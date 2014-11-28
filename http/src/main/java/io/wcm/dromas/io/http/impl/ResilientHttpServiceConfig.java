@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * The configuration is mapped to archaius configuration internally.
  */
 @Component(immediate = true, metatype = true,
-label = "Transport Layer Service Configuration",
+label = "wcm.io Dromas Resilient Http Service Configuration",
 description = "Configures transport layer options for service access.",
 configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
 @Property(name = "webconsole.configurationFactory.nameHint", value = "{serviceName}: {ribbonHosts}")
