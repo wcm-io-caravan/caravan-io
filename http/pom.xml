@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  #%L
+  wcm.io
+  %%
+  Copyright (C) 2014 wcm.io
+  %%
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  #L%
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.wcm.dromas</groupId>
+    <artifactId>io.wcm.dromas.parent_toplevel</artifactId>
+    <version>0.2.0-SNAPSHOT</version>
+    <relativePath>../../parent_toplevel/pom.xml</relativePath>
+  </parent>
+
+  <groupId>io.wcm.dromas</groupId>
+  <artifactId>io.wcm.dromas.io.http</artifactId>
+  <version>0.2.0-SNAPSHOT</version>
+  <packaging>bundle</packaging>
+
+  <name>Resilient HTTP</name>
+  <description>HTTP communication layer using Netflix Hystrix and Ribbon for resilience.</description>
+
+  <dependencies>
+  
+    <dependency>
+      <groupId>io.wcm.dromas</groupId>
+      <artifactId>io.wcm.dromas.commons.stream</artifactId>
+      <version>0.2.0-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <!-- OSGi -->
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.http.api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.commons.osgi</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Standard APIs -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <scope>compile</scope>
+    </dependency>
+
+    <!-- Commons -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.reactivex</groupId>
+      <artifactId>rxjava</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Apache HTTP Client -->
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpasyncclient</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Netflix Stack -->
+    <dependency>
+      <groupId>commons-configuration</groupId>
+      <artifactId>commons-configuration</artifactId>
+      <version>1.9</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.archaius</groupId>
+      <artifactId>archaius-core</artifactId>
+      <version>0.6.3</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.hystrix</groupId>
+      <artifactId>hystrix-core</artifactId>
+      <version>1.4.0-RC5</version>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.netflix.rxjava</groupId>
+          <artifactId>rxjava-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.hystrix</groupId>
+      <artifactId>hystrix-metrics-event-stream</artifactId>
+      <version>1.4.0-RC5</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.hystrix</groupId>
+      <artifactId>hystrix-codahale-metrics-publisher</artifactId>
+      <version>1.4.0-RC5</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.netflix-commons</groupId>
+      <artifactId>netflix-commons-util</artifactId>
+      <version>0.1.2</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.netflix-commons</groupId>
+      <artifactId>netflix-statistics</artifactId>
+      <version>0.1.2</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.ribbon</groupId>
+      <artifactId>ribbon</artifactId>
+      <version>2.0-RC9</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.ribbon</groupId>
+      <artifactId>ribbon-core</artifactId>
+      <version>2.0-RC9</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.ribbon</groupId>
+      <artifactId>ribbon-loadbalancer</artifactId>
+      <version>2.0-RC9</version>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.netflix.rxjava</groupId>
+          <artifactId>rxjava-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.servo</groupId>
+      <artifactId>servo-core</artifactId>
+      <version>0.7.9</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.servo</groupId>
+      <artifactId>servo-internal</artifactId>
+      <version>0.7.9</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Testing -->
+    <dependency>
+      <groupId>com.github.tomakehurst</groupId>
+      <artifactId>wiremock</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+          <instructions>
+            <!-- archaius has to be embedded because it is based on singleton instances -->
+            <Embed-Dependency>
+              archaius-core;scope=provided;inline=false,
+              hystrix-core;scope=provided;inline=false,
+              hystrix-metrics-event-stream;scope=provided;inline=false,
+              hystrix-codahale-metrics-publisher;scope=provided;inline=false,
+              ribbon-loadbalancer;scope=provided;inline=false,
+              ribbon-core;scope=provided;inline=false,
+              netflix-commons-util;scope=provided;inline=false,
+              netflix-statistics;scope=provided;inline=false,
+              servo-core;scope=provided;inline=false,
+              servo-internal;scope=provided;inline=false
+            </Embed-Dependency>
+            <Embed-Transitive>false</Embed-Transitive>
+            <Import-Package>
+              sun.misc.*;resolution:=optional,
+              org.junit.*;resolution:=optional,
+              com.netflix.ribbon.transport.netty.*;resolution:=optional,
+              io.netty.*;resolution:=optional,
+              io.reactivex.netty.*;resolution:=optional,
+              *
+            </Import-Package>
+            <Bundle-Activator>io.wcm.dromas.io.http.impl.BundleActivator</Bundle-Activator>
+          </instructions>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-scr-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-scr-scrdescriptor</id>
+            <goals>
+              <goal>scr</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>maven-sling-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>validate-bundle</id>
+            <goals>
+              <goal>validate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+    <pluginManagement>
+      <plugins>
+      
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>license-maven-plugin</artifactId>
+          <configuration>
+            <licenseName>apache_v2</licenseName>
+            <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+            <projectName>wcm.io</projectName>
+            <excludes>
+              <exclude>**/*.json</exclude>
+              <exclude>**/*.html</exclude>
+              <exclude>**/hystrix-dashboard/**</exclude>
+            </excludes>
+          </configuration>
+        </plugin>
+
+      </plugins>
+    </pluginManagement>
+  </build>
+
+</project>
