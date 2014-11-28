@@ -8,4 +8,4 @@ Implements a resilient HTTP transport layer using:
 * [Netflix Ribbon](https://github.com/netflix/ribbon) for load balancing
 * [Reactive Java](https://github.com/ReactiveX/RxJava) for asynchronous interfaces
 
-Its target for REST communication, but can be used for other protocols as well (e.g. SOAP).
+It's targeted for REST communication, but can be used for other protocols as well (e.g. SOAP).
