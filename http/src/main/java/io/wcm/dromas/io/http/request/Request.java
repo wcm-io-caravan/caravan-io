@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,14 +20,20 @@
 package io.wcm.dromas.io.http.request;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import io.wcm.dromas.commons.stream.Streams;
 
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
 
 /**
  * An immutable request to an http server.
@@ -46,6 +52,7 @@ public final class Request {
     LinkedHashMap<String, Collection<String>> copyOf = new LinkedHashMap<String, Collection<String>>();
     copyOf.putAll(checkNotNull(headers, "headers of %s %s", method, url));
     this.headers = Collections.unmodifiableMap(copyOf);
+
     this.body = body; // nullable
     this.charset = charset; // nullable
   }
@@ -65,6 +72,19 @@ public final class Request {
     return headers;
   }
 
+  /**
+   * @param name of the query parameter
+   * @return true if the parameter exists in this request's query
+   */
+  public boolean hasParameter(String name) {
+
+    // TODO: is there really no easier function for this on the classpath (e.g. parse into some MultiValueMap)
+    List<NameValuePair> parameters = URLEncodedUtils.parse(URI.create(url), CharEncoding.UTF_8);
+
+    return Streams.of(parameters)
+        .filter(param -> param.getName().equals(name))
+        .iterator().hasNext();
+  }
   /**
    * The character set with which the body is encoded, or null if unknown or not applicable. When this is
    * present, you can use {@code new String(req.body(), req.charset())} to access the body as a String.
