@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -85,8 +85,16 @@ public class ResilientHttpImpl implements ResilientHttp {
   }
 
   private Observable<Response> getHystrixObservable(String serviceName, Request request, Observable<Response> fallback) {
-    Observable<Response> ribbonObservable = getRibbonObservable(serviceName, request);
-    return new HttpHystrixCommand(serviceName, ribbonObservable, fallback).observe();
+
+    // calling HttpHystrixCommand#observe() will immediately start the request,
+    // which is not what we want in the context of the JsonPipeline. Instead all network activity should be postponed
+    // until someone subscribes to the observable returned by #execute 
+    //  - that's why we add another layer of indirection by wrapping the hystrix observable's in another simple Observable
+
+    return Observable.create(subscriber -> {
+      Observable<Response> ribbonObservable = getRibbonObservable(serviceName, request);
+      new HttpHystrixCommand(serviceName, ribbonObservable, fallback).observe().subscribe(subscriber);
+    });
   }
 
   private Observable<Response> getRibbonObservable(String serviceName, Request request) {
