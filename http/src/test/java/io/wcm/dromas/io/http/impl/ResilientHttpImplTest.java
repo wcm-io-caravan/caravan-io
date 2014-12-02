@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -128,13 +128,13 @@ public class ResilientHttpImplTest {
     MockOsgi.deactivate(serviceConfig);
 
     Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_200_URI).request());
-    observable.toBlocking().first();
+    observable.toBlocking().single();
   }
 
   @Test
   public void testHttp200() throws IOException {
     Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_200_URI).request());
-    Response response = observable.toBlocking().first();
+    Response response = observable.toBlocking().single();
     assertEquals(HttpServletResponse.SC_OK, response.status());
     assertEquals(DUMMY_CONTENT, response.body().asString());
   }
@@ -144,15 +144,15 @@ public class ResilientHttpImplTest {
   @Test
   public void testHttp404() {
     Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_404_URI).request());
-    Response response = observable.toBlocking().first();
+    Response response = observable.toBlocking().single();
     assertEquals(HttpServletResponse.SC_NOT_FOUND, response.status());
   }
-  */
+   */
 
   @Test(expected = ResilientHttpRuntimeException.class)
   public void testHttp500() {
     Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_500_URI).request());
-    observable.toBlocking().first();
+    observable.toBlocking().single();
   }
 
 }
