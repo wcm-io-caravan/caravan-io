@@ -1,4 +1,4 @@
-wcm.io Dromas Resilient Http
+wcm.io Caravan Resilient Http
 ============================
 
 Implements a resilient HTTP transport layer using:
