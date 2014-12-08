@@ -19,8 +19,9 @@
  */
 package io.wcm.caravan.io.http.impl;
 
+import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
+import io.wcm.caravan.io.http.RequestFailedRuntimeException;
 import io.wcm.caravan.io.http.ResilientHttp;
-import io.wcm.caravan.io.http.ResilientHttpRuntimeException;
 import io.wcm.caravan.io.http.httpclient.HttpClientFactory;
 import io.wcm.caravan.io.http.request.Request;
 import io.wcm.caravan.io.http.response.Response;
@@ -30,6 +31,7 @@ import java.net.SocketTimeoutException;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -74,21 +76,25 @@ public class ResilientHttpImpl implements ResilientHttp {
   @Override
   public Observable<Response> execute(String serviceName, Request request, Observable<Response> fallback) {
     return getHystrixObservable(serviceName, request, fallback)
-        .onErrorResumeNext(exception -> Observable.<Response>error(mapToTransportLayerRuntimeException(serviceName, request, exception)));
+        .onErrorResumeNext(exception -> Observable.<Response>error(mapToKnownException(serviceName, request, exception)));
   }
 
-  private ResilientHttpRuntimeException mapToTransportLayerRuntimeException(String serviceName, Request request, Throwable ex) {
-    if (ex instanceof HystrixRuntimeException) {
-      return mapToTransportLayerRuntimeException(serviceName, request, ex.getCause());
+  private Throwable mapToKnownException(String serviceName, Request request, Throwable ex) {
+    if (ex instanceof RequestFailedRuntimeException || ex instanceof IllegalResponseRuntimeException) {
+      return ex;
     }
-    throw new ResilientHttpRuntimeException(serviceName, request, ex.getMessage(), ex);
+    if (ex instanceof HystrixRuntimeException && ex.getCause() != null) {
+      return mapToKnownException(serviceName, request, ex.getCause());
+    }
+    throw new RequestFailedRuntimeException(serviceName, request,
+        StringUtils.defaultString(ex.getMessage(), ex.getClass().getSimpleName()), ex);
   }
 
   private Observable<Response> getHystrixObservable(String serviceName, Request request, Observable<Response> fallback) {
 
     // calling HttpHystrixCommand#observe() will immediately start the request,
     // which is not what we want in the context of the JsonPipeline. Instead all network activity should be postponed
-    // until someone subscribes to the observable returned by #execute 
+    // until someone subscribes to the observable returned by #execute
     //  - that's why we add another layer of indirection by wrapping the hystrix observable's in another simple Observable
 
     return Observable.create(subscriber -> {
@@ -104,13 +110,13 @@ public class ResilientHttpImpl implements ResilientHttp {
         .build(new LoadBalancerObservable<Response>() {
           @Override
           public Observable<Response> call(Server server) {
-            return getHttpObservable(RequestUtil.buildUrlPrefix(server), request);
+            return getHttpObservable(serviceName, RequestUtil.buildUrlPrefix(server), request);
           }
         });
     return command.toObservable();
   }
 
-  private Observable<Response> getHttpObservable(String urlPrefix, Request request) {
+  private Observable<Response> getHttpObservable(String serviceName, String urlPrefix, Request request) {
     return Observable.<Response>create(new Observable.OnSubscribe<Response>() {
 
       @Override
@@ -129,9 +135,10 @@ public class ResilientHttpImpl implements ResilientHttp {
             StatusLine status = result.getStatusLine();
             HttpEntity entity = result.getEntity();
             try {
-              if (status.getStatusCode() >= HttpServletResponse.SC_INTERNAL_SERVER_ERROR) {
-                subscriber.onError(new IOException("Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine() + "\n"
-                    + EntityUtils.toString(entity)));
+              if (status.getStatusCode() != HttpServletResponse.SC_OK) {
+                subscriber.onError(new IllegalResponseRuntimeException(serviceName, request,
+                    httpRequest.getURI().toString(), status.getStatusCode(), EntityUtils.toString(entity),
+                    "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine()));
                 EntityUtils.consumeQuietly(entity);
               }
               else {
@@ -142,7 +149,7 @@ public class ResilientHttpImpl implements ResilientHttp {
                 subscriber.onCompleted();
               }
             }
-            catch (IOException ex) {
+            catch (Throwable ex) {
               subscriber.onError(new IOException("Reading response of '" + httpRequest.getURI() + "' failed.", ex));
               EntityUtils.consumeQuietly(entity);
             }

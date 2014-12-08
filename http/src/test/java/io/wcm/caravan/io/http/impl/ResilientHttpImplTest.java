@@ -25,7 +25,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertEquals;
 import io.wcm.caravan.io.http.ResilientHttp;
-import io.wcm.caravan.io.http.ResilientHttpRuntimeException;
+import io.wcm.caravan.io.http.RequestFailedRuntimeException;
 import io.wcm.caravan.io.http.httpclient.HttpClientFactory;
 import io.wcm.caravan.io.http.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.request.RequestTemplate;
@@ -122,7 +122,7 @@ public class ResilientHttpImplTest {
     MockOsgi.deactivate(serviceConfig);
   }
 
-  @Test(expected = ResilientHttpRuntimeException.class)
+  @Test(expected = RequestFailedRuntimeException.class)
   public void testWithoutConfig() {
     // remove host config
     MockOsgi.deactivate(serviceConfig);
@@ -149,7 +149,7 @@ public class ResilientHttpImplTest {
   }
    */
 
-  @Test(expected = ResilientHttpRuntimeException.class)
+  @Test(expected = RequestFailedRuntimeException.class)
   public void testHttp500() {
     Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_500_URI).request());
     observable.toBlocking().single();
