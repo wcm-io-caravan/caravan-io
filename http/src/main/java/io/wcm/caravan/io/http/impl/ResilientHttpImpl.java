@@ -29,8 +29,6 @@ import io.wcm.caravan.io.http.response.Response;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
@@ -135,7 +133,7 @@ public class ResilientHttpImpl implements ResilientHttp {
             StatusLine status = result.getStatusLine();
             HttpEntity entity = result.getEntity();
             try {
-              if (status.getStatusCode() != HttpServletResponse.SC_OK) {
+              if (status.getStatusCode() >= 500) {
                 subscriber.onError(new IllegalResponseRuntimeException(serviceName, request,
                     httpRequest.getURI().toString(), status.getStatusCode(), EntityUtils.toString(entity),
                     "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine()));
