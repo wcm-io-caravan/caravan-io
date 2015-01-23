@@ -45,6 +45,12 @@
       <version>0.2.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>io.wcm.caravan</groupId>
+      <artifactId>io.wcm.caravan.commons.httpclient</artifactId>
+      <version>0.2.0-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
 
     <!-- OSGi -->
     <dependency>
@@ -84,18 +90,6 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>commons-beanutils</groupId>
-      <artifactId>commons-beanutils</artifactId>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- Apache HTTP Client -->
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpasyncclient</artifactId>
       <scope>provided</scope>
     </dependency>
 

@@ -24,10 +24,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertEquals;
-import io.wcm.caravan.io.http.ResilientHttp;
+import io.wcm.caravan.commons.httpclient.HttpClientFactory;
+import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
-import io.wcm.caravan.io.http.httpclient.HttpClientFactory;
-import io.wcm.caravan.io.http.httpclient.impl.HttpClientFactoryImpl;
+import io.wcm.caravan.io.http.ResilientHttp;
 import io.wcm.caravan.io.http.request.RequestTemplate;
 import io.wcm.caravan.io.http.response.Response;
 

@@ -19,10 +19,10 @@
  */
 package io.wcm.caravan.io.http.impl;
 
+import io.wcm.caravan.commons.httpclient.HttpClientFactory;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
 import io.wcm.caravan.io.http.ResilientHttp;
-import io.wcm.caravan.io.http.httpclient.HttpClientFactory;
 import io.wcm.caravan.io.http.request.Request;
 import io.wcm.caravan.io.http.response.Response;
 
@@ -125,7 +125,7 @@ public class ResilientHttpImpl implements ResilientHttp {
           log.debug("Execute: " + httpRequest.getURI() + "\n" + request.toString());
         }
 
-        HttpAsyncClient httpClient = httpClientFactory.getHttpAsyncClient(httpRequest.getURI());
+        HttpAsyncClient httpClient = httpClientFactory.getAsync(httpRequest.getURI());
         httpClient.execute(httpRequest, new FutureCallback<HttpResponse>() {
 
           @Override
