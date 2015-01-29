@@ -21,7 +21,6 @@ package io.wcm.caravan.io.http.impl;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertEquals;
 import io.wcm.caravan.commons.httpclient.HttpClientFactory;
@@ -32,6 +31,8 @@ import io.wcm.caravan.io.http.request.RequestTemplate;
 import io.wcm.caravan.io.http.response.Response;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -44,7 +45,9 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import rx.Observable;
+import rx.Observer;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
 
@@ -76,6 +79,7 @@ public class ResilientHttpImplTest {
 
   @Before
   public void setUp() {
+
     ArchaiusConfig.initialize();
 
     wireMockHost = "localhost:" + wireMock.port();
@@ -88,25 +92,25 @@ public class ResilientHttpImplTest {
     underTest = context.registerInjectActivateService(new ResilientHttpImpl());
 
     // setup wiremock
-    stubFor(get(urlEqualTo(HTTP_200_URI))
+    WireMock.stubFor(get(urlEqualTo(HTTP_200_URI))
         .willReturn(aResponse()
             .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
             .withBody(DUMMY_CONTENT)
             ));
-    stubFor(get(urlEqualTo(HTTP_404_URI))
+    WireMock.stubFor(get(urlEqualTo(HTTP_404_URI))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_NOT_FOUND)
             ));
-    stubFor(get(urlEqualTo(HTTP_500_URI))
+    WireMock.stubFor(get(urlEqualTo(HTTP_500_URI))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
             ));
-    stubFor(get(urlEqualTo(CONNECT_TIMEOUT_URI))
+    WireMock.stubFor(get(urlEqualTo(CONNECT_TIMEOUT_URI))
         .willReturn(aResponse()
             .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
             .withBody(DUMMY_CONTENT)
             ));
-    stubFor(get(urlEqualTo(RESPONSE_TIMEOUT_URI))
+    WireMock.stubFor(get(urlEqualTo(RESPONSE_TIMEOUT_URI))
         .willReturn(aResponse()
             .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
             .withBody(DUMMY_CONTENT)
@@ -140,19 +144,86 @@ public class ResilientHttpImplTest {
   }
 
   // TODO: this fails if run together with testHttp200 - disable it for now
-  /*
-  @Test
+
+
+  // @Test
   public void testHttp404() {
     Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_404_URI).request());
     Response response = observable.toBlocking().single();
     assertEquals(HttpServletResponse.SC_NOT_FOUND, response.status());
   }
-   */
 
+  // TODO: shouldn't this cause an IllegalResponseRuntimeException?
   @Test(expected = RequestFailedRuntimeException.class)
   public void testHttp500() {
     Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_500_URI).request());
     observable.toBlocking().single();
   }
 
+  /** used by #testHttpSimultaneousRequests to detect errors */
+  private static final class ResponseObserver implements Observer<Response> {
+
+    private final int iteration;
+
+    private Throwable error;
+
+    private static int completedCount;
+
+    private ResponseObserver(int iteration) {
+      this.iteration = iteration;
+    }
+
+    @Override
+    public void onNext(Response t) {
+
+      try {
+        assertEquals(HttpServletResponse.SC_OK, t.status());
+        assertEquals(DUMMY_CONTENT, t.body().asString());
+
+      }
+      catch (IOException ex) {
+        error = ex;
+      }
+    }
+
+    @Override
+    public void onCompleted() {
+      completedCount++;
+    }
+
+    @Override
+    public void onError(Throwable e) {
+      error = e;
+
+      completedCount++;
+    }
+  }
+
+  // TODO: this test fails because of the default maximum of 10 simultaneous request enforced by hystrix
+  //@Test
+  public void testHttpSimultaneousRequests() throws InterruptedException {
+
+    int totalNumRequests = 11;
+
+    List<ResponseObserver> observers = new ArrayList<ResponseObserver>();
+
+    for (int i = 0; i < totalNumRequests; i++) {
+
+      ResponseObserver obs = new ResponseObserver(i);
+      observers.add(obs);
+
+      Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_200_URI).request());
+      observable.subscribe(obs);
+    }
+
+    while (ResponseObserver.completedCount < totalNumRequests) {
+      Thread.sleep(50);
+    }
+
+    for (ResponseObserver obs : observers) {
+      if (obs.error != null) {
+        throw new RuntimeException("Request " + obs.iteration + " failed." + obs.error);
+      }
+    }
+  }
 }
