@@ -133,8 +133,7 @@ public class ResilientHttpImplTest {
   @Test(expected = RequestFailedRuntimeException.class)
   public void testWithoutConfig() throws IOException {
 
-    // remove host config - we have to pass a map with a "serviceName" key (the value being ignored), otherwise the
-    // ResilientHttpServiceConfig will not be properly deactivated (see VWDBS-1787)
+    // remove host config - service name is required to clear archaius properties
     MockOsgi.deactivate(serviceConfig, getServiceConfigProperties(""));
 
     Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_200_URI).request());
