@@ -135,6 +135,9 @@ public class ResilientHttpImpl implements ResilientHttp {
       IClientConfig clientConfig = ClientFactory.getNamedConfig(serviceName, DefaultClientConfigImpl.class);
       String loadBalancerClassName = clientConfig.get(CommonClientConfigKey.NFLoadBalancerClassName);
       ILoadBalancer lb = (ILoadBalancer)ClientFactory.instantiateInstanceWithClientConfig(loadBalancerClassName, clientConfig);
+
+      namedLoadBalancers.put(serviceName, lb);
+
       return lb;
     }
     catch (InstantiationException | IllegalAccessException | ClassNotFoundException ex) {

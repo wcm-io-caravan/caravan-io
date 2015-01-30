@@ -207,7 +207,7 @@ public class ResilientHttpImplTest {
   //@Test
   public void testHttpSimultaneousRequests() throws InterruptedException {
 
-    int totalNumRequests = 5;
+    int totalNumRequests = 11;
 
     List<ResponseObserver> observers = new ArrayList<ResponseObserver>();
 
