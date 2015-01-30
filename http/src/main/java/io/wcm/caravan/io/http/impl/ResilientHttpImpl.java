@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 
 import rx.Observable;
 import rx.Subscriber;
+import rx.schedulers.Schedulers;
 
 import com.netflix.client.ClientFactory;
 import com.netflix.client.config.CommonClientConfigKey;
@@ -97,15 +98,11 @@ public class ResilientHttpImpl implements ResilientHttp {
 
   private Observable<Response> getHystrixObservable(String serviceName, Request request, Observable<Response> fallback) {
 
-    // calling HttpHystrixCommand#observe() will immediately start the request,
-    // which is not what we want in the context of the JsonPipeline. Instead all network activity should be postponed
-    // until someone subscribes to the observable returned by #execute
-    //  - that's why we add another layer of indirection by wrapping the hystrix observable's in another simple Observable
+    Observable<Response> ribbonObservable = getRibbonObservable(serviceName, request);
 
-    return Observable.create(subscriber -> {
-      Observable<Response> ribbonObservable = getRibbonObservable(serviceName, request);
-      new HttpHystrixCommand(serviceName, ribbonObservable, fallback).observe().subscribe(subscriber);
-    });
+    // calling HttpHystrixCommand#observe() will immediately start the request, while #toObservable() will return a "lazy" Observable
+    // that only initiates the request when a subscriber subscribes
+    return new HttpHystrixCommand(serviceName, ribbonObservable, fallback).toObservable(Schedulers.io());
   }
 
   private Observable<Response> getRibbonObservable(String serviceName, Request request) {
@@ -113,6 +110,7 @@ public class ResilientHttpImpl implements ResilientHttp {
     LoadBalancerObservableCommand<Response> command = CommandBuilder.<Response>newBuilder()
         .withLoadBalancer(loadBalancer)
         .build(new LoadBalancerObservable<Response>() {
+
           @Override
           public Observable<Response> call(Server server) {
             return getHttpObservable(serviceName, RequestUtil.buildUrlPrefix(server), request);
