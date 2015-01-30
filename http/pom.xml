@@ -110,7 +110,7 @@
     <dependency>
       <groupId>com.netflix.archaius</groupId>
       <artifactId>archaius-core</artifactId>
-      <version>0.6.3</version>
+      <version>0.6.5</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -176,13 +176,13 @@
     <dependency>
       <groupId>com.netflix.servo</groupId>
       <artifactId>servo-core</artifactId>
-      <version>0.7.9</version>
+      <version>0.8.2</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.netflix.servo</groupId>
       <artifactId>servo-internal</artifactId>
-      <version>0.7.9</version>
+      <version>0.8.2</version>
       <scope>provided</scope>
     </dependency>
 
