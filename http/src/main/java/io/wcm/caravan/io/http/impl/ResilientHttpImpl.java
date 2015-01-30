@@ -28,6 +28,8 @@ import io.wcm.caravan.io.http.response.Response;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Component;
@@ -47,6 +49,9 @@ import rx.Observable;
 import rx.Subscriber;
 
 import com.netflix.client.ClientFactory;
+import com.netflix.client.config.CommonClientConfigKey;
+import com.netflix.client.config.DefaultClientConfigImpl;
+import com.netflix.client.config.IClientConfig;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
@@ -65,6 +70,8 @@ public class ResilientHttpImpl implements ResilientHttp {
   private HttpClientFactory httpClientFactory;
 
   private static final Logger log = LoggerFactory.getLogger(ResilientHttpImpl.class);
+
+  private Map<String, ILoadBalancer> namedLoadBalancers = new HashMap<String, ILoadBalancer>();
 
   @Override
   public Observable<Response> execute(String serviceName, Request request) {
@@ -102,7 +109,7 @@ public class ResilientHttpImpl implements ResilientHttp {
   }
 
   private Observable<Response> getRibbonObservable(String serviceName, Request request) {
-    ILoadBalancer loadBalancer = ClientFactory.getNamedLoadBalancer(serviceName);
+    ILoadBalancer loadBalancer = getNamedLoadBalancer(serviceName);
     LoadBalancerObservableCommand<Response> command = CommandBuilder.<Response>newBuilder()
         .withLoadBalancer(loadBalancer)
         .build(new LoadBalancerObservable<Response>() {
@@ -112,6 +119,27 @@ public class ResilientHttpImpl implements ResilientHttp {
           }
         });
     return command.toObservable();
+  }
+
+  private ILoadBalancer getNamedLoadBalancer(String serviceName) {
+
+    // replaces ClientFactory#getNamedLoadBalancer() - we don't want to use the static map of ILoadBalancerInstances
+    // defined within ClientFactory, because that list will outlive our ResilientHttpImpl instance, and may
+    // contain an outdated server list (especially in unit-tests)
+
+    if (namedLoadBalancers.containsKey(serviceName)) {
+      return namedLoadBalancers.get(serviceName);
+    }
+
+    try {
+      IClientConfig clientConfig = ClientFactory.getNamedConfig(serviceName, DefaultClientConfigImpl.class);
+      String loadBalancerClassName = clientConfig.get(CommonClientConfigKey.NFLoadBalancerClassName);
+      ILoadBalancer lb = (ILoadBalancer)ClientFactory.instantiateInstanceWithClientConfig(loadBalancerClassName, clientConfig);
+      return lb;
+    }
+    catch (InstantiationException | IllegalAccessException | ClassNotFoundException ex) {
+      throw new RuntimeException("Failed to create new load balancer instance for service " + serviceName, ex);
+    }
   }
 
   private Observable<Response> getHttpObservable(String serviceName, String urlPrefix, Request request) {

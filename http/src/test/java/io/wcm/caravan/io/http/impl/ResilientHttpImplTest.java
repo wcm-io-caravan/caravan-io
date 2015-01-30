@@ -25,6 +25,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertEquals;
 import io.wcm.caravan.commons.httpclient.HttpClientFactory;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
+import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
 import io.wcm.caravan.io.http.ResilientHttp;
 import io.wcm.caravan.io.http.request.RequestTemplate;
@@ -47,7 +48,6 @@ import org.junit.Test;
 import rx.Observable;
 import rx.Observer;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
 
@@ -64,13 +64,14 @@ public class ResilientHttpImplTest {
   private static final String CONNECT_TIMEOUT_URI = "/connect/timeout";
   private static final String RESPONSE_TIMEOUT_URI = "/connect/timeout";
 
-  private static final String DUMMY_CONTENT = "Der Jodelkaiser aus dem \\u00D6tztal ist wieder daheim.";
+  private static final String DUMMY_CONTENT = "Der Jodelkaiser aus dem \u00D6tztal ist wieder daheim.";
 
   @Rule
   public OsgiContext context = new OsgiContext();
 
   @Rule
   public WireMockRule wireMock = new WireMockRule(0);
+
 
   private String wireMockHost;
   private ResilientHttpServiceConfig serviceConfig;
@@ -84,39 +85,43 @@ public class ResilientHttpImplTest {
 
     wireMockHost = "localhost:" + wireMock.port();
 
-    serviceConfig = context.registerInjectActivateService(new ResilientHttpServiceConfig(), ImmutableMap.<String, Object>builder()
-        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
-        .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, wireMockHost)
-        .build());
+    serviceConfig = context.registerInjectActivateService(new ResilientHttpServiceConfig(), getServiceConfigProperties(wireMockHost));
+
     httpClientFactory = context.registerInjectActivateService(new HttpClientFactoryImpl());
     underTest = context.registerInjectActivateService(new ResilientHttpImpl());
 
     // setup wiremock
-    WireMock.stubFor(get(urlEqualTo(HTTP_200_URI))
+    wireMock.stubFor(get(urlEqualTo(HTTP_200_URI))
         .willReturn(aResponse()
             .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
             .withBody(DUMMY_CONTENT)
             ));
-    WireMock.stubFor(get(urlEqualTo(HTTP_404_URI))
+    wireMock.stubFor(get(urlEqualTo(HTTP_404_URI))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_NOT_FOUND)
             ));
-    WireMock.stubFor(get(urlEqualTo(HTTP_500_URI))
+    wireMock.stubFor(get(urlEqualTo(HTTP_500_URI))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
             ));
-    WireMock.stubFor(get(urlEqualTo(CONNECT_TIMEOUT_URI))
+    wireMock.stubFor(get(urlEqualTo(CONNECT_TIMEOUT_URI))
         .willReturn(aResponse()
             .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
             .withBody(DUMMY_CONTENT)
             ));
-    WireMock.stubFor(get(urlEqualTo(RESPONSE_TIMEOUT_URI))
+    wireMock.stubFor(get(urlEqualTo(RESPONSE_TIMEOUT_URI))
         .willReturn(aResponse()
             .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
             .withBody(DUMMY_CONTENT)
             .withFixedDelay(1000)
             ));
+  }
 
+  private static ImmutableMap<String, Object> getServiceConfigProperties(String hostAndPort) {
+    return ImmutableMap.<String, Object>builder()
+        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
+        .build();
   }
 
   @After
@@ -127,12 +132,15 @@ public class ResilientHttpImplTest {
   }
 
   @Test(expected = RequestFailedRuntimeException.class)
-  public void testWithoutConfig() {
-    // remove host config
-    MockOsgi.deactivate(serviceConfig);
+  public void testWithoutConfig() throws IOException {
+
+    // remove host config - we have to pass a map with a "serviceName" key (the value being ignored), otherwise the
+    // ResilientHttpServiceConfig will not be properly deactivated (see VWDBS-1787)
+    MockOsgi.deactivate(serviceConfig, getServiceConfigProperties(""));
 
     Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_200_URI).request());
-    observable.toBlocking().single();
+    Response response = observable.toBlocking().single();
+    System.out.println(response.body().asString());
   }
 
   @Test
@@ -143,18 +151,14 @@ public class ResilientHttpImplTest {
     assertEquals(DUMMY_CONTENT, response.body().asString());
   }
 
-  // TODO: this fails if run together with testHttp200 - disable it for now
-
-
-  // @Test
+  @Test
   public void testHttp404() {
     Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_404_URI).request());
     Response response = observable.toBlocking().single();
     assertEquals(HttpServletResponse.SC_NOT_FOUND, response.status());
   }
 
-  // TODO: shouldn't this cause an IllegalResponseRuntimeException?
-  @Test(expected = RequestFailedRuntimeException.class)
+  @Test(expected = IllegalResponseRuntimeException.class)
   public void testHttp500() {
     Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_500_URI).request());
     observable.toBlocking().single();
@@ -203,7 +207,7 @@ public class ResilientHttpImplTest {
   //@Test
   public void testHttpSimultaneousRequests() throws InterruptedException {
 
-    int totalNumRequests = 11;
+    int totalNumRequests = 5;
 
     List<ResponseObserver> observers = new ArrayList<ResponseObserver>();
 
