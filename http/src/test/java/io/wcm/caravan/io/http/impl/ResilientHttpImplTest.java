@@ -32,8 +32,7 @@ import io.wcm.caravan.io.http.request.RequestTemplate;
 import io.wcm.caravan.io.http.response.Response;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -164,22 +163,14 @@ public class ResilientHttpImplTest {
     observable.toBlocking().single();
   }
 
-  /** used by #testHttpSimultaneousRequests to detect errors */
+  /** used by #testHttpSimultaneousRequests to count how many requests habe been completed, and detect errors */
   private static final class ResponseObserver implements Observer<Response> {
 
-    private final int iteration;
-
     private Throwable error;
-
-    private static int completedCount;
-
-    private ResponseObserver(int iteration) {
-      this.iteration = iteration;
-    }
+    private AtomicInteger completedCount = new AtomicInteger();
 
     @Override
-    public void onNext(Response t) {
-
+    public synchronized void onNext(Response t) {
       try {
         assertEquals(HttpServletResponse.SC_OK, t.status());
         assertEquals(DUMMY_CONTENT, t.body().asString());
@@ -191,43 +182,35 @@ public class ResilientHttpImplTest {
     }
 
     @Override
-    public void onCompleted() {
-      completedCount++;
+    public synchronized void onCompleted() {
+      completedCount.incrementAndGet();
     }
 
     @Override
-    public void onError(Throwable e) {
+    public synchronized void onError(Throwable e) {
       error = e;
-
-      completedCount++;
+      completedCount.incrementAndGet();
     }
   }
 
-  // TODO: this test fails because of the default maximum of 10 simultaneous request enforced by hystrix
-  //@Test
+  @Test
   public void testHttpSimultaneousRequests() throws InterruptedException {
 
-    int totalNumRequests = 11;
+    int totalNumRequests = 100;
 
-    List<ResponseObserver> observers = new ArrayList<ResponseObserver>();
+    ResponseObserver obs = new ResponseObserver();
 
     for (int i = 0; i < totalNumRequests; i++) {
-
-      ResponseObserver obs = new ResponseObserver(i);
-      observers.add(obs);
-
       Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_200_URI).request());
       observable.subscribe(obs);
     }
 
-    while (ResponseObserver.completedCount < totalNumRequests) {
+    while (obs.completedCount.get() < totalNumRequests) {
       Thread.sleep(50);
     }
 
-    for (ResponseObserver obs : observers) {
-      if (obs.error != null) {
-        throw new RuntimeException("Request " + obs.iteration + " failed." + obs.error);
-      }
+    if (obs.error != null) {
+      throw new RuntimeException("At least one of the requests failed with an error ", obs.error);
     }
   }
 }
