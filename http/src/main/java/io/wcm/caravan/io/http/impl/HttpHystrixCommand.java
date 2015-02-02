@@ -19,6 +19,7 @@
  */
 package io.wcm.caravan.io.http.impl;
 
+import static com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy.THREAD;
 import io.wcm.caravan.io.http.response.Response;
 
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ import rx.functions.Action1;
 
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixObservableCommand;
 
 /**
@@ -45,9 +47,11 @@ class HttpHystrixCommand extends HystrixObservableCommand<Response> {
   private static final Logger log = LoggerFactory.getLogger(HttpHystrixCommand.class);
 
   public HttpHystrixCommand(String serviceName, Observable<Response> observable, Observable<Response> fallback) {
+
     super(Setter
         .withGroupKey(HystrixCommandGroupKey.Factory.asKey(GROUP_KEY))
-        .andCommandKey(HystrixCommandKey.Factory.asKey(serviceName)));
+        .andCommandKey(HystrixCommandKey.Factory.asKey(serviceName))
+        .andCommandPropertiesDefaults(HystrixCommandProperties.Setter().withExecutionIsolationStrategy(THREAD)));
 
     this.serviceName = serviceName;
     this.observable = observable;
@@ -59,6 +63,7 @@ class HttpHystrixCommand extends HystrixObservableCommand<Response> {
     if (fallback != null) {
       // make sure errors are logged in log and not swallowed when hystrix falls back to fallback
       return observable.doOnError(new Action1<Throwable>() {
+
         @Override
         public void call(Throwable ex) {
           log.warn("Service call to '" + serviceName + "' failed, returned fallback instead.", ex);

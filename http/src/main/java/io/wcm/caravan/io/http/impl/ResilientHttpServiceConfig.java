@@ -32,8 +32,6 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy;
-
 /**
  * Configures transport layer options for service access.
  * The configuration is mapped to archaius configuration internally.
@@ -190,10 +188,8 @@ public class ResilientHttpServiceConfig {
 
     // hystrix parameters
 
-    // make sure to use "THREAD" isolation strategy for all resilient HTTP requests, and set a queue size big enough
-    // so requests won't be immediately rejected while pre-caching.
+    // make sure to set a queue size big enough so requests won't be immediately rejected while pre-caching.
     // TODO: make this configurable per server and/or investigate why this requests failed immediately with ExecutionIsolationStrategy.SEMAPHORE
-    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + ".execution.isolation.strategy", ExecutionIsolationStrategy.THREAD);
     archaiusConfig.setProperty("hystrix.threadpool.default.queueSizeRejectionThreshold", 4096);
     archaiusConfig.setProperty("hystrix.threadpool.default.maxQueueSize", 4096);
 
