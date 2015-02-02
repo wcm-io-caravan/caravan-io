@@ -45,7 +45,6 @@ import org.slf4j.LoggerFactory;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.schedulers.Schedulers;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -57,9 +56,8 @@ import com.netflix.client.config.IClientConfig;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
-import com.netflix.loadbalancer.reactive.CommandBuilder;
-import com.netflix.loadbalancer.reactive.LoadBalancerObservable;
-import com.netflix.loadbalancer.reactive.LoadBalancerObservableCommand;
+import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
+import com.netflix.loadbalancer.reactive.ServerOperation;
 
 /**
  * Default implementation of {@link ResilientHttp}.
@@ -113,20 +111,24 @@ public class ResilientHttpImpl implements ResilientHttp {
 
     // calling HttpHystrixCommand#observe() will immediately start the request, while #toObservable() will return a "lazy" Observable
     // that only initiates the request when a subscriber subscribes
-    return new HttpHystrixCommand(serviceName, ribbonObservable, fallback).toObservable(Schedulers.io());
+    return new HttpHystrixCommand(serviceName, ribbonObservable, fallback).toObservable();
   }
 
   private Observable<Response> getRibbonObservable(String serviceName, Request request) {
     ILoadBalancer loadBalancer = namedLoadBalancers.getUnchecked(serviceName);
-    LoadBalancerObservableCommand<Response> command = CommandBuilder.<Response>newBuilder()
+
+    LoadBalancerCommand<Response> command = LoadBalancerCommand.<Response>builder()
         .withLoadBalancer(loadBalancer)
-        .build(new LoadBalancerObservable<Response>() {
-          @Override
-          public Observable<Response> call(Server server) {
-            return getHttpObservable(serviceName, RequestUtil.buildUrlPrefix(server), request);
-          }
-        });
-    return command.toObservable();
+        .build();
+
+    ServerOperation<Response> operation = new ServerOperation<Response>() {
+      @Override
+      public Observable<Response> call(Server server) {
+        return getHttpObservable(serviceName, RequestUtil.buildUrlPrefix(server), request);
+      }
+    };
+
+    return command.submit(operation);
   }
 
   private Observable<Response> getHttpObservable(String serviceName, String urlPrefix, Request request) {

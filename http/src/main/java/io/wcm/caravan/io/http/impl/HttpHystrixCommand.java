@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,13 +48,14 @@ class HttpHystrixCommand extends HystrixObservableCommand<Response> {
     super(Setter
         .withGroupKey(HystrixCommandGroupKey.Factory.asKey(GROUP_KEY))
         .andCommandKey(HystrixCommandKey.Factory.asKey(serviceName)));
+
     this.serviceName = serviceName;
     this.observable = observable;
     this.fallback = fallback;
   }
 
   @Override
-  protected Observable<Response> run() {
+  protected Observable<Response> construct() {
     if (fallback != null) {
       // make sure errors are logged in log and not swallowed when hystrix falls back to fallback
       return observable.doOnError(new Action1<Throwable>() {
@@ -70,12 +71,12 @@ class HttpHystrixCommand extends HystrixObservableCommand<Response> {
   }
 
   @Override
-  protected Observable<Response> getFallback() {
+  protected Observable<Response> resumeWithFallback() {
     if (fallback != null) {
       return fallback;
     }
     else {
-      return super.getFallback();
+      return super.resumeWithFallback();
     }
   }
 
