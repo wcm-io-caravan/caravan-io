@@ -61,7 +61,7 @@ public class ResilientHttpServiceConfig {
   @Property(label = "Max. Auto Retries Next Server",
       description = "Ribbon: Max number of next servers to retry (excluding the first server).",
       intValue = ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIESONSERVER_DEFAULT)
-  static final String RIBBON_MAXAUTORETRIESONSERVER_PROPERTY = "ribbonMaxAutoRetriesNextServer";
+  static final String RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY = "ribbonMaxAutoRetriesNextServer";
   static final int RIBBON_MAXAUTORETRIESONSERVER_DEFAULT = 1;
 
   @Property(label = "Isolation Timeout",
@@ -183,7 +183,7 @@ public class ResilientHttpServiceConfig {
     archaiusConfig.setProperty(serviceName + RIBBON_PARAM_MAXAUTORETRIES,
         PropertiesUtil.toInteger(config.get(RIBBON_MAXAUTORETRIES_PROPERTY), RIBBON_MAXAUTORETRIES_DEFAULT));
     archaiusConfig.setProperty(serviceName + RIBBON_PARAM_MAXAUTORETRIESONSERVER,
-        PropertiesUtil.toInteger(config.get(RIBBON_MAXAUTORETRIESONSERVER_PROPERTY), RIBBON_MAXAUTORETRIESONSERVER_DEFAULT));
+        PropertiesUtil.toInteger(config.get(RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY), RIBBON_MAXAUTORETRIESONSERVER_DEFAULT));
     archaiusConfig.setProperty(serviceName + RIBBON_PARAM_OKTORETRYONALLOPERATIONS, "true");
 
     // hystrix parameters

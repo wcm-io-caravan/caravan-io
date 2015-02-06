@@ -49,6 +49,7 @@ import rx.Subscriber;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.netflix.client.ClientException;
 import com.netflix.client.ClientFactory;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
@@ -75,6 +76,7 @@ public class ResilientHttpImpl implements ResilientHttp {
   // defined within ClientFactory, because that list will outlive our ResilientHttpImpl instance, and may
   // contain an outdated server list (especially in unit-tests)
   private LoadingCache<String, ILoadBalancer> namedLoadBalancers = CacheBuilder.newBuilder().build(new CacheLoader<String, ILoadBalancer>() {
+
     @Override
     public ILoadBalancer load(String key) throws Exception {
       IClientConfig clientConfig = ClientFactory.getNamedConfig(key, DefaultClientConfigImpl.class);
@@ -98,7 +100,7 @@ public class ResilientHttpImpl implements ResilientHttp {
     if (ex instanceof RequestFailedRuntimeException || ex instanceof IllegalResponseRuntimeException) {
       return ex;
     }
-    if (ex instanceof HystrixRuntimeException && ex.getCause() != null) {
+    if ((ex instanceof HystrixRuntimeException || ex instanceof ClientException) && ex.getCause() != null) {
       return mapToKnownException(serviceName, request, ex.getCause());
     }
     throw new RequestFailedRuntimeException(serviceName, request,
@@ -116,12 +118,16 @@ public class ResilientHttpImpl implements ResilientHttp {
 
   private Observable<Response> getRibbonObservable(String serviceName, Request request) {
     ILoadBalancer loadBalancer = namedLoadBalancers.getUnchecked(serviceName);
+    IClientConfig config = ClientFactory.getNamedConfig(serviceName, DefaultClientConfigImpl.class);
 
     LoadBalancerCommand<Response> command = LoadBalancerCommand.<Response>builder()
         .withLoadBalancer(loadBalancer)
+        .withClientConfig(config)
+        .withRetryHandler(new CaravanLoadBalancerRetryHandler(config))
         .build();
 
     ServerOperation<Response> operation = new ServerOperation<Response>() {
+
       @Override
       public Observable<Response> call(Server server) {
         return getHttpObservable(serviceName, RequestUtil.buildUrlPrefix(server), request);
