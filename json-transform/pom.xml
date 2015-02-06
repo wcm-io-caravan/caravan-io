@@ -20,115 +20,115 @@
   -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>io.wcm.caravan</groupId>
-		<artifactId>io.wcm.caravan.parent_toplevel</artifactId>
-		<version>0.2.1-SNAPSHOT</version>
-		<relativePath>../../parent_toplevel/pom.xml</relativePath>
-	</parent>
+  <parent>
+    <groupId>io.wcm.caravan</groupId>
+    <artifactId>io.wcm.caravan.parent_toplevel</artifactId>
+    <version>0.2.1-SNAPSHOT</version>
+    <relativePath>../../parent_toplevel/pom.xml</relativePath>
+  </parent>
 
-	<groupId>io.wcm.caravan</groupId>
-	<artifactId>io.wcm.caravan.io.json-transform</artifactId>
-	<version>0.2.0-SNAPSHOT</version>
-	<packaging>bundle</packaging>
+  <groupId>io.wcm.caravan</groupId>
+  <artifactId>io.wcm.caravan.io.json-transform</artifactId>
+  <version>0.2.0-SNAPSHOT</version>
+  <packaging>bundle</packaging>
 
-	<name>JSON Transform</name>
-	<description>A stream based JSON manipulation library.</description>
+  <name>JSON Transform</name>
+  <description>A stream based JSON manipulation library.</description>
 
-	<scm>
-	  <connection>scm:git:git@github.com:wcm-io/wcm-io-caravan.git</connection>
-		<developerConnection>scm:git:git@github.com:wcm-io/wcm-io-caravan.git</developerConnection>
-		<url>https://github.com/wcm-io/wcm-io-caravan</url> <tag>HEAD</tag>
-	</scm>
+  <scm>
+    <connection>scm:git:git@github.com:wcm-io/wcm-io-caravan.git</connection>
+    <developerConnection>scm:git:git@github.com:wcm-io/wcm-io-caravan.git</developerConnection>
+    <url>https://github.com/wcm-io/wcm-io-caravan</url> <tag>HEAD</tag>
+  </scm>
 
-	<dependencies>
+  <dependencies>
 
-		<!-- OSGi -->
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.http.api</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.sling</groupId>
-			<artifactId>org.apache.sling.commons.osgi</artifactId>
-			<scope>provided</scope>
-		</dependency>
+    <!-- OSGi -->
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.http.api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.commons.osgi</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
-		<!-- Standard APIs -->
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<scope>compile</scope>
-		</dependency>
+    <!-- Standard APIs -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <scope>compile</scope>
+    </dependency>
 
-		<!-- Commons -->
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<scope>provided</scope>
-		</dependency>
+    <!-- Commons -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-core</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<scope>provided</scope>
-		</dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
-	</dependencies>
+  </dependencies>
 
-	<build>
-		<plugins>
+  <build>
+    <plugins>
 
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-			</plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+      </plugin>
 
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-scr-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>generate-scr-scrdescriptor</id>
-						<goals>
-							<goal>scr</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-scr-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-scr-scrdescriptor</id>
+            <goals>
+              <goal>scr</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
 
-			<plugin>
-				<groupId>org.apache.sling</groupId>
-				<artifactId>maven-sling-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>validate-bundle</id>
-						<goals>
-							<goal>validate</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+      <plugin>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>maven-sling-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>validate-bundle</id>
+            <goals>
+              <goal>validate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

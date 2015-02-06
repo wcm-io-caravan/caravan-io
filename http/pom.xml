@@ -45,7 +45,7 @@
   </scm>
 
   <dependencies>
-  
+
     <dependency>
       <groupId>io.wcm.caravan</groupId>
       <artifactId>io.wcm.caravan.commons.stream</artifactId>
@@ -259,7 +259,7 @@
     </plugins>
     <pluginManagement>
       <plugins>
-      
+
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>license-maven-plugin</artifactId>
