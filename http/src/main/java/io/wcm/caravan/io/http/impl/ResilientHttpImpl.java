@@ -72,18 +72,26 @@ public class ResilientHttpImpl implements ResilientHttp {
 
   private static final Logger log = LoggerFactory.getLogger(ResilientHttpImpl.class);
 
-  // replaces ClientFactory#getNamedLoadBalancer() - we don't want to use the static map of ILoadBalancerInstances
-  // defined within ClientFactory, because that list will outlive our ResilientHttpImpl instance, and may
-  // contain an outdated server list (especially in unit-tests)
-  private LoadingCache<String, ILoadBalancer> namedLoadBalancers = CacheBuilder.newBuilder().build(new CacheLoader<String, ILoadBalancer>() {
+  /** a cached map of pre-configured LoadBalancerCommand instances for every logical serviceNae */
+  private LoadingCache<String, LoadBalancerCommand<Response>> namedLoadBalancercommands = CacheBuilder.newBuilder().build(
+      new CacheLoader<String, LoadBalancerCommand<Response>>() {
 
-    @Override
-    public ILoadBalancer load(String key) throws Exception {
-      IClientConfig clientConfig = ClientFactory.getNamedConfig(key, DefaultClientConfigImpl.class);
-      String loadBalancerClassName = clientConfig.get(CommonClientConfigKey.NFLoadBalancerClassName);
-      return (ILoadBalancer)ClientFactory.instantiateInstanceWithClientConfig(loadBalancerClassName, clientConfig);
-    }
-  });
+        @Override
+        public LoadBalancerCommand<Response> load(String key) throws Exception {
+          IClientConfig clientConfig = ClientFactory.getNamedConfig(key, DefaultClientConfigImpl.class);
+          String loadBalancerClassName = clientConfig.get(CommonClientConfigKey.NFLoadBalancerClassName);
+          ILoadBalancer loadBalancer = (ILoadBalancer)ClientFactory.instantiateInstanceWithClientConfig(loadBalancerClassName, clientConfig);
+          IClientConfig config = ClientFactory.getNamedConfig(key, DefaultClientConfigImpl.class);
+
+          LoadBalancerCommand<Response> command = LoadBalancerCommand.<Response>builder()
+              .withLoadBalancer(loadBalancer)
+              .withClientConfig(config)
+              .withRetryHandler(new CaravanLoadBalancerRetryHandler(config))
+              .build();
+
+          return command;
+        }
+      });
 
   @Override
   public Observable<Response> execute(String serviceName, Request request) {
@@ -117,14 +125,8 @@ public class ResilientHttpImpl implements ResilientHttp {
   }
 
   private Observable<Response> getRibbonObservable(String serviceName, Request request) {
-    ILoadBalancer loadBalancer = namedLoadBalancers.getUnchecked(serviceName);
-    IClientConfig config = ClientFactory.getNamedConfig(serviceName, DefaultClientConfigImpl.class);
 
-    LoadBalancerCommand<Response> command = LoadBalancerCommand.<Response>builder()
-        .withLoadBalancer(loadBalancer)
-        .withClientConfig(config)
-        .withRetryHandler(new CaravanLoadBalancerRetryHandler(config))
-        .build();
+    LoadBalancerCommand<Response> command = namedLoadBalancercommands.getUnchecked(serviceName);
 
     ServerOperation<Response> operation = new ServerOperation<Response>() {
 
