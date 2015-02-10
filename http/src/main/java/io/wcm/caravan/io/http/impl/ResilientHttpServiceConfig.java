@@ -56,13 +56,13 @@ public class ResilientHttpServiceConfig {
       description = "Ribbon: Max number of retries on the same server (excluding the first try).",
       intValue = ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIES_DEFAULT)
   static final String RIBBON_MAXAUTORETRIES_PROPERTY = "ribbonMaxAutoRetries";
-  static final int RIBBON_MAXAUTORETRIES_DEFAULT = 1;
+  static final int RIBBON_MAXAUTORETRIES_DEFAULT = 0;
 
   @Property(label = "Max. Auto Retries Next Server",
       description = "Ribbon: Max number of next servers to retry (excluding the first server).",
       intValue = ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIESONSERVER_DEFAULT)
   static final String RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY = "ribbonMaxAutoRetriesNextServer";
-  static final int RIBBON_MAXAUTORETRIESONSERVER_DEFAULT = 1;
+  static final int RIBBON_MAXAUTORETRIESONSERVER_DEFAULT = 0;
 
   @Property(label = "Isolation Timeout",
       description = "Hystrix: Time in milliseconds after which the calling thread will timeout and walk away from the "
