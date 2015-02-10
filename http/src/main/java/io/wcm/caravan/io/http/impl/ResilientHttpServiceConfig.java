@@ -115,6 +115,10 @@ public class ResilientHttpServiceConfig {
   static final String HYSTRIX_CIRCUITBREAKER_FORCECLOSED_PROPERTY = "hystrixCircuitBreakerForceClosed";
   static final boolean HYSTRIX_CIRCUITBREAKER_FORCECLOSED_DEFAULT = false;
 
+  @Property(label = "Thread Pool Name",
+      description = "Hystrix: Overrides the default thread pool for the service")
+  static final String HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY = "hystrixThreadPoolKeyOverride";
+
   private static final Logger log = LoggerFactory.getLogger(ResilientHttpServiceConfig.class);
 
   private static final String RIBBON_PARAM_LISTOFSERVERS = ".ribbon.listOfServers";
@@ -131,6 +135,7 @@ public class ResilientHttpServiceConfig {
   private static final String HYSTRIX_PARAM_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE = ".circuitBreaker.errorThresholdPercentage";
   private static final String HYSTRIX_PARAM_CIRCUITBREAKER_FORCEOPEN = ".circuitBreaker.forceOpen";
   private static final String HYSTRIX_PARAM_CIRCUITBREAKER_FORCECLOSED = ".circuitBreaker.forceClosed";
+  private static final String HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE = ".threadPoolKeyOverride";
 
   @Activate
   protected void activate(Map<String, Object> config) {
@@ -187,11 +192,9 @@ public class ResilientHttpServiceConfig {
     archaiusConfig.setProperty(serviceName + RIBBON_PARAM_OKTORETRYONALLOPERATIONS, "true");
 
     // hystrix parameters
-
-    // make sure to set a queue size big enough so requests won't be immediately rejected while pre-caching.
-    // TODO: make this configurable per server and/or investigate why this requests failed immediately with ExecutionIsolationStrategy.SEMAPHORE
-    archaiusConfig.setProperty("hystrix.threadpool.default.queueSizeRejectionThreshold", 4096);
-    archaiusConfig.setProperty("hystrix.threadpool.default.maxQueueSize", 4096);
+    archaiusConfig.setProperty("hystrix.threadpool.default.maxQueueSize", ResilientHttpThreadPoolConfig.HYSTRIX_THREADPOOL_MAXQUEUESIZE_DEFAULT);
+    archaiusConfig.setProperty("hystrix.threadpool.default.queueSizeRejectionThreshold",
+        ResilientHttpThreadPoolConfig.HYSTRIX_THREADPOOL_QUEUESIZEREJECTIONTHRESHOLD_DEFAULT);
 
     archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_TIMEOUT_MS,
         PropertiesUtil.toInteger(config.get(HYSTRIX_TIMEOUT_MS_PROPERTY), HYSTRIX_TIMEOUT_MS_DEFAULT));
@@ -210,6 +213,11 @@ public class ResilientHttpServiceConfig {
         PropertiesUtil.toBoolean(config.get(HYSTRIX_CIRCUITBREAKER_FORCEOPEN_PROPERTY), HYSTRIX_CIRCUITBREAKER_FORCEOPEN_DEFAULT));
     archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_FORCECLOSED,
         PropertiesUtil.toBoolean(config.get(HYSTRIX_CIRCUITBREAKER_FORCECLOSED_PROPERTY), HYSTRIX_CIRCUITBREAKER_FORCECLOSED_DEFAULT));
+    if (config.get(HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY) != null) {
+      // thread pool name
+      archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE,
+          config.get(HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY));
+    }
   }
 
   /**
@@ -234,6 +242,7 @@ public class ResilientHttpServiceConfig {
     archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE);
     archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_FORCEOPEN);
     archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_FORCECLOSED);
+    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE);
   }
 
 }

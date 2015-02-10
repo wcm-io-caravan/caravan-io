@@ -74,6 +74,7 @@ public class ResilientHttpImplTest {
 
   private String wireMockHost;
   private ResilientHttpServiceConfig serviceConfig;
+  private ResilientHttpThreadPoolConfig threadPoolConfig;
   private HttpClientFactory httpClientFactory;
   private ResilientHttp underTest;
 
@@ -85,6 +86,8 @@ public class ResilientHttpImplTest {
     wireMockHost = "localhost:" + wireMock.port();
 
     serviceConfig = context.registerInjectActivateService(new ResilientHttpServiceConfig(), getServiceConfigProperties(wireMockHost));
+    threadPoolConfig = context.registerInjectActivateService(new ResilientHttpThreadPoolConfig(),
+        ImmutableMap.of(ResilientHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
 
     httpClientFactory = context.registerInjectActivateService(new HttpClientFactoryImpl());
     underTest = context.registerInjectActivateService(new ResilientHttpImpl());
@@ -128,17 +131,17 @@ public class ResilientHttpImplTest {
     MockOsgi.deactivate(underTest);
     MockOsgi.deactivate(httpClientFactory);
     MockOsgi.deactivate(serviceConfig);
+    MockOsgi.deactivate(threadPoolConfig);
   }
 
   @Test(expected = RequestFailedRuntimeException.class)
-  public void testWithoutConfig() throws IOException {
+  public void testWithoutConfig() {
 
     // remove host config - service name is required to clear archaius properties
     MockOsgi.deactivate(serviceConfig, getServiceConfigProperties(""));
 
     Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_200_URI).request());
-    Response response = observable.toBlocking().single();
-    System.out.println(response.body().asString());
+    observable.toBlocking().single();
   }
 
   @Test

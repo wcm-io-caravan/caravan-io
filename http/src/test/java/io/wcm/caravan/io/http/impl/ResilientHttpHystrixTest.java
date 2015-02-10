@@ -144,5 +144,4 @@ public class ResilientHttpHystrixTest {
     return HystrixCircuitBreaker.Factory.getInstance(HystrixCommandKey.Factory.asKey(SERVICE_NAME));
   }
 
-
 }
