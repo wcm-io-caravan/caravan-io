@@ -24,12 +24,18 @@ import io.wcm.caravan.io.hal.domain.CompactUri;
 import io.wcm.caravan.io.hal.domain.EmbeddedResource;
 import io.wcm.caravan.io.hal.domain.HalResource;
 import io.wcm.caravan.io.hal.domain.Link;
+import io.wcm.caravan.io.hal.mapper.JsonMapper;
 import io.wcm.caravan.io.hal.mapper.ResourceMapper;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
@@ -44,6 +50,12 @@ public class JacksonHalResourceWriterTest {
 
   @Test
   public void test_simple() {
+    HalResource resource = createHalResource();
+    ObjectNode json = underTest.toObjectNode(resource);
+    assertEquals(2, json.at("/_embedded/friends").size());
+  }
+
+  protected HalResource createHalResource() {
     List<Dummy> friends = Lists.newArrayList(new Dummy(3, "dummy3"), new Dummy(4, "dummy4"));
     HalResource resource = new HalResource()
     .setState(DUMMY)
@@ -52,9 +64,55 @@ public class JacksonHalResourceWriterTest {
     .setEmbeddedResource("friend", new EmbeddedResource(new HalResource().setState(new Dummy(2, "dummy2")).setLink("self", new Link("/dummy-service/2"))))
     .setEmbeddedResource("friends", HalResourceFactory.createEmbeddedResources(friends, new DummyMapper()))
     .addCuri(new CompactUri("documentation", "http://localhost/documentation"));
-    ObjectNode json = underTest.toObjectNode(resource);
-    System.out.println(json);
-    assertEquals(2, json.at("/_embedded/friends").size());
+    return resource;
+  }
+
+  @Test
+  public void test_performance() throws JsonParseException, JsonMappingException, IOException {
+    int runs = 10000;
+    String json = "";
+
+    HalResource objectResource = createHalResource();
+    long start = System.currentTimeMillis();
+    for (int i = 0; i < runs; i++) {
+      json = underTest.toString(objectResource);
+    }
+    double timePerSerializationByObject = Double.valueOf(System.currentTimeMillis() - start) / runs;
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    JsonNode input = objectMapper.readValue(json.getBytes(), JsonNode.class);
+    DummyJsonMapper mapper = new DummyJsonMapper(objectMapper);
+    HalResource jsonResource = HalResourceFactory.createResource(input, mapper)
+        .setLinks("others", ImmutableList.of(new Link("/others/1"), new Link("/others/2")))
+        .setEmbeddedResource("friend", HalResourceFactory.createEmbeddedResource(input.at("/_embedded/friend"), mapper))
+        .setEmbeddedResource("friends", HalResourceFactory.createEmbeddedResources(input.at("/_embedded/friends"), mapper));
+    start = System.currentTimeMillis();
+    for (int i = 0; i < runs; i++) {
+      json = underTest.toString(jsonResource);
+    }
+    double timePerSerializationByJson = Double.valueOf(System.currentTimeMillis() - start) / runs;
+
+    LoggerFactory.getLogger(getClass()).info(
+        String.format("Took %fms for object and %fms for json serialization", timePerSerializationByObject, timePerSerializationByJson));
+  }
+
+  public static class DummyJsonMapper extends JsonMapper {
+
+    public DummyJsonMapper(final ObjectMapper objectMapper) {
+      super(objectMapper, "/test-service/%s", "/id", "/name");
+    }
+
+    @Override
+    public ObjectNode getEmbeddedResource(JsonNode resource) {
+      return super.getEmbeddedResource(resource).put("id", getId(resource));
+    }
+
+    @Override
+    public ObjectNode getResource(JsonNode resource) {
+      return getEmbeddedResource(resource);
+    }
+
+
   }
 
   public static class Dummy {
@@ -84,7 +142,7 @@ public class JacksonHalResourceWriterTest {
 
     @Override
     public ObjectNode getEmbeddedResource(Dummy resource) {
-      return objectMapper.createObjectNode().put("name", resource.name);
+      return objectMapper.createObjectNode().put("id", resource.id).put("name", resource.name);
     }
 
     @Override
