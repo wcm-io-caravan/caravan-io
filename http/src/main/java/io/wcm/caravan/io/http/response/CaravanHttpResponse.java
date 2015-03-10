@@ -31,51 +31,53 @@ import java.io.Reader;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
 /**
  * An immutable response to an http invocation which only returns string
  * content.
  */
 //CHECKSTYLE:OFF
-public final class Response {
+public final class CaravanHttpResponse {
 
   private final int status;
   private final String reason;
-  private final Map<String, Collection<String>> headers;
+  private final Multimap<String, String> headers;
   private final Body body;
 
-  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
+  public static CaravanHttpResponse create(int status, String reason, Multimap<String, String> headers,
       InputStream inputStream, Integer length) {
-    return new Response(status, reason, headers, InputStreamBody.orNull(inputStream, length));
+    return new CaravanHttpResponse(status, reason, headers, InputStreamBody.orNull(inputStream, length));
   }
 
-  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
+  public static CaravanHttpResponse create(int status, String reason, Multimap<String, String> headers,
       byte[] data) {
-    return new Response(status, reason, headers, ByteArrayBody.orNull(data));
+    return new CaravanHttpResponse(status, reason, headers, ByteArrayBody.orNull(data));
   }
 
-  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
+  public static CaravanHttpResponse create(int status, String reason, Multimap<String, String> headers,
       String text, Charset charset) {
-    return new Response(status, reason, headers, ByteArrayBody.orNull(text, charset));
+    return new CaravanHttpResponse(status, reason, headers, ByteArrayBody.orNull(text, charset));
   }
 
-  private Response(int status, String reason, Map<String, Collection<String>> headers, Body body) {
+  private CaravanHttpResponse(int status, String reason, Multimap<String, String> headers, Body body) {
     checkState(status >= 200, "Invalid status code: %s", status);
     this.status = status;
     this.reason = checkNotNull(reason, "reason");
-    LinkedHashMap<String, Collection<String>> copyOf = new LinkedHashMap<String, Collection<String>>();
-    copyOf.putAll(checkNotNull(headers, "headers"));
-    this.headers = Collections.unmodifiableMap(copyOf);
+    Multimap<String, String> copyOf = LinkedHashMultimap.create(checkNotNull(headers, "headers"));
+    this.headers = ImmutableMultimap.copyOf(copyOf);
     this.body = body; //nullable
   }
 
@@ -90,8 +92,23 @@ public final class Response {
     return reason;
   }
 
-  public Map<String, Collection<String>> headers() {
+  public Multimap<String, String> headers() {
     return headers;
+  }
+
+  /**
+   * Returns a specific header represented as a {@link Map}. Therefore splits the entries of one header by
+   * {code}:{code}. If the entry has no value gets interpreted as a boolean and set to true.
+   * @param headerName The name of the header to convert
+   * @return A map representation of the header
+   */
+  public Map<String, Object> getHeaderAsMap(final String headerName) {
+    Map<String, Object> headerMap = Maps.newHashMap();
+    for (String line : headers.get(headerName)) {
+      String[] tokens = line.split(":", 2);
+      headerMap.put(tokens[0], tokens.length == 1 ? true : StringUtils.trim(tokens[1]));
+    }
+    return headerMap;
   }
 
   /**
@@ -136,7 +153,7 @@ public final class Response {
 
   }
 
-  private static final class InputStreamBody implements Response.Body {
+  private static final class InputStreamBody implements CaravanHttpResponse.Body {
 
     private static Body orNull(InputStream inputStream, Integer length) {
       if (inputStream == null) {
@@ -190,7 +207,7 @@ public final class Response {
 
   }
 
-  private static final class ByteArrayBody implements Response.Body {
+  private static final class ByteArrayBody implements CaravanHttpResponse.Body {
 
     private static Body orNull(byte[] data) {
       if (data == null) {

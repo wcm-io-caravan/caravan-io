@@ -19,7 +19,7 @@
  */
 package io.wcm.caravan.io.http;
 
-import io.wcm.caravan.io.http.request.Request;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 
 /**
  * Exception is thrown when a resilient HTTP request failed before a response was received.
@@ -28,7 +28,7 @@ public final class RequestFailedRuntimeException extends RuntimeException {
   private static final long serialVersionUID = 1L;
 
   private final String serviceName;
-  private final Request request;
+  private final CaravanHttpRequest request;
 
   /**
    * @param serviceName Service name
@@ -36,7 +36,7 @@ public final class RequestFailedRuntimeException extends RuntimeException {
    * @param message Error message
    * @param cause Cause (may be null)
    */
-  public RequestFailedRuntimeException(String serviceName, Request request, String message, Throwable cause) {
+  public RequestFailedRuntimeException(String serviceName, CaravanHttpRequest request, String message, Throwable cause) {
     super(serviceName + ": " + message, cause);
     this.serviceName = serviceName;
     this.request = request;
@@ -52,7 +52,7 @@ public final class RequestFailedRuntimeException extends RuntimeException {
   /**
    * @return Request
    */
-  public Request getRequest() {
+  public CaravanHttpRequest getRequest() {
     return this.request;
   }
 

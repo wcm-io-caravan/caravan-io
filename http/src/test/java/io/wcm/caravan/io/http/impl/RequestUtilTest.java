@@ -21,12 +21,10 @@ package io.wcm.caravan.io.http.impl;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import io.wcm.caravan.io.http.request.RequestTemplate;
+import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -41,7 +39,8 @@ import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.Multimap;
 import com.netflix.loadbalancer.Server;
 
 public class RequestUtilTest {
@@ -56,26 +55,23 @@ public class RequestUtilTest {
 
   @Test
   public void testBuildHttpRequest_Get() {
-    RequestTemplate template = new RequestTemplate().method("get").append("/path")
+    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("get").append("/path")
         .header("header1", "value1")
         .header("header2", "value2", "value3");
-    HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.request());
+    HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.build());
 
     assertEquals("http://host/path", request.getURI().toString());
     assertEquals(HttpGet.METHOD_NAME, request.getMethod());
 
-    Map<String, Collection<String>> expected = ImmutableMap.<String, Collection<String>>of(
-        "header1", ImmutableList.of("value1"),
-        "header2", ImmutableList.of("value2", "value3")
-        );
+    Multimap<String, String> expected = ImmutableListMultimap.<String, String>builder().put("header1", "value1").putAll("header2", "value2", "value3").build();
     assertEquals(expected, RequestUtil.toHeadersMap(request.getAllHeaders()));
   }
 
   @Test
   public void testBuildHttpRequest_Post() throws ParseException, IOException {
-    RequestTemplate template = new RequestTemplate().method("post").append("/path")
+    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("post").append("/path")
         .body("string body");
-    HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.request());
+    HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.build());
 
     assertEquals("http://host/path", request.getURI().toString());
     assertEquals(HttpPost.METHOD_NAME, request.getMethod());
@@ -89,9 +85,9 @@ public class RequestUtilTest {
     byte[] data = new byte[] {
         0x01, 0x02, 0x03, 0x04, 0x05
     };
-    RequestTemplate template = new RequestTemplate().method("put").append("/path")
+    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("put").append("/path")
         .body(data, null);
-    HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.request());
+    HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.build());
 
     assertEquals("http://host/path", request.getURI().toString());
     assertEquals(HttpPut.METHOD_NAME, request.getMethod());
@@ -102,8 +98,8 @@ public class RequestUtilTest {
 
   @Test
   public void testBuildHttpRequest_Delete() {
-    RequestTemplate template = new RequestTemplate().method("delete").append("/path");
-    HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.request());
+    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("delete").append("/path");
+    HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.build());
 
     assertEquals("http://host/path", request.getURI().toString());
     assertEquals(HttpDelete.METHOD_NAME, request.getMethod());
@@ -111,7 +107,7 @@ public class RequestUtilTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testBuildHttpRequest_Invalid() {
-    RequestUtil.buildHttpRequest("http://host", new RequestTemplate().method("invalid").append("/path").request());
+    RequestUtil.buildHttpRequest("http://host", new CaravanHttpRequestBuilder().method("invalid").append("/path").build());
   }
 
   @Test
@@ -121,12 +117,8 @@ public class RequestUtilTest {
         new BasicHeader("header2", "value2"),
         new BasicHeader("header2", "value3"));
 
-    Map<String, Collection<String>> expected = ImmutableMap.<String, Collection<String>>of(
-        "header1", ImmutableList.of("value1"),
-        "header2", ImmutableList.of("value2", "value3")
-        );
+    Multimap<String, String> expected = ImmutableListMultimap.<String, String>builder().put("header1", "value1").putAll("header2", "value2", "value3").build();
 
     assertEquals(expected, RequestUtil.toHeadersMap(headers.toArray(new Header[headers.size()])));
   }
-
 }

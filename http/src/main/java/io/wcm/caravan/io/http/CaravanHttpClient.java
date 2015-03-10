@@ -19,15 +19,15 @@
  */
 package io.wcm.caravan.io.http;
 
-import io.wcm.caravan.io.http.request.Request;
-import io.wcm.caravan.io.http.response.Response;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 import rx.Observable;
 
 /**
  * Resilient transport layer that can execute any request asynchronously and
  * applying software load balancing and circuit breaking.
  */
-public interface ResilientHttp {
+public interface CaravanHttpClient {
 
   /**
    * Execute request.
@@ -35,7 +35,7 @@ public interface ResilientHttp {
    * @param request Request
    * @return Response
    */
-  Observable<Response> execute(String serviceName, Request request);
+  Observable<CaravanHttpResponse> execute(String serviceName, CaravanHttpRequest request);
 
   /**
    * Execute request.
@@ -44,6 +44,6 @@ public interface ResilientHttp {
    * @param fallback Function that returns a fallback that is returned when the call fails.
    * @return Response
    */
-  Observable<Response> execute(String serviceName, Request request, Observable<Response> fallback);
+  Observable<CaravanHttpResponse> execute(String serviceName, CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback);
 
 }

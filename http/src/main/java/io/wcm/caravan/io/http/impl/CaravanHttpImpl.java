@@ -22,9 +22,9 @@ package io.wcm.caravan.io.http.impl;
 import io.wcm.caravan.commons.httpclient.HttpClientFactory;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
-import io.wcm.caravan.io.http.ResilientHttp;
-import io.wcm.caravan.io.http.request.Request;
-import io.wcm.caravan.io.http.response.Response;
+import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -61,29 +61,29 @@ import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
 import com.netflix.loadbalancer.reactive.ServerOperation;
 
 /**
- * Default implementation of {@link ResilientHttp}.
+ * Default implementation of {@link CaravanHttpClient}.
  */
 @Component(immediate = true)
-@Service(ResilientHttp.class)
-public class ResilientHttpImpl implements ResilientHttp {
+@Service(CaravanHttpClient.class)
+public class CaravanHttpImpl implements CaravanHttpClient {
 
   @Reference
   private HttpClientFactory httpClientFactory;
 
-  private static final Logger log = LoggerFactory.getLogger(ResilientHttpImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(CaravanHttpImpl.class);
 
   /** a cached map of pre-configured LoadBalancerCommand instances for every logical serviceNae */
-  private LoadingCache<String, LoadBalancerCommand<Response>> namedLoadBalancercommands = CacheBuilder.newBuilder().build(
-      new CacheLoader<String, LoadBalancerCommand<Response>>() {
+  private LoadingCache<String, LoadBalancerCommand<CaravanHttpResponse>> namedLoadBalancercommands = CacheBuilder.newBuilder().build(
+      new CacheLoader<String, LoadBalancerCommand<CaravanHttpResponse>>() {
 
         @Override
-        public LoadBalancerCommand<Response> load(String key) throws Exception {
+        public LoadBalancerCommand<CaravanHttpResponse> load(String key) throws Exception {
           IClientConfig clientConfig = ClientFactory.getNamedConfig(key, DefaultClientConfigImpl.class);
           String loadBalancerClassName = clientConfig.get(CommonClientConfigKey.NFLoadBalancerClassName);
           ILoadBalancer loadBalancer = (ILoadBalancer)ClientFactory.instantiateInstanceWithClientConfig(loadBalancerClassName, clientConfig);
           IClientConfig config = ClientFactory.getNamedConfig(key, DefaultClientConfigImpl.class);
 
-          LoadBalancerCommand<Response> command = LoadBalancerCommand.<Response>builder()
+          LoadBalancerCommand<CaravanHttpResponse> command = LoadBalancerCommand.<CaravanHttpResponse>builder()
               .withLoadBalancer(loadBalancer)
               .withClientConfig(config)
               .withRetryHandler(new CaravanLoadBalancerRetryHandler(config))
@@ -94,17 +94,17 @@ public class ResilientHttpImpl implements ResilientHttp {
       });
 
   @Override
-  public Observable<Response> execute(String serviceName, Request request) {
+  public Observable<CaravanHttpResponse> execute(String serviceName, CaravanHttpRequest request) {
     return execute(serviceName, request, null);
   }
 
   @Override
-  public Observable<Response> execute(String serviceName, Request request, Observable<Response> fallback) {
+  public Observable<CaravanHttpResponse> execute(String serviceName, CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback) {
     return getHystrixObservable(serviceName, request, fallback)
-        .onErrorResumeNext(exception -> Observable.<Response>error(mapToKnownException(serviceName, request, exception)));
+        .onErrorResumeNext(exception -> Observable.<CaravanHttpResponse>error(mapToKnownException(serviceName, request, exception)));
   }
 
-  private Throwable mapToKnownException(String serviceName, Request request, Throwable ex) {
+  private Throwable mapToKnownException(String serviceName, CaravanHttpRequest request, Throwable ex) {
     if (ex instanceof RequestFailedRuntimeException || ex instanceof IllegalResponseRuntimeException) {
       return ex;
     }
@@ -115,23 +115,23 @@ public class ResilientHttpImpl implements ResilientHttp {
         StringUtils.defaultString(ex.getMessage(), ex.getClass().getSimpleName()), ex);
   }
 
-  private Observable<Response> getHystrixObservable(String serviceName, Request request, Observable<Response> fallback) {
+  private Observable<CaravanHttpResponse> getHystrixObservable(String serviceName, CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback) {
 
-    Observable<Response> ribbonObservable = getRibbonObservable(serviceName, request);
+    Observable<CaravanHttpResponse> ribbonObservable = getRibbonObservable(serviceName, request);
 
     // calling HttpHystrixCommand#observe() will immediately start the request, while #toObservable() will return a "lazy" Observable
     // that only initiates the request when a subscriber subscribes
     return new HttpHystrixCommand(serviceName, ribbonObservable, fallback).toObservable();
   }
 
-  private Observable<Response> getRibbonObservable(String serviceName, Request request) {
+  private Observable<CaravanHttpResponse> getRibbonObservable(String serviceName, CaravanHttpRequest request) {
 
-    LoadBalancerCommand<Response> command = namedLoadBalancercommands.getUnchecked(serviceName);
+    LoadBalancerCommand<CaravanHttpResponse> command = namedLoadBalancercommands.getUnchecked(serviceName);
 
-    ServerOperation<Response> operation = new ServerOperation<Response>() {
+    ServerOperation<CaravanHttpResponse> operation = new ServerOperation<CaravanHttpResponse>() {
 
       @Override
-      public Observable<Response> call(Server server) {
+      public Observable<CaravanHttpResponse> call(Server server) {
         return getHttpObservable(serviceName, RequestUtil.buildUrlPrefix(server), request);
       }
     };
@@ -139,11 +139,11 @@ public class ResilientHttpImpl implements ResilientHttp {
     return command.submit(operation);
   }
 
-  private Observable<Response> getHttpObservable(String serviceName, String urlPrefix, Request request) {
-    return Observable.<Response>create(new Observable.OnSubscribe<Response>() {
+  private Observable<CaravanHttpResponse> getHttpObservable(String serviceName, String urlPrefix, CaravanHttpRequest request) {
+    return Observable.<CaravanHttpResponse>create(new Observable.OnSubscribe<CaravanHttpResponse>() {
 
       @Override
-      public void call(final Subscriber<? super Response> subscriber) {
+      public void call(final Subscriber<? super CaravanHttpResponse> subscriber) {
         HttpUriRequest httpRequest = RequestUtil.buildHttpRequest(urlPrefix, request);
 
         if (log.isDebugEnabled()) {
@@ -165,7 +165,7 @@ public class ResilientHttpImpl implements ResilientHttp {
                 EntityUtils.consumeQuietly(entity);
               }
               else {
-                Response response = Response.create(status.getStatusCode(), status.getReasonPhrase(),
+                CaravanHttpResponse response = CaravanHttpResponse.create(status.getStatusCode(), status.getReasonPhrase(),
                     RequestUtil.toHeadersMap(result.getAllHeaders()),
                     entity.getContent(), entity.getContentLength() > 0 ? (int)entity.getContentLength() : null);
                 subscriber.onNext(response);

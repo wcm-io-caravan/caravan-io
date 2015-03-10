@@ -24,35 +24,37 @@ import io.wcm.caravan.commons.stream.Streams;
 
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
 /**
  * An immutable request to an http server.
  */
-public final class Request {
+public final class CaravanHttpRequest {
 
   private final String method;
   private final String url;
-  private final Map<String, Collection<String>> headers;
+  private final Multimap<String, String> headers;
   private final byte[] body;
   private final Charset charset;
 
-  Request(String method, String url, Map<String, Collection<String>> headers, byte[] body, Charset charset) {
+  CaravanHttpRequest(final String method, final String url, final Multimap<String, String> headers, final byte[] body, final Charset charset) {
     this.method = checkNotNull(method, "method of %s", url);
     this.url = checkNotNull(url, "url");
-    LinkedHashMap<String, Collection<String>> copyOf = new LinkedHashMap<String, Collection<String>>();
-    copyOf.putAll(checkNotNull(headers, "headers of %s %s", method, url));
-    this.headers = Collections.unmodifiableMap(copyOf);
-
+    Multimap<String, String> copyOf = LinkedHashMultimap.create(checkNotNull(headers, "headers of %s %s", method, url));
+    this.headers = ImmutableMultimap.copyOf(copyOf);
     this.body = body; // nullable
     this.charset = charset; // nullable
   }
@@ -68,8 +70,23 @@ public final class Request {
   }
 
   /** Ordered list of headers that will be sent to the server. */
-  public Map<String, Collection<String>> headers() {
+  public Multimap<String, String> headers() {
     return headers;
+  }
+
+  /**
+   * Returns a specific header represented as a {@link Map}. Therefore splits the entries of one header by
+   * {code}:{code}. If the entry has no value gets interpreted as a boolean and set to true.
+   * @param headerName The name of the header to convert
+   * @return A map representation of the header
+   */
+  public Map<String, Object> getHeaderAsMap(final String headerName) {
+    Map<String, Object> headerMap = Maps.newHashMap();
+    for (String line : headers.get(headerName)) {
+      String[] tokens = line.split(":", 2);
+      headerMap.put(tokens[0], tokens.length == 1 ? true : StringUtils.trim(tokens[1]));
+    }
+    return headerMap;
   }
 
   /**
@@ -85,6 +102,7 @@ public final class Request {
         .filter(param -> param.getName().equals(name))
         .iterator().hasNext();
   }
+
   /**
    * The character set with which the body is encoded, or null if unknown or not applicable. When this is
    * present, you can use {@code new String(req.body(), req.charset())} to access the body as a String.

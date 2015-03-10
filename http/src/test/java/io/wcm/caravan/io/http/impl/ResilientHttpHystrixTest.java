@@ -27,9 +27,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
-import io.wcm.caravan.io.http.ResilientHttp;
-import io.wcm.caravan.io.http.request.RequestTemplate;
-import io.wcm.caravan.io.http.response.Response;
+import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -60,14 +60,14 @@ public class ResilientHttpHystrixTest {
   @Rule
   public WireMockRule server = new WireMockRule(0);
   private String host;
-  private ResilientHttp underTest;
+  private CaravanHttpClient underTest;
 
   @Before
   public void setUp() {
 
     ArchaiusConfig.initialize();
     context.registerInjectActivateService(new HttpClientFactoryImpl());
-    underTest = context.registerInjectActivateService(new ResilientHttpImpl());
+    underTest = context.registerInjectActivateService(new CaravanHttpImpl());
 
     host = "localhost:" + server.port();
 
@@ -123,7 +123,7 @@ public class ResilientHttpHystrixTest {
     long before = metrics == null ? 0 : metrics.getHealthCounts().getTotalRequests();
     for (int i = 0; i < times; i++) {
       try {
-        Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(url).request());
+        Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(url).build());
         observable.toBlocking().single();
       }
       catch (IllegalResponseRuntimeException ex) {

@@ -20,14 +20,7 @@
 package io.wcm.caravan.io.http.impl;
 
 import io.wcm.caravan.commons.stream.Streams;
-import io.wcm.caravan.io.http.request.Request;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
@@ -40,7 +33,9 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import com.netflix.loadbalancer.Server;
 
 /**
@@ -76,7 +71,7 @@ final class RequestUtil {
    * @param request Requset
    * @return HTTP client request object
    */
-  public static HttpUriRequest buildHttpRequest(String urlPrefix, Request request) {
+  public static HttpUriRequest buildHttpRequest(String urlPrefix, CaravanHttpRequest request) {
     String url = urlPrefix + request.url();
 
     // http method
@@ -100,9 +95,7 @@ final class RequestUtil {
     }
 
     // headers
-    for (Entry<String, Collection<String>> entry : request.headers().entrySet()) {
-      Streams.of(entry.getValue()).forEach(value -> httpRequest.addHeader(entry.getKey(), value));
-    }
+    Streams.of(request.headers().entries()).forEach(e -> httpRequest.addHeader(e.getKey(), e.getValue()));
 
     // body
     if ((httpRequest instanceof HttpEntityEnclosingRequest) && request.body() != null) {
@@ -122,17 +115,10 @@ final class RequestUtil {
    * @param headerArray Http-client header array
    * @return Map with header values
    */
-  public static Map<String, Collection<String>> toHeadersMap(Header[] headerArray) {
-    Map<String, List<String>> headerMap = new HashMap<>();
-    for (Header header : headerArray) {
-      List<String> values = headerMap.get(header.getName());
-      if (values == null) {
-        values = new ArrayList<>();
-        headerMap.put(header.getName(), values);
-      }
-      values.add(header.getValue());
-    }
-    return ImmutableMap.copyOf(headerMap);
+  public static Multimap<String, String> toHeadersMap(Header[] headerArray) {
+    LinkedHashMultimap<String, String> headerMap = LinkedHashMultimap.create();
+    Streams.of(headerArray).forEach(h -> headerMap.put(h.getName(), h.getValue()));
+    return ImmutableListMultimap.copyOf(headerMap);
   }
 
 }

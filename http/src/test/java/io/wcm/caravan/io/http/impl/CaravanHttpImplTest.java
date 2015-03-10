@@ -27,9 +27,9 @@ import io.wcm.caravan.commons.httpclient.HttpClientFactory;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
-import io.wcm.caravan.io.http.ResilientHttp;
-import io.wcm.caravan.io.http.request.RequestTemplate;
-import io.wcm.caravan.io.http.response.Response;
+import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -53,7 +53,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Integration tests for HTTP communcation of transport layer.
  */
-public class ResilientHttpImplTest {
+public class CaravanHttpImplTest {
 
   private static final String SERVICE_NAME = "testService";
 
@@ -76,7 +76,7 @@ public class ResilientHttpImplTest {
   private ResilientHttpServiceConfig serviceConfig;
   private ResilientHttpThreadPoolConfig threadPoolConfig;
   private HttpClientFactory httpClientFactory;
-  private ResilientHttp underTest;
+  private CaravanHttpClient underTest;
 
   @Before
   public void setUp() {
@@ -90,7 +90,7 @@ public class ResilientHttpImplTest {
         ImmutableMap.of(ResilientHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
 
     httpClientFactory = context.registerInjectActivateService(new HttpClientFactoryImpl());
-    underTest = context.registerInjectActivateService(new ResilientHttpImpl());
+    underTest = context.registerInjectActivateService(new CaravanHttpImpl());
 
     // setup wiremock
     wireMock.stubFor(get(urlEqualTo(HTTP_200_URI))
@@ -140,39 +140,39 @@ public class ResilientHttpImplTest {
     // remove host config - service name is required to clear archaius properties
     MockOsgi.deactivate(serviceConfig, getServiceConfigProperties(""));
 
-    Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_200_URI).request());
+    Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_200_URI).build());
     observable.toBlocking().single();
   }
 
   @Test
   public void testHttp200() throws IOException {
-    Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_200_URI).request());
-    Response response = observable.toBlocking().single();
+    Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_200_URI).build());
+    CaravanHttpResponse response = observable.toBlocking().single();
     assertEquals(HttpServletResponse.SC_OK, response.status());
     assertEquals(DUMMY_CONTENT, response.body().asString());
   }
 
   @Test
   public void testHttp404() {
-    Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_404_URI).request());
-    Response response = observable.toBlocking().single();
+    Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_404_URI).build());
+    CaravanHttpResponse response = observable.toBlocking().single();
     assertEquals(HttpServletResponse.SC_NOT_FOUND, response.status());
   }
 
   @Test(expected = IllegalResponseRuntimeException.class)
   public void testHttp500() {
-    Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_500_URI).request());
+    Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_500_URI).build());
     observable.toBlocking().single();
   }
 
   /** used by #testHttpSimultaneousRequests to count how many requests habe been completed, and detect errors */
-  private static final class ResponseObserver implements Observer<Response> {
+  private static final class ResponseObserver implements Observer<CaravanHttpResponse> {
 
     private Throwable error;
     private AtomicInteger completedCount = new AtomicInteger();
 
     @Override
-    public synchronized void onNext(Response t) {
+    public synchronized void onNext(CaravanHttpResponse t) {
       try {
         assertEquals(HttpServletResponse.SC_OK, t.status());
         assertEquals(DUMMY_CONTENT, t.body().asString());
@@ -203,7 +203,7 @@ public class ResilientHttpImplTest {
     ResponseObserver obs = new ResponseObserver();
 
     for (int i = 0; i < totalNumRequests; i++) {
-      Observable<Response> observable = underTest.execute(SERVICE_NAME, new RequestTemplate().append(HTTP_200_URI).request());
+      Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_200_URI).build());
       observable.subscribe(obs);
     }
 

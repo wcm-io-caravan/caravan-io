@@ -20,7 +20,7 @@
 package io.wcm.caravan.io.http.impl;
 
 import static com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy.THREAD;
-import io.wcm.caravan.io.http.response.Response;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,17 +36,17 @@ import com.netflix.hystrix.HystrixObservableCommand;
 /**
  * Hystrix command for asynchronously wrapping a HTTP request execution.
  */
-class HttpHystrixCommand extends HystrixObservableCommand<Response> {
+class HttpHystrixCommand extends HystrixObservableCommand<CaravanHttpResponse> {
 
   private static final String GROUP_KEY = "transportLayer";
 
   private final String serviceName;
-  private final Observable<Response> observable;
-  private final Observable<Response> fallback;
+  private final Observable<CaravanHttpResponse> observable;
+  private final Observable<CaravanHttpResponse> fallback;
 
   private static final Logger log = LoggerFactory.getLogger(HttpHystrixCommand.class);
 
-  public HttpHystrixCommand(String serviceName, Observable<Response> observable, Observable<Response> fallback) {
+  public HttpHystrixCommand(String serviceName, Observable<CaravanHttpResponse> observable, Observable<CaravanHttpResponse> fallback) {
 
     super(Setter
         .withGroupKey(HystrixCommandGroupKey.Factory.asKey(GROUP_KEY))
@@ -59,7 +59,7 @@ class HttpHystrixCommand extends HystrixObservableCommand<Response> {
   }
 
   @Override
-  protected Observable<Response> construct() {
+  protected Observable<CaravanHttpResponse> construct() {
     if (fallback != null) {
       // make sure errors are logged in log and not swallowed when hystrix falls back to fallback
       return observable.doOnError(new Action1<Throwable>() {
@@ -76,7 +76,7 @@ class HttpHystrixCommand extends HystrixObservableCommand<Response> {
   }
 
   @Override
-  protected Observable<Response> resumeWithFallback() {
+  protected Observable<CaravanHttpResponse> resumeWithFallback() {
     if (fallback != null) {
       return fallback;
     }

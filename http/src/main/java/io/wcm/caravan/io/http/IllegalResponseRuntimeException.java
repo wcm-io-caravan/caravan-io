@@ -19,7 +19,7 @@
  */
 package io.wcm.caravan.io.http;
 
-import io.wcm.caravan.io.http.request.Request;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 
 /**
  * Exception is thrown when a resilient HTTP response was received, but rated illegal (e.g. beause of status code).
@@ -28,7 +28,7 @@ public final class IllegalResponseRuntimeException extends RuntimeException {
   private static final long serialVersionUID = 1L;
 
   private final String serviceName;
-  private final Request request;
+  private final CaravanHttpRequest request;
   private final String requestUri;
   private final int responseStatusCode;
   private final String responseBody;
@@ -41,7 +41,7 @@ public final class IllegalResponseRuntimeException extends RuntimeException {
    * @param responseBody Response bdoy
    * @param message Error message
    */
-  public IllegalResponseRuntimeException(String serviceName, Request request, String requestUri,
+  public IllegalResponseRuntimeException(String serviceName, CaravanHttpRequest request, String requestUri,
       int responseStatusCode, String responseBody, String message) {
     super(serviceName + ": " + message);
     this.serviceName = serviceName;
@@ -61,7 +61,7 @@ public final class IllegalResponseRuntimeException extends RuntimeException {
   /**
    * @return Request
    */
-  public Request getRequest() {
+  public CaravanHttpRequest getRequest() {
     return this.request;
   }
 
