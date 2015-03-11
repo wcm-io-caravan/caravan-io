@@ -26,8 +26,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
-import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
@@ -75,7 +75,7 @@ public class ResilientHttpRibbonTest {
 
     ArchaiusConfig.initialize();
     context.registerInjectActivateService(new HttpClientFactoryImpl());
-    underTest = context.registerInjectActivateService(new CaravanHttpImpl());
+    underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
 
     defectServer1Host = "localhost:" + defectServer1.port();
     defectServer2Host = "localhost:" + defectServer2.port();
@@ -110,7 +110,7 @@ public class ResilientHttpRibbonTest {
         .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 0)
         .build());
     try {
-      Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_200_URI).build());
+      Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
       observable.toBlocking().single();
     }
     catch (IllegalResponseRuntimeException ex) {
@@ -128,7 +128,7 @@ public class ResilientHttpRibbonTest {
         .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
         .build());
     try {
-      Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_200_URI).build());
+      Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
       observable.toBlocking().single();
     }
     catch (IllegalResponseRuntimeException ex) {
@@ -147,7 +147,7 @@ public class ResilientHttpRibbonTest {
         .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 0)
         .build());
     try {
-      Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_200_URI).build());
+      Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
       observable.toBlocking().single();
     }
     catch (IllegalResponseRuntimeException ex) {
@@ -167,7 +167,7 @@ public class ResilientHttpRibbonTest {
         .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 1)
         .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
         .build());
-    Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_200_URI).build());
+    Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
     CaravanHttpResponse response = observable.toBlocking().single();
 
     workingServer.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo(HTTP_200_URI)));
@@ -184,7 +184,7 @@ public class ResilientHttpRibbonTest {
         .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(workingServerHost, defectServer1Host, defectServer2Host))
         .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
         .build());
-    Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_404_URI).build());
+    Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_404_URI).build());
     CaravanHttpResponse response = observable.toBlocking().single();
     workingServer.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo(HTTP_404_URI)));
     assertEquals(HttpServletResponse.SC_NOT_FOUND, response.status());

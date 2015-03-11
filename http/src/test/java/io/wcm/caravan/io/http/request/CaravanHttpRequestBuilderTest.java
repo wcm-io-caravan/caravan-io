@@ -39,7 +39,7 @@ public class CaravanHttpRequestBuilderTest {
 
   @Before
   public void setUp() {
-    builder = new CaravanHttpRequestBuilder();
+    builder = new CaravanHttpRequestBuilder("test-service");
   }
 
   @Test
@@ -125,7 +125,7 @@ public class CaravanHttpRequestBuilderTest {
   @Test
   public void resolve_templateWithParameterizedPathSkipsEncodingSlash() {
 
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().append("{zoneId}");
+    CaravanHttpRequestBuilder template = builder.append("{zoneId}");
     assertEquals("GET {zoneId} HTTP/1.1\n", template.toString());
 
     template.resolve(ImmutableMap.of("zoneId", "/hostedzone/Z1PA6795UKMFR9"));
@@ -139,7 +139,7 @@ public class CaravanHttpRequestBuilderTest {
 
   @Test
   public void resolve_templateWithBaseAndParameterizedQuery() {
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("GET")
+    CaravanHttpRequestBuilder template = builder.method("GET")
         .append("/?Action=DescribeRegions").query("RegionName.1", "{region}");
 
     assertEquals(template.queries(),
@@ -162,7 +162,7 @@ public class CaravanHttpRequestBuilderTest {
 
   @Test
   public void resolveTemplateWithBaseAndParameterizedIterableQuery() {
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("GET")
+    CaravanHttpRequestBuilder template = builder.method("GET")
         .append("/?Query=one").query("Queries", "{queries}");
 
     template.resolve(ImmutableMap.of("queries", Arrays.asList("us-east-1", "eu-west-1")));
@@ -177,7 +177,7 @@ public class CaravanHttpRequestBuilderTest {
 
   @Test
   public void resolveTemplateWithMixedRequestLineParams() throws Exception {
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("GET")//
+    CaravanHttpRequestBuilder template = builder.method("GET")//
         .append("/domains/{domainId}/records")//
         .query("name", "{name}")//
         .query("type", "{type}");
@@ -201,7 +201,7 @@ public class CaravanHttpRequestBuilderTest {
 
   @Test
   public void insertHasQueryParams() throws Exception {
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("GET")//
+    CaravanHttpRequestBuilder template = builder.method("GET")//
         .append("/domains/{domainId}/records")//
         .query("name", "{name}")//
         .query("type", "{type}");
@@ -224,7 +224,7 @@ public class CaravanHttpRequestBuilderTest {
 
   @Test
   public void resolveTemplateWithBodyTemplateSetsBodyAndContentLength() {
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("POST")
+    CaravanHttpRequestBuilder template = builder.method("POST")
         .bodyTemplate("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", " +
             "\"password\": \"{password}\"%7D");
 
@@ -247,7 +247,7 @@ public class CaravanHttpRequestBuilderTest {
 
   @Test
   public void skipUnresolvedQueries() throws Exception {
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("GET")//
+    CaravanHttpRequestBuilder template = builder.method("GET")//
         .append("/domains/{domainId}/records")//
         .query("optional", "{optional}")//
         .query("name", "{nameVariable}");
@@ -264,7 +264,7 @@ public class CaravanHttpRequestBuilderTest {
 
   @Test
   public void allQueriesUnresolvable() throws Exception {
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("GET")//
+    CaravanHttpRequestBuilder template = builder.method("GET")//
         .append("/domains/{domainId}/records")//
         .query("optional", "{optional}")//
         .query("optional2", "{optional2}");

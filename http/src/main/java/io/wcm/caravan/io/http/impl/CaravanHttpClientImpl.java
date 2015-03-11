@@ -20,9 +20,9 @@
 package io.wcm.caravan.io.http.impl;
 
 import io.wcm.caravan.commons.httpclient.HttpClientFactory;
+import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
-import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
@@ -65,12 +65,12 @@ import com.netflix.loadbalancer.reactive.ServerOperation;
  */
 @Component(immediate = true)
 @Service(CaravanHttpClient.class)
-public class CaravanHttpImpl implements CaravanHttpClient {
+public class CaravanHttpClientImpl implements CaravanHttpClient {
 
   @Reference
   private HttpClientFactory httpClientFactory;
 
-  private static final Logger log = LoggerFactory.getLogger(CaravanHttpImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(CaravanHttpClientImpl.class);
 
   /** a cached map of pre-configured LoadBalancerCommand instances for every logical serviceNae */
   private LoadingCache<String, LoadBalancerCommand<CaravanHttpResponse>> namedLoadBalancercommands = CacheBuilder.newBuilder().build(
@@ -94,52 +94,51 @@ public class CaravanHttpImpl implements CaravanHttpClient {
       });
 
   @Override
-  public Observable<CaravanHttpResponse> execute(String serviceName, CaravanHttpRequest request) {
-    return execute(serviceName, request, null);
+  public Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request) {
+    return execute(request, null);
   }
 
   @Override
-  public Observable<CaravanHttpResponse> execute(String serviceName, CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback) {
-    return getHystrixObservable(serviceName, request, fallback)
-        .onErrorResumeNext(exception -> Observable.<CaravanHttpResponse>error(mapToKnownException(serviceName, request, exception)));
+  public Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request, final Observable<CaravanHttpResponse> fallback) {
+    return getHystrixObservable(request, fallback)
+        .onErrorResumeNext(exception -> Observable.<CaravanHttpResponse>error(mapToKnownException(request, exception)));
   }
 
-  private Throwable mapToKnownException(String serviceName, CaravanHttpRequest request, Throwable ex) {
+  private Throwable mapToKnownException(final CaravanHttpRequest request, final Throwable ex) {
     if (ex instanceof RequestFailedRuntimeException || ex instanceof IllegalResponseRuntimeException) {
       return ex;
     }
     if ((ex instanceof HystrixRuntimeException || ex instanceof ClientException) && ex.getCause() != null) {
-      return mapToKnownException(serviceName, request, ex.getCause());
+      return mapToKnownException(request, ex.getCause());
     }
-    throw new RequestFailedRuntimeException(serviceName, request,
-        StringUtils.defaultString(ex.getMessage(), ex.getClass().getSimpleName()), ex);
+    throw new RequestFailedRuntimeException(request, StringUtils.defaultString(ex.getMessage(), ex.getClass().getSimpleName()), ex);
   }
 
-  private Observable<CaravanHttpResponse> getHystrixObservable(String serviceName, CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback) {
+  private Observable<CaravanHttpResponse> getHystrixObservable(final CaravanHttpRequest request, final Observable<CaravanHttpResponse> fallback) {
 
-    Observable<CaravanHttpResponse> ribbonObservable = getRibbonObservable(serviceName, request);
+    Observable<CaravanHttpResponse> ribbonObservable = getRibbonObservable(request);
 
     // calling HttpHystrixCommand#observe() will immediately start the request, while #toObservable() will return a "lazy" Observable
     // that only initiates the request when a subscriber subscribes
-    return new HttpHystrixCommand(serviceName, ribbonObservable, fallback).toObservable();
+    return new HttpHystrixCommand(request.getServiceName(), ribbonObservable, fallback).toObservable();
   }
 
-  private Observable<CaravanHttpResponse> getRibbonObservable(String serviceName, CaravanHttpRequest request) {
+  private Observable<CaravanHttpResponse> getRibbonObservable(final CaravanHttpRequest request) {
 
-    LoadBalancerCommand<CaravanHttpResponse> command = namedLoadBalancercommands.getUnchecked(serviceName);
+    LoadBalancerCommand<CaravanHttpResponse> command = namedLoadBalancercommands.getUnchecked(request.getServiceName());
 
     ServerOperation<CaravanHttpResponse> operation = new ServerOperation<CaravanHttpResponse>() {
 
       @Override
       public Observable<CaravanHttpResponse> call(Server server) {
-        return getHttpObservable(serviceName, RequestUtil.buildUrlPrefix(server), request);
+        return getHttpObservable(RequestUtil.buildUrlPrefix(server), request);
       }
     };
 
     return command.submit(operation);
   }
 
-  private Observable<CaravanHttpResponse> getHttpObservable(String serviceName, String urlPrefix, CaravanHttpRequest request) {
+  private Observable<CaravanHttpResponse> getHttpObservable(final String urlPrefix, final CaravanHttpRequest request) {
     return Observable.<CaravanHttpResponse>create(new Observable.OnSubscribe<CaravanHttpResponse>() {
 
       @Override
@@ -159,9 +158,8 @@ public class CaravanHttpImpl implements CaravanHttpClient {
             HttpEntity entity = result.getEntity();
             try {
               if (status.getStatusCode() >= 500) {
-                subscriber.onError(new IllegalResponseRuntimeException(serviceName, request,
-                    httpRequest.getURI().toString(), status.getStatusCode(), EntityUtils.toString(entity),
-                    "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine()));
+                subscriber.onError(new IllegalResponseRuntimeException(request, httpRequest.getURI().toString(), status.getStatusCode(), EntityUtils
+                    .toString(entity), "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine()));
                 EntityUtils.consumeQuietly(entity);
               }
               else {

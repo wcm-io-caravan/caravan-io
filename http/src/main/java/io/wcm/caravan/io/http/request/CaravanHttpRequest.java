@@ -44,13 +44,16 @@ import com.google.common.collect.Multimap;
  */
 public final class CaravanHttpRequest {
 
+  private final String serviceName;
   private final String method;
   private final String url;
   private final Multimap<String, String> headers;
   private final byte[] body;
   private final Charset charset;
 
-  CaravanHttpRequest(final String method, final String url, final Multimap<String, String> headers, final byte[] body, final Charset charset) {
+  CaravanHttpRequest(final String serviceName, final String method, final String url, final Multimap<String, String> headers, final byte[] body,
+      final Charset charset) {
+    this.serviceName = checkNotNull(serviceName, "service name");
     this.method = checkNotNull(method, "method of %s", url);
     this.url = checkNotNull(url, "url");
     Multimap<String, String> copyOf = LinkedHashMultimap.create(checkNotNull(headers, "headers of %s %s", method, url));
@@ -64,7 +67,7 @@ public final class CaravanHttpRequest {
     return method;
   }
 
-  /** Fully resolved URL including query. */
+  /** Fully resolved url including query. */
   public String url() {
     return url;
   }
@@ -132,6 +135,14 @@ public final class CaravanHttpRequest {
       builder.append('\n').append(charset != null ? new String(body, charset) : "Binary data");
     }
     return builder.toString();
+  }
+
+
+  /**
+   * @return the serviceName
+   */
+  public String getServiceName() {
+    return this.serviceName;
   }
 
 }

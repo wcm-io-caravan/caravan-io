@@ -25,9 +25,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertEquals;
 import io.wcm.caravan.commons.httpclient.HttpClientFactory;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
+import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
-import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
@@ -53,7 +53,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Integration tests for HTTP communcation of transport layer.
  */
-public class CaravanHttpImplTest {
+public class CaravanHttpClientImplTest {
 
   private static final String SERVICE_NAME = "testService";
 
@@ -90,7 +90,7 @@ public class CaravanHttpImplTest {
         ImmutableMap.of(ResilientHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
 
     httpClientFactory = context.registerInjectActivateService(new HttpClientFactoryImpl());
-    underTest = context.registerInjectActivateService(new CaravanHttpImpl());
+    underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
 
     // setup wiremock
     wireMock.stubFor(get(urlEqualTo(HTTP_200_URI))
@@ -140,13 +140,13 @@ public class CaravanHttpImplTest {
     // remove host config - service name is required to clear archaius properties
     MockOsgi.deactivate(serviceConfig, getServiceConfigProperties(""));
 
-    Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_200_URI).build());
+    Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
     observable.toBlocking().single();
   }
 
   @Test
   public void testHttp200() throws IOException {
-    Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_200_URI).build());
+    Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
     CaravanHttpResponse response = observable.toBlocking().single();
     assertEquals(HttpServletResponse.SC_OK, response.status());
     assertEquals(DUMMY_CONTENT, response.body().asString());
@@ -154,14 +154,14 @@ public class CaravanHttpImplTest {
 
   @Test
   public void testHttp404() {
-    Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_404_URI).build());
+    Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_404_URI).build());
     CaravanHttpResponse response = observable.toBlocking().single();
     assertEquals(HttpServletResponse.SC_NOT_FOUND, response.status());
   }
 
   @Test(expected = IllegalResponseRuntimeException.class)
   public void testHttp500() {
-    Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_500_URI).build());
+    Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_500_URI).build());
     observable.toBlocking().single();
   }
 
@@ -203,7 +203,7 @@ public class CaravanHttpImplTest {
     ResponseObserver obs = new ResponseObserver();
 
     for (int i = 0; i < totalNumRequests; i++) {
-      Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(HTTP_200_URI).build());
+      Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
       observable.subscribe(obs);
     }
 

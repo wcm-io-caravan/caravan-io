@@ -55,6 +55,7 @@ public final class CaravanHttpRequestBuilder implements Serializable {
 
   private static final long serialVersionUID = -4247954761231424727L;
 
+  private final String serviceName;
   private String method = HttpGet.METHOD_NAME;
   /* final to encourage mutable use vs replacing the object. */
   private final StringBuilder url = new StringBuilder();
@@ -65,13 +66,14 @@ public final class CaravanHttpRequestBuilder implements Serializable {
   private String bodyTemplate;
 
   /** Default constructor */
-  public CaravanHttpRequestBuilder() {
-    // nothing to do
+  public CaravanHttpRequestBuilder(final String serviceName) {
+    this.serviceName = serviceName;
   }
 
   /** Copy constructor. Use this when making templates. */
   public CaravanHttpRequestBuilder(final CaravanHttpRequestBuilder toCopy) {
     checkNotNull(toCopy, "toCopy");
+    this.serviceName = toCopy.serviceName;
     this.method = toCopy.method;
     this.url.append(toCopy.url);
     this.queries.putAll(toCopy.queries);
@@ -132,7 +134,7 @@ public final class CaravanHttpRequestBuilder implements Serializable {
 
   /** roughly analogous to {@code javax.ws.rs.client.Target.request()}. */
   public CaravanHttpRequest build() {
-    return new CaravanHttpRequest(method, new StringBuilder(url).append(queryLine()).toString(), headers, body, charset);
+    return new CaravanHttpRequest(serviceName, method, new StringBuilder(url).append(queryLine()).toString(), headers, body, charset);
   }
 
   /* @see Request#method() */

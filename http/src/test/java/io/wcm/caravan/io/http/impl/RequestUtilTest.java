@@ -55,7 +55,7 @@ public class RequestUtilTest {
 
   @Test
   public void testBuildHttpRequest_Get() {
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("get").append("/path")
+    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder("test-service").method("get").append("/path")
         .header("header1", "value1")
         .header("header2", "value2", "value3");
     HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.build());
@@ -69,7 +69,7 @@ public class RequestUtilTest {
 
   @Test
   public void testBuildHttpRequest_Post() throws ParseException, IOException {
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("post").append("/path")
+    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder("test-service").method("post").append("/path")
         .body("string body");
     HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.build());
 
@@ -85,7 +85,7 @@ public class RequestUtilTest {
     byte[] data = new byte[] {
         0x01, 0x02, 0x03, 0x04, 0x05
     };
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("put").append("/path")
+    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder("test-service").method("put").append("/path")
         .body(data, null);
     HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.build());
 
@@ -98,7 +98,7 @@ public class RequestUtilTest {
 
   @Test
   public void testBuildHttpRequest_Delete() {
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder().method("delete").append("/path");
+    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder("test-service").method("delete").append("/path");
     HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.build());
 
     assertEquals("http://host/path", request.getURI().toString());
@@ -107,7 +107,7 @@ public class RequestUtilTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testBuildHttpRequest_Invalid() {
-    RequestUtil.buildHttpRequest("http://host", new CaravanHttpRequestBuilder().method("invalid").append("/path").build());
+    RequestUtil.buildHttpRequest("http://host", new CaravanHttpRequestBuilder("test-service").method("invalid").append("/path").build());
   }
 
   @Test

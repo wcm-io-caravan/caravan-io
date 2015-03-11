@@ -31,19 +31,17 @@ public interface CaravanHttpClient {
 
   /**
    * Execute request.
-   * @param serviceName Logical service name (is mapped to configured real host names).
    * @param request Request
    * @return Response
    */
-  Observable<CaravanHttpResponse> execute(String serviceName, CaravanHttpRequest request);
+  Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request);
 
   /**
    * Execute request.
-   * @param serviceName Logical service name (is mapped to configured real host names).
    * @param request Request
    * @param fallback Function that returns a fallback that is returned when the call fails.
    * @return Response
    */
-  Observable<CaravanHttpResponse> execute(String serviceName, CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback);
+  Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback);
 
 }

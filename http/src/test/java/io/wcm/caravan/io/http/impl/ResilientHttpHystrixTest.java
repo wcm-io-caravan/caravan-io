@@ -26,8 +26,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
-import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
@@ -67,7 +67,7 @@ public class ResilientHttpHystrixTest {
 
     ArchaiusConfig.initialize();
     context.registerInjectActivateService(new HttpClientFactoryImpl());
-    underTest = context.registerInjectActivateService(new CaravanHttpImpl());
+    underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
 
     host = "localhost:" + server.port();
 
@@ -123,7 +123,7 @@ public class ResilientHttpHystrixTest {
     long before = metrics == null ? 0 : metrics.getHealthCounts().getTotalRequests();
     for (int i = 0; i < times; i++) {
       try {
-        Observable<CaravanHttpResponse> observable = underTest.execute(SERVICE_NAME, new CaravanHttpRequestBuilder().append(url).build());
+        Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(url).build());
         observable.toBlocking().single();
       }
       catch (IllegalResponseRuntimeException ex) {
