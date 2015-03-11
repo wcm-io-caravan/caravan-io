@@ -280,7 +280,16 @@ public class CaravanHttpRequestBuilderTest {
 
   @Test
   public void test_resolveHeaders() {
-    assertEquals(ImmutableListMultimap.of("x", "x1", "y", "y1", "z", "{z}"),
+    assertEquals(ImmutableListMultimap.of("x", "x1", "y", "y1"),
         builder.headers(ImmutableListMultimap.of("x", "{x}", "y", "y1", "z", "{z}")).resolve(ImmutableMap.of("x", "x1")).headers());
+  }
+
+  @Test
+  public void test_resolvePartial() {
+    builder.append("/{path1}{/path2}")
+    .bodyTemplate("{body1}\n{body2}")
+    .header("header-key", "{header1}", "{header2}")
+    .resolve(ImmutableMap.of("path1", "p1", "body1", "b1", "header1", "h1"));
+    assertEquals("GET /p1 HTTP/1.1\nheader-key: h1\n\nb1\n", builder.toString());
   }
 }

@@ -22,7 +22,7 @@ package io.wcm.caravan.io.http.request;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Iterables.toArray;
 import io.wcm.caravan.commons.stream.Streams;
-import io.wcm.caravan.io.http.impl.CaravanHttpRequestHelper;
+import io.wcm.caravan.io.http.impl.CaravanHttpHelper;
 
 import java.io.Serializable;
 import java.nio.charset.Charset;
@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.methods.HttpGet;
 
 import com.damnhandy.uri.template.UriTemplate;
@@ -57,7 +58,6 @@ public final class CaravanHttpRequestBuilder implements Serializable {
 
   private final String serviceName;
   private String method = HttpGet.METHOD_NAME;
-  /* final to encourage mutable use vs replacing the object. */
   private final StringBuilder url = new StringBuilder();
   private final Multimap<String, String> queries = LinkedHashMultimap.create();
   private final Multimap<String, String> headers = LinkedHashMultimap.create();
@@ -65,7 +65,16 @@ public final class CaravanHttpRequestBuilder implements Serializable {
   private byte[] body;
   private String bodyTemplate;
 
-  /** Default constructor */
+  /**
+   * Default constructor.
+   */
+  public CaravanHttpRequestBuilder() {
+    serviceName = null;
+  }
+
+  /**
+   * @param serviceName Logical service name. Can be null
+   */
   public CaravanHttpRequestBuilder(final String serviceName) {
     this.serviceName = serviceName;
   }
@@ -114,11 +123,9 @@ public final class CaravanHttpRequestBuilder implements Serializable {
     Multimap<String, String> resolvedHeaders = LinkedHashMultimap.create();
     for (String field : headers.keySet()) {
       for (String value : headers.get(field)) {
-        if (value.indexOf('{') == 0 && unencoded.containsKey(field)) {
-          resolvedHeaders.put(field, String.valueOf(unencoded.get(field)));
-        }
-        else {
-          resolvedHeaders.put(field, value);
+        String expanded = UriTemplate.expand(value, unencoded);
+        if (!StringUtils.isBlank(expanded)) {
+          resolvedHeaders.put(field, expanded);
         }
       }
     }
@@ -128,7 +135,7 @@ public final class CaravanHttpRequestBuilder implements Serializable {
 
   private void resolveBody(final Map<String, Object> unencoded) {
     if (bodyTemplate != null) {
-      body(CaravanHttpRequestHelper.urlDecode(UriTemplate.expand(bodyTemplate, unencoded)));
+      body(CaravanHttpHelper.urlDecode(UriTemplate.expand(bodyTemplate, unencoded)));
     }
   }
 
@@ -198,7 +205,7 @@ public final class CaravanHttpRequestBuilder implements Serializable {
     if (in == null || in.indexOf('{') == 0) {
       return in;
     }
-    return CaravanHttpRequestHelper.urlEncode(in);
+    return CaravanHttpHelper.urlEncode(in);
   }
 
   /* @see #query(String, String...) */
@@ -244,9 +251,9 @@ public final class CaravanHttpRequestBuilder implements Serializable {
   public Multimap<String, String> queries() {
     Multimap<String, String> decoded = LinkedHashMultimap.create();
     for (String field : queries.keySet()) {
-      String decodedField = CaravanHttpRequestHelper.urlDecode(field);
+      String decodedField = CaravanHttpHelper.urlDecode(field);
       Streams.of(queries.get(field))
-      .map(v -> v != null ? CaravanHttpRequestHelper.urlDecode(v) : null)
+      .map(v -> v != null ? CaravanHttpHelper.urlDecode(v) : null)
       .forEach(v -> decoded.put(decodedField, v));
     }
     return ImmutableMultimap.copyOf(decoded);
@@ -383,7 +390,7 @@ public final class CaravanHttpRequestBuilder implements Serializable {
     final int queryIndex = url.indexOf("?");
     if (queryIndex != -1) {
       String queryLine = url.substring(queryIndex + 1);
-      Multimap<String, String> firstQueries = CaravanHttpRequestHelper.parseAndDecodeQueries(queryLine);
+      Multimap<String, String> firstQueries = CaravanHttpHelper.parseAndDecodeQueries(queryLine);
       if (!queries.isEmpty()) {
         firstQueries.putAll(queries);
         queries.clear();
@@ -399,7 +406,7 @@ public final class CaravanHttpRequestBuilder implements Serializable {
           //be ignored by the query(key, value)-method
           //So we manually avoid this case here, to ensure that
           //we still fulfill the contract (ex. parameters without values)
-          queries.putAll(CaravanHttpRequestHelper.urlEncode(key), values);
+          queries.putAll(CaravanHttpHelper.urlEncode(key), values);
         }
         else {
           query(key, values);
@@ -446,11 +453,11 @@ public final class CaravanHttpRequestBuilder implements Serializable {
           }
           if (variableValue instanceof Iterable) {
             for (Object val : Iterable.class.cast(variableValue)) {
-              newQueries.put(key, CaravanHttpRequestHelper.urlEncode(String.valueOf(val)));
+              newQueries.put(key, CaravanHttpHelper.urlEncode(String.valueOf(val)));
             }
           }
           else {
-            newQueries.put(key, CaravanHttpRequestHelper.urlEncode(String.valueOf(variableValue)));
+            newQueries.put(key, CaravanHttpHelper.urlEncode(String.valueOf(variableValue)));
           }
         }
         else {

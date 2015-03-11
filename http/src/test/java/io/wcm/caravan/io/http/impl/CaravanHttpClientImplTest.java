@@ -144,6 +144,19 @@ public class CaravanHttpClientImplTest {
     observable.toBlocking().single();
   }
 
+  @Test(expected = RequestFailedRuntimeException.class)
+  public void testMissingServiceName() {
+    underTest.execute(new CaravanHttpRequestBuilder().append(HTTP_200_URI).build()).toBlocking().first();
+  }
+
+  @Test
+  public void testAbsolutUrl() throws IOException {
+    Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder().append("http://" + wireMockHost + HTTP_200_URI).build());
+    CaravanHttpResponse response = observable.toBlocking().first();
+    assertEquals(HttpServletResponse.SC_OK, response.status());
+    assertEquals(DUMMY_CONTENT, response.body().asString());
+  }
+
   @Test
   public void testHttp200() throws IOException {
     Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());

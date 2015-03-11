@@ -21,6 +21,7 @@ package io.wcm.caravan.io.http.response;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import io.wcm.caravan.io.http.impl.CaravanHttpHelper;
 
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
@@ -37,12 +38,10 @@ import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
 /**
@@ -97,18 +96,13 @@ public final class CaravanHttpResponse {
   }
 
   /**
-   * Returns a specific header represented as a {@link Map}. Therefore splits the entries of one header by
-   * {code}:{code}. If the entry has no value gets interpreted as a boolean and set to true.
-   * @param headerName The name of the header to convert
+   * Returns a specific header represented as a {@link Map}. Therefore splits the entries of one header by {@code :}. If
+   * the entry has no value gets interpreted as a boolean and set to true.
+   * @param headerName Name of the header to convert
    * @return A map representation of the header
    */
   public Map<String, Object> getHeaderAsMap(final String headerName) {
-    Map<String, Object> headerMap = Maps.newHashMap();
-    for (String line : headers.get(headerName)) {
-      String[] tokens = line.split(":", 2);
-      headerMap.put(tokens[0], tokens.length == 1 ? true : StringUtils.trim(tokens[1]));
-    }
-    return headerMap;
+    return CaravanHttpHelper.convertHeaderToMap(headers.get(headerName));
   }
 
   /**

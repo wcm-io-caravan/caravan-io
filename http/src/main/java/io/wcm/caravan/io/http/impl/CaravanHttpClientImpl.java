@@ -70,9 +70,9 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
   @Reference
   private HttpClientFactory httpClientFactory;
 
-  private static final Logger log = LoggerFactory.getLogger(CaravanHttpClientImpl.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CaravanHttpClientImpl.class);
 
-  /** a cached map of pre-configured LoadBalancerCommand instances for every logical serviceNae */
+  /** a cached map of pre-configured LoadBalancerCommand instances for every logical service name */
   private LoadingCache<String, LoadBalancerCommand<CaravanHttpResponse>> namedLoadBalancercommands = CacheBuilder.newBuilder().build(
       new CacheLoader<String, LoadBalancerCommand<CaravanHttpResponse>>() {
 
@@ -100,8 +100,22 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
 
   @Override
   public Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request, final Observable<CaravanHttpResponse> fallback) {
-    return getHystrixObservable(request, fallback)
-        .onErrorResumeNext(exception -> Observable.<CaravanHttpResponse>error(mapToKnownException(request, exception)));
+    Observable<CaravanHttpResponse> ribbon = request.getServiceName() != null ? getRibbonObservable(request) : getHttpObservable("", request);
+    Observable<CaravanHttpResponse> hystrix = new HttpHystrixCommand(StringUtils.defaultString(request.getServiceName(), "UNKNOWN"), ribbon, fallback)
+    .toObservable();
+    return hystrix.onErrorResumeNext(exception -> Observable.<CaravanHttpResponse>error(mapToKnownException(request, exception)));
+  }
+
+  private Observable<CaravanHttpResponse> getRibbonObservable(final CaravanHttpRequest request) {
+    LoadBalancerCommand<CaravanHttpResponse> command = namedLoadBalancercommands.getUnchecked(request.getServiceName());
+    ServerOperation<CaravanHttpResponse> operation = new ServerOperation<CaravanHttpResponse>() {
+
+      @Override
+      public Observable<CaravanHttpResponse> call(Server server) {
+        return getHttpObservable(RequestUtil.buildUrlPrefix(server), request);
+      }
+    };
+    return command.submit(operation);
   }
 
   private Throwable mapToKnownException(final CaravanHttpRequest request, final Throwable ex) {
@@ -114,30 +128,6 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
     throw new RequestFailedRuntimeException(request, StringUtils.defaultString(ex.getMessage(), ex.getClass().getSimpleName()), ex);
   }
 
-  private Observable<CaravanHttpResponse> getHystrixObservable(final CaravanHttpRequest request, final Observable<CaravanHttpResponse> fallback) {
-
-    Observable<CaravanHttpResponse> ribbonObservable = getRibbonObservable(request);
-
-    // calling HttpHystrixCommand#observe() will immediately start the request, while #toObservable() will return a "lazy" Observable
-    // that only initiates the request when a subscriber subscribes
-    return new HttpHystrixCommand(request.getServiceName(), ribbonObservable, fallback).toObservable();
-  }
-
-  private Observable<CaravanHttpResponse> getRibbonObservable(final CaravanHttpRequest request) {
-
-    LoadBalancerCommand<CaravanHttpResponse> command = namedLoadBalancercommands.getUnchecked(request.getServiceName());
-
-    ServerOperation<CaravanHttpResponse> operation = new ServerOperation<CaravanHttpResponse>() {
-
-      @Override
-      public Observable<CaravanHttpResponse> call(Server server) {
-        return getHttpObservable(RequestUtil.buildUrlPrefix(server), request);
-      }
-    };
-
-    return command.submit(operation);
-  }
-
   private Observable<CaravanHttpResponse> getHttpObservable(final String urlPrefix, final CaravanHttpRequest request) {
     return Observable.<CaravanHttpResponse>create(new Observable.OnSubscribe<CaravanHttpResponse>() {
 
@@ -145,8 +135,8 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
       public void call(final Subscriber<? super CaravanHttpResponse> subscriber) {
         HttpUriRequest httpRequest = RequestUtil.buildHttpRequest(urlPrefix, request);
 
-        if (log.isDebugEnabled()) {
-          log.debug("Execute: " + httpRequest.getURI() + "\n" + request.toString());
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Execute: " + httpRequest.getURI() + "\n" + request.toString());
         }
 
         HttpAsyncClient httpClient = httpClientFactory.getAsync(httpRequest.getURI());

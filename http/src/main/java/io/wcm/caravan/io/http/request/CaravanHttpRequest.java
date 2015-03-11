@@ -21,26 +21,25 @@ package io.wcm.caravan.io.http.request;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import io.wcm.caravan.commons.stream.Streams;
+import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.impl.CaravanHttpHelper;
 
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.CharEncoding;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
 /**
- * An immutable request to an http server.
+ * An immutable request to a HTTP server.
  */
 public final class CaravanHttpRequest {
 
@@ -51,13 +50,22 @@ public final class CaravanHttpRequest {
   private final byte[] body;
   private final Charset charset;
 
+  /**
+   * @param serviceName Logical name of the request service. Used by {@link CaravanHttpClient} to resolve the real URL.
+   *          If null, only {@code url} is used
+   * @param method HTTP method verb
+   * @param url Service request URL. Can be an absolute URL or just an path getting combined with the URL of the logical
+   *          service name
+   * @param headers HTTP headers
+   * @param body HTTP Payload
+   * @param charset Payload charset
+   */
   CaravanHttpRequest(final String serviceName, final String method, final String url, final Multimap<String, String> headers, final byte[] body,
       final Charset charset) {
-    this.serviceName = checkNotNull(serviceName, "service name");
+    this.serviceName = serviceName; // nullable
     this.method = checkNotNull(method, "method of %s", url);
     this.url = checkNotNull(url, "url");
-    Multimap<String, String> copyOf = LinkedHashMultimap.create(checkNotNull(headers, "headers of %s %s", method, url));
-    this.headers = ImmutableMultimap.copyOf(copyOf);
+    this.headers = ImmutableMultimap.copyOf(LinkedHashMultimap.create(checkNotNull(headers, "headers of %s %s", method, url)));
     this.body = body; // nullable
     this.charset = charset; // nullable
   }
@@ -78,18 +86,13 @@ public final class CaravanHttpRequest {
   }
 
   /**
-   * Returns a specific header represented as a {@link Map}. Therefore splits the entries of one header by
-   * {code}:{code}. If the entry has no value gets interpreted as a boolean and set to true.
-   * @param headerName The name of the header to convert
+   * Returns a specific header represented as a {@link Map}. Therefore splits the entries of one header by {@code :}. If
+   * the entry has no value gets interpreted as a boolean and set to true.
+   * @param headerName Name of the header to convert
    * @return A map representation of the header
    */
   public Map<String, Object> getHeaderAsMap(final String headerName) {
-    Map<String, Object> headerMap = Maps.newHashMap();
-    for (String line : headers.get(headerName)) {
-      String[] tokens = line.split(":", 2);
-      headerMap.put(tokens[0], tokens.length == 1 ? true : StringUtils.trim(tokens[1]));
-    }
-    return headerMap;
+    return CaravanHttpHelper.convertHeaderToMap(headers.get(headerName));
   }
 
   /**
@@ -97,10 +100,9 @@ public final class CaravanHttpRequest {
    * @return true if the parameter exists in this request's query
    */
   public boolean hasParameter(String name) {
-
     // TODO: is there really no easier function for this on the classpath (e.g. parse into some MultiValueMap)
     List<NameValuePair> parameters = URLEncodedUtils.parse(URI.create(url), CharEncoding.UTF_8);
-
+    // TODO: use Streams.of(parameters).exists(p -> name.equals(p.getName()))
     return Streams.of(parameters)
         .filter(param -> param.getName().equals(name))
         .iterator().hasNext();
@@ -127,9 +129,7 @@ public final class CaravanHttpRequest {
     StringBuilder builder = new StringBuilder();
     builder.append(method).append(' ').append(url).append(" HTTP/1.1\n");
     for (String field : headers.keySet()) {
-      for (String value : ObjectUtils.defaultIfNull(headers.get(field), Collections.<String>emptyList())) {
-        builder.append(field).append(": ").append(value).append('\n');
-      }
+      builder.append(field).append(": ").append(StringUtils.join(headers.get(field), ", ")).append('\n');
     }
     if (body != null) {
       builder.append('\n').append(charset != null ? new String(body, charset) : "Binary data");
@@ -142,7 +142,7 @@ public final class CaravanHttpRequest {
    * @return the serviceName
    */
   public String getServiceName() {
-    return this.serviceName;
+    return serviceName;
   }
 
 }

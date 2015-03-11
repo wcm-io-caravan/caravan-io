@@ -24,17 +24,22 @@ import static com.google.common.base.Strings.emptyToNull;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Collection;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
 /**
  * Helper class for standard URL tasks.
  */
-public final class CaravanHttpRequestHelper {
+public final class CaravanHttpHelper {
 
-  private CaravanHttpRequestHelper() {
+  private CaravanHttpHelper() {
     // nothing to do
   }
 
@@ -76,7 +81,7 @@ public final class CaravanHttpRequestHelper {
     }
     if (queryLine.indexOf('&') == -1) {
       if (queryLine.indexOf('=') != -1) {
-        CaravanHttpRequestHelper.putKV(queryLine, map);
+        CaravanHttpHelper.putKV(queryLine, map);
       }
       else {
         map.put(queryLine, null);
@@ -88,11 +93,11 @@ public final class CaravanHttpRequestHelper {
       int i = 0;
       for (; i < chars.length; i++) {
         if (chars[i] == '&') {
-          CaravanHttpRequestHelper.putKV(queryLine.substring(start, i), map);
+          CaravanHttpHelper.putKV(queryLine.substring(start, i), map);
           start = i + 1;
         }
       }
-      CaravanHttpRequestHelper.putKV(queryLine.substring(start, i), map);
+      CaravanHttpHelper.putKV(queryLine.substring(start, i), map);
     }
     return map;
   }
@@ -111,6 +116,20 @@ public final class CaravanHttpRequestHelper {
       value = urlDecode(stringToParse.substring(firstEq + 1));
     }
     map.put(key, value);
+  }
+
+  /**
+   * Converts a multi value header to a {@link Map}. If header segment has no value gets stored as boolean.
+   * @param header Multi value header to parse
+   * @return Header map
+   */
+  public static Map<String, Object> convertHeaderToMap(final Collection<String> header) {
+    Map<String, Object> headerMap = Maps.newHashMap();
+    for (String line : header) {
+      String[] tokens = line.split(":", 2);
+      headerMap.put(tokens[0], tokens.length == 1 ? true : StringUtils.trim(tokens[1]));
+    }
+    return headerMap;
   }
 
 }
