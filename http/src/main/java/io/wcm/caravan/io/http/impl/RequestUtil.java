@@ -61,7 +61,7 @@ final class RequestUtil {
     }
     urlPrefix.append("://").append(server.getHost());
     if (server.getPort() != 80 && server.getPort() != 443) {
-      urlPrefix.append(":").append(server.getPort());
+      urlPrefix.append(':').append(server.getPort());
     }
     return urlPrefix.toString();
   }
@@ -115,7 +115,7 @@ final class RequestUtil {
    * @param headerArray Http-client header array
    * @return Map with header values
    */
-  public static Multimap<String, String> toHeadersMap(Header[] headerArray) {
+  public static Multimap<String, String> toHeadersMap(Header... headerArray) {
     LinkedHashMultimap<String, String> headerMap = LinkedHashMultimap.create();
     Streams.of(headerArray).forEach(h -> headerMap.put(h.getName(), h.getValue()));
     return ImmutableListMultimap.copyOf(headerMap);

@@ -27,12 +27,12 @@ import org.osgi.framework.BundleContext;
 public class BundleActivator implements org.osgi.framework.BundleActivator {
 
   @Override
-  public void start(BundleContext context) throws Exception {
+  public void start(BundleContext context) {
     ArchaiusConfig.initialize();
   }
 
   @Override
-  public void stop(BundleContext context) throws Exception {
+  public void stop(BundleContext context) {
     // nothing to do
   }
 

@@ -70,17 +70,26 @@ public final class CaravanHttpRequest {
     this.charset = charset; // nullable
   }
 
-  /** Method to invoke on the server. */
+  /**
+   * Method to invoke on the server.
+   * @return HTTP method
+   */
   public String method() {
     return method;
   }
 
-  /** Fully resolved url including query. */
+  /**
+   * Fully resolved url including query.
+   * @return URL
+   */
   public String url() {
     return url;
   }
 
-  /** Ordered list of headers that will be sent to the server. */
+  /**
+   * Ordered list of headers that will be sent to the server.
+   * @return HTTP headers
+   */
   public Multimap<String, String> headers() {
     return headers;
   }
@@ -111,6 +120,7 @@ public final class CaravanHttpRequest {
   /**
    * The character set with which the body is encoded, or null if unknown or not applicable. When this is
    * present, you can use {@code new String(req.body(), req.charset())} to access the body as a String.
+   * @return Charset
    */
   public Charset charset() {
     return charset;
@@ -119,6 +129,7 @@ public final class CaravanHttpRequest {
   /**
    * If present, this is the replayable body to send to the server. In some cases, this may be interpretable as text.
    * @see #charset()
+   * @return HTTP body
    */
   public byte[] body() {
     return body;
@@ -136,7 +147,6 @@ public final class CaravanHttpRequest {
     }
     return builder.toString();
   }
-
 
   /**
    * @return the serviceName

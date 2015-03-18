@@ -73,11 +73,11 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
   private static final Logger LOG = LoggerFactory.getLogger(CaravanHttpClientImpl.class);
 
   /** a cached map of pre-configured LoadBalancerCommand instances for every logical service name */
-  private LoadingCache<String, LoadBalancerCommand<CaravanHttpResponse>> namedLoadBalancercommands = CacheBuilder.newBuilder().build(
+  private final LoadingCache<String, LoadBalancerCommand<CaravanHttpResponse>> namedLoadBalancercommands = CacheBuilder.newBuilder().build(
       new CacheLoader<String, LoadBalancerCommand<CaravanHttpResponse>>() {
 
         @Override
-        public LoadBalancerCommand<CaravanHttpResponse> load(String key) throws Exception {
+        public LoadBalancerCommand<CaravanHttpResponse> load(String key) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
           IClientConfig clientConfig = ClientFactory.getNamedConfig(key, DefaultClientConfigImpl.class);
           String loadBalancerClassName = clientConfig.get(CommonClientConfigKey.NFLoadBalancerClassName);
           ILoadBalancer loadBalancer = (ILoadBalancer)ClientFactory.instantiateInstanceWithClientConfig(loadBalancerClassName, clientConfig);

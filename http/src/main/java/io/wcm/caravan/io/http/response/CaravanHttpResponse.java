@@ -32,14 +32,13 @@ import java.io.Reader;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
-import java.util.Collections;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.CharEncoding;
-import org.apache.commons.lang3.ObjectUtils;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
@@ -48,7 +47,6 @@ import com.google.common.collect.Multimap;
  * An immutable response to an http invocation which only returns string
  * content.
  */
-//CHECKSTYLE:OFF
 public final class CaravanHttpResponse {
 
   private final int status;
@@ -56,16 +54,39 @@ public final class CaravanHttpResponse {
   private final Multimap<String, String> headers;
   private final Body body;
 
+  /**
+   * @param status HTTP status code
+   * @param reason HTTP status reason
+   * @param headers HTTP headers
+   * @param inputStream HTTP body
+   * @param length HTTP body length
+   * @return HTTP response
+   */
   public static CaravanHttpResponse create(int status, String reason, Multimap<String, String> headers,
       InputStream inputStream, Integer length) {
     return new CaravanHttpResponse(status, reason, headers, InputStreamBody.orNull(inputStream, length));
   }
 
+  /**
+   * @param status HTTP status code
+   * @param reason HTTP status reason
+   * @param headers HTTP headers
+   * @param data HTTP body
+   * @return HTTP response
+   */
   public static CaravanHttpResponse create(int status, String reason, Multimap<String, String> headers,
       byte[] data) {
     return new CaravanHttpResponse(status, reason, headers, ByteArrayBody.orNull(data));
   }
 
+  /**
+   * @param status HTTP status code
+   * @param reason HTTP status reason
+   * @param headers HTTP headers
+   * @param text HTTP body
+   * @param charset HTTP body charset
+   * @return HTTP response
+   */
   public static CaravanHttpResponse create(int status, String reason, Multimap<String, String> headers,
       String text, Charset charset) {
     return new CaravanHttpResponse(status, reason, headers, ByteArrayBody.orNull(text, charset));
@@ -82,15 +103,22 @@ public final class CaravanHttpResponse {
 
   /**
    * status code. ex {@code 200} See <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html" >rfc2616</a>
+   * @return HTTP status code
    */
   public int status() {
     return status;
   }
 
+  /**
+   * @return HTTP status reason
+   */
   public String reason() {
     return reason;
   }
 
+  /**
+   * @return HTTP headers
+   */
   public Multimap<String, String> headers() {
     return headers;
   }
@@ -107,11 +135,15 @@ public final class CaravanHttpResponse {
 
   /**
    * if present, the response had a body
+   * @return HTTP body
    */
   public Body body() {
     return body;
   }
 
+  /**
+   * Generic HTTP body.
+   */
   public interface Body extends Closeable {
 
     /**
@@ -122,26 +154,34 @@ public final class CaravanHttpResponse {
      * This is an integer as most implementations cannot do
      * bodies greater than 2GB. Moreover, the scope of this interface doesn't include
      * large bodies.
+     * @return Length of the body
      */
     Integer length();
 
     /**
      * True if {@link #asInputStream()} and {@link #asReader()} can be called more than once.
+     * @return True if repeatable
      */
     boolean isRepeatable();
 
     /**
      * It is the responsibility of the caller to close the stream.
+     * @return Stream representation
+     * @throws IOException Error generating Stream
      */
     InputStream asInputStream() throws IOException;
 
     /**
      * It is the responsibility of the caller to close the stream.
+     * @return Reader representation
+     * @throws IOException Error generating Reader
      */
     Reader asReader() throws IOException;
 
     /**
      * Returns body as string and closes the stream.
+     * @return String representation
+     * @throws IOException Error generating String
      */
     String asString() throws IOException;
 
@@ -279,9 +319,7 @@ public final class CaravanHttpResponse {
     StringBuilder builder = new StringBuilder();
     builder.append("HTTP/1.1 ").append(status).append(' ').append(reason).append('\n');
     for (String field : headers.keySet()) {
-      for (String value : ObjectUtils.defaultIfNull(headers.get(field), Collections.<String>emptyList())) {
-        builder.append(field).append(": ").append(value).append('\n');
-      }
+      builder.append(field).append(": ").append(Joiner.on(", ").join(headers.get(field))).append('\n');
     }
     if (body != null) {
       builder.append('\n').append(body);

@@ -53,7 +53,7 @@ public class CaravanHttpRequestBuilder {
 
   private final String serviceName;
   private String method = HttpGet.METHOD_NAME;
-  private final StringBuilder path = new StringBuilder();
+  private String path = "";
   private final List<VarSpec> queryExpressions = Lists.newArrayList();
   private final Map<String, Object> queryValues = Maps.newHashMap();
   private final Multimap<String, String> headers = ArrayListMultimap.create();
@@ -120,6 +120,7 @@ public class CaravanHttpRequestBuilder {
   /**
    * Returns an immutable copy of the current headers.
    * @see CaravanHttpRequest#headers()
+   * @return HTTP headers
    */
   public Multimap<String, String> headers() {
     return ImmutableMultimap.copyOf(headers);
@@ -141,7 +142,7 @@ public class CaravanHttpRequestBuilder {
         }
       }
     }
-    path.append(slicedPath);
+    path += slicedPath;
     return this;
   }
 
@@ -203,6 +204,7 @@ public class CaravanHttpRequestBuilder {
   /**
    * The character set with which the body is encoded, or null if unknown or not applicable. When this is
    * present, you can use {@code new String(req.body(), req.charset())} to access the body as a String.
+   * @return Charset
    */
   public Charset charset() {
     return charset;
@@ -237,7 +239,7 @@ public class CaravanHttpRequestBuilder {
     if (inTemplate.get()) {
       query.append('}');
     }
-    return path.toString() + query.toString();
+    return path + query.toString();
   }
 
   @Override
@@ -270,7 +272,7 @@ public class CaravanHttpRequestBuilder {
     mergedParams.putAll(queryValues);
     List<String> expressions = Streams.of(queryExpressions).map(expression -> expression.getValue()).collect(Collectors.toList());
     String query = expressions.isEmpty() ? "" : ("{?" + Joiner.on(",").join(expressions) + "}");
-    return UriTemplate.fromTemplate(path.toString() + query).expand(mergedParams);
+    return UriTemplate.fromTemplate(path + query).expand(mergedParams);
   }
 
   private Multimap<String, String> getExpandedHeaders(Map<String, Object> parameters) {
