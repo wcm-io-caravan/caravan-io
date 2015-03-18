@@ -57,7 +57,8 @@ public class RequestUtilTest {
   public void testBuildHttpRequest_Get() {
     CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder("test-service").method("get").append("/path")
         .header("header1", "value1")
-        .header("header2", "value2", "value3");
+        .header("header2", "value2")
+        .header("header2", "value3");
     HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.build());
 
     assertEquals("http://host/path", request.getURI().toString());

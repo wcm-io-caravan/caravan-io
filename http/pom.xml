@@ -36,6 +36,7 @@
 
   <dependencies>
 
+    <!-- Caravan -->
     <dependency>
       <groupId>io.wcm.caravan</groupId>
       <artifactId>io.wcm.caravan.commons.stream</artifactId>
@@ -65,13 +66,6 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.commons.osgi</artifactId>
       <scope>provided</scope>
-    </dependency>
-
-    <!-- Standard APIs -->
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <scope>compile</scope>
     </dependency>
 
     <!-- Commons -->
