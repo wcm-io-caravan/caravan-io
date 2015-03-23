@@ -136,7 +136,11 @@ public class CaravanHttpRequestBuilder {
     String slicedPath = urlFragment;
     for (Expression expression : template.getExpressions()) {
       if (Operator.QUERY.equals(expression.getOperator())) {
-        slicedPath = slicedPath.substring(0, expression.getStartPosition()) + slicedPath.substring(expression.getEndPosition());
+        String temp = slicedPath.substring(0, expression.getStartPosition());
+        if (expression.getEndPosition() != -1 && expression.getEndPosition() < slicedPath.length()) {
+          temp += slicedPath.substring(expression.getEndPosition());
+        }
+        slicedPath = temp;
         for (VarSpec spec : expression.getVarSpecs()) {
           queryExpressions.add(spec);
         }
