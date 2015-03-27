@@ -19,8 +19,6 @@
  */
 package io.wcm.caravan.io.http.impl;
 
-import static com.google.common.base.Strings.emptyToNull;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -30,9 +28,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 
 /**
  * Helper class for standard URL tasks.
@@ -67,55 +63,6 @@ public final class CaravanHttpHelper {
     catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  /**
-   * Parses a query and decodes the values.
-   * @param queryLine Query line to parse
-   * @return Parsed query
-   */
-  public static Multimap<String, String> parseAndDecodeQueries(final String queryLine) {
-    Multimap<String, String> map = LinkedHashMultimap.create();
-    if (emptyToNull(queryLine) == null) {
-      return map;
-    }
-    if (queryLine.indexOf('&') == -1) {
-      if (queryLine.indexOf('=') != -1) {
-        CaravanHttpHelper.putKV(queryLine, map);
-      }
-      else {
-        map.put(queryLine, null);
-      }
-    }
-    else {
-      char[] chars = queryLine.toCharArray();
-      int start = 0;
-      int i = 0;
-      for (; i < chars.length; i++) {
-        if (chars[i] == '&') {
-          CaravanHttpHelper.putKV(queryLine.substring(start, i), map);
-          start = i + 1;
-        }
-      }
-      CaravanHttpHelper.putKV(queryLine.substring(start, i), map);
-    }
-    return map;
-  }
-
-  private static void putKV(final String stringToParse, final Multimap<String, String> map) {
-    String key;
-    String value;
-    // note that '=' can be a valid part of the value
-    final int firstEq = stringToParse.indexOf('=');
-    if (firstEq == -1) {
-      key = urlDecode(stringToParse);
-      value = null;
-    }
-    else {
-      key = urlDecode(stringToParse.substring(0, firstEq));
-      value = urlDecode(stringToParse.substring(firstEq + 1));
-    }
-    map.put(key, value);
   }
 
   /**
