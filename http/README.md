@@ -26,12 +26,16 @@ CaravanHttpRequest request = new CaravanHttpRequestBuilder("my-service")
   .append("/path{?param}")
   // pass template values at building time
   .build(ImmutableMap.of("param", "test-value"));
+
 // HTTP client gets injected by OSGI
 CaravanHttpClient client = ... 
+
 // execute the request
 Observable<CaravanHttpResponse> rxResponse = client.execute(request);
+
 // wait for the response
 CaravanHttpResponse response = rxResponse.toBlocking().single();
+
 // check the status
 if(HttpServletResponse.SC_OK.equals(response.status())) {
   // extract the body
