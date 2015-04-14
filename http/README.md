@@ -37,7 +37,7 @@ Observable<CaravanHttpResponse> rxResponse = client.execute(request);
 CaravanHttpResponse response = rxResponse.toBlocking().single();
 
 // check the status
-if(HttpServletResponse.SC_OK.equals(response.status())) {
+if (HttpServletResponse.SC_OK.equals(response.status())) {
   // extract the body
   String body = response.body().asString();
 }

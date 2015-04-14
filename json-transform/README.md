@@ -42,7 +42,7 @@ Processor rename = new RenameProcessor(source, mapping);
 
 // write into output
 Sink sink = new JacksonStreamSink(output);
-while(rename.hasNext()) {
+while (rename.hasNext()) {
   sink.write(rename.next());
 }
 ```
