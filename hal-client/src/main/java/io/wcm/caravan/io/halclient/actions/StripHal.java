@@ -21,7 +21,7 @@ package io.wcm.caravan.io.halclient.actions;
 
 import io.wcm.caravan.commons.hal.domain.HalResource;
 import io.wcm.caravan.pipeline.JsonPipelineAction;
-import io.wcm.caravan.pipeline.JsonPipelineFactory;
+import io.wcm.caravan.pipeline.JsonPipelineContext;
 import io.wcm.caravan.pipeline.JsonPipelineOutput;
 import rx.Observable;
 
@@ -38,7 +38,7 @@ public class StripHal implements JsonPipelineAction {
   }
 
   @Override
-  public Observable<JsonPipelineOutput> execute(JsonPipelineOutput previousStepOutput, JsonPipelineFactory factory) {
+  public Observable<JsonPipelineOutput> execute(JsonPipelineOutput previousStepOutput, JsonPipelineContext context) {
     HalResource halResource = new HalResource((ObjectNode)previousStepOutput.getPayload());
     halResource.removeEmbedded().removeLinks();
     return Observable.just(previousStepOutput);

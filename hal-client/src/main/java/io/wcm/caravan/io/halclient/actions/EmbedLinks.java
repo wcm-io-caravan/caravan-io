@@ -8,7 +8,7 @@ import io.wcm.caravan.commons.stream.Streams;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.pipeline.JsonPipelineAction;
-import io.wcm.caravan.pipeline.JsonPipelineFactory;
+import io.wcm.caravan.pipeline.JsonPipelineContext;
 import io.wcm.caravan.pipeline.JsonPipelineOutput;
 import io.wcm.caravan.pipeline.cache.CacheStrategy;
 import io.wcm.caravan.pipeline.util.JsonPipelineOutputUtil;
@@ -63,10 +63,11 @@ public class EmbedLinks implements JsonPipelineAction {
   }
 
   @Override
-  public Observable<JsonPipelineOutput> execute(JsonPipelineOutput previousStepOutput, JsonPipelineFactory factory) {
+  public Observable<JsonPipelineOutput> execute(JsonPipelineOutput previousStepOutput, JsonPipelineContext context) {
+
     HalResource halResource = new HalResource((ObjectNode)previousStepOutput.getPayload());
 
-    List<Observable<JsonPipelineOutput>> observablesToEmbed = getPipelineOutputs(previousStepOutput, factory);
+    List<Observable<JsonPipelineOutput>> observablesToEmbed = getPipelineOutputs(previousStepOutput, context);
 
     // create one new zipping Observable that will call the given lambda when all resources to embed are available
     return Observable.zip(observablesToEmbed, pipelineOutputsToEmbed -> {
@@ -89,11 +90,11 @@ public class EmbedLinks implements JsonPipelineAction {
     });
   }
 
-  private List<Observable<JsonPipelineOutput>> getPipelineOutputs(JsonPipelineOutput previousStepOutput, JsonPipelineFactory factory) {
+  private List<Observable<JsonPipelineOutput>> getPipelineOutputs(JsonPipelineOutput previousStepOutput, JsonPipelineContext context) {
     List<CaravanHttpRequest> requests = getRequests(previousStepOutput);
     return Streams.of(requests)
         // create pipeline
-        .map(request -> factory.create(request))
+        .map(request -> context.getFactory().create(request, context.getProperties()))
         // add Caching
         .map(pipeline -> cacheStrategy == null ? pipeline : pipeline.addCachePoint(cacheStrategy))
         // get output

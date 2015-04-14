@@ -7,7 +7,7 @@ import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.pipeline.JsonPipeline;
 import io.wcm.caravan.pipeline.JsonPipelineAction;
 import io.wcm.caravan.pipeline.JsonPipelineActions;
-import io.wcm.caravan.pipeline.JsonPipelineFactory;
+import io.wcm.caravan.pipeline.JsonPipelineContext;
 import io.wcm.caravan.pipeline.JsonPipelineOutput;
 import io.wcm.caravan.pipeline.cache.CacheStrategy;
 
@@ -56,10 +56,10 @@ public class FollowLink implements JsonPipelineAction {
   }
 
   @Override
-  public Observable<JsonPipelineOutput> execute(JsonPipelineOutput previousStepOutput, JsonPipelineFactory factory) {
+  public Observable<JsonPipelineOutput> execute(JsonPipelineOutput previousStepOutput, JsonPipelineContext context) {
     CaravanHttpRequest request = getRequest(previousStepOutput);
-    // TODO: fetch metadata properties (need to change JsonPipelineAction signature to pass the context instead of factory);
-    JsonPipeline pipeline = factory.create(request);
+
+    JsonPipeline pipeline = context.getFactory().create(request, context.getProperties());
     if (cacheStrategy != null) {
       pipeline = pipeline.addCachePoint(cacheStrategy);
     }
