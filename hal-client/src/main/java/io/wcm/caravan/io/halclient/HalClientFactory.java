@@ -31,6 +31,8 @@ import io.wcm.caravan.pipeline.cache.CacheStrategy;
 import java.util.Collections;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
+
 /**
  * Factory for HAL specific {@link JsonPipelineAction}s.
  */
@@ -38,14 +40,25 @@ public class HalClientFactory {
 
   private final String serviceName;
   private final CacheStrategy cacheStrategy;
+  private final Map<String, String> contextProperties;
 
   /**
    * @param serviceName Service name
-   * @param cacheStrategy Used cache strategy for all actions
+   * @param cacheStrategy default cache strategy to use for all actions that fetch additional resources
    */
   public HalClientFactory(String serviceName, CacheStrategy cacheStrategy) {
+    this(serviceName, cacheStrategy, ImmutableMap.of());
+  }
+
+  /**
+   * @param serviceName Service name
+   * @param cacheStrategy  default cache strategy to use for all actions that fetch additional resources
+   * @param contextProperties a Map of properties to pass on to {@link JsonPipelineFactory#create(CaravanHttpRequest, Map)}
+   */
+  public HalClientFactory(String serviceName, CacheStrategy cacheStrategy, Map<String, String> contextProperties) {
     this.serviceName = serviceName;
     this.cacheStrategy = cacheStrategy;
+    this.contextProperties = contextProperties;
   }
 
   /**
@@ -74,7 +87,7 @@ public class HalClientFactory {
    * @return JSON pipeline
    */
   public JsonPipeline create(JsonPipelineFactory factory, CaravanHttpRequest request) {
-    JsonPipeline entryPoint = factory.create(request);
+    JsonPipeline entryPoint = factory.create(request, contextProperties);
     if (cacheStrategy != null) {
       entryPoint = entryPoint.addCachePoint(cacheStrategy);
     }
