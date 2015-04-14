@@ -56,25 +56,25 @@
       <groupId>io.wcm.caravan</groupId>
       <artifactId>io.wcm.caravan.commons.jsonpath</artifactId>
       <version>${io-wcm-caravan.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>io.wcm.caravan</groupId>
       <artifactId>io.wcm.caravan.io.http</artifactId>
       <version>${io-wcm-caravan.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>io.wcm.caravan</groupId>
       <artifactId>io.wcm.caravan.pipeline.api</artifactId>
       <version>${io-wcm-caravan.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>io.wcm.caravan</groupId>
       <artifactId>io.wcm.caravan.commons.hal</artifactId>
       <version>${io-wcm-caravan.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
 
     <!-- Commons -->
@@ -83,21 +83,11 @@
       <artifactId>commons-lang3</artifactId>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <scope>test</scope>
-    </dependency>
 
     <!-- Mocking & Junit -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
