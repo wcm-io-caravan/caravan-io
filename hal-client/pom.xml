@@ -35,7 +35,7 @@
   <version>0.2.0-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
-  <name>Commons HAL Client</name>
+  <name>HAL Client</name>
   <description>Client to navigate inside HAL JSON resources.</description>
 
   <scm>
