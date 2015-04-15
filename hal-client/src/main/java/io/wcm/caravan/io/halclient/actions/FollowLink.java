@@ -85,9 +85,18 @@ public class FollowLink implements JsonPipelineAction {
   }
 
   private CaravanHttpRequest getRequest(JsonPipelineOutput previousStepOutput) {
+
+    CaravanHttpRequest previousRequest = previousStepOutput.getRequests().get(0);
+
     HalResource halResource = new HalResource((ObjectNode)previousStepOutput.getPayload());
     String href = halResource.getLinks(relation).get(index).getHref();
-    return new CaravanHttpRequestBuilder(serviceName).append(href).build(parameters);
+
+    // create follow-up request, and main cache-control headers from previous request
+
+    return new CaravanHttpRequestBuilder(serviceName)
+      .append(href)
+      .header("Cache-Control",previousRequest.headers().get("Cache-Control"))
+      .build(parameters);
   }
 
 }

@@ -121,10 +121,19 @@ public class EmbedLinks implements JsonPipelineAction {
   }
 
   private List<CaravanHttpRequest> getRequests(JsonPipelineOutput previousStepOutput) {
+
+    CaravanHttpRequest previousRequest = previousStepOutput.getRequests().get(0);
+
     List<Link> links = getLinks(previousStepOutput);
     return Streams.of(links)
-        // create request
-        .map(link -> new CaravanHttpRequestBuilder(serviceName).append(link.getHref()).build(parameters))
+        // create request, and main cache-control headers from previous request
+        .map(link -> {
+
+          return new CaravanHttpRequestBuilder(serviceName)
+            .append(link.getHref())
+            .header("Cache-Control",previousRequest.headers().get("Cache-Control"))
+            .build(parameters);
+        })
         .collect(Collectors.toList());
   }
 
