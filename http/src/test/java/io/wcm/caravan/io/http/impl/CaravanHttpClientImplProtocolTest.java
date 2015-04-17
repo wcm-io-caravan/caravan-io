@@ -58,7 +58,6 @@ import com.google.common.collect.ImmutableMap;
 @RunWith(MockitoJUnitRunner.class)
 public class CaravanHttpClientImplProtocolTest {
 
-  private static final String SERVICE_NAME = "testService";
   private static final String URL = "/my/url";
 
   @Rule
@@ -166,9 +165,9 @@ public class CaravanHttpClientImplProtocolTest {
     assertUrl("myhost:8443", "https", "https://myhost:8443/my/url");
   }
 
-  private static ImmutableMap<String, Object> getServiceConfigProperties(String hostAndPort, String protocol) {
+  private static ImmutableMap<String, Object> getServiceConfigProperties(String serviceName, String hostAndPort, String protocol) {
     return ImmutableMap.<String, Object>builder()
-        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, serviceName)
         .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
         .put(ResilientHttpServiceConfig.PROTOCOL_PROPERTY, protocol)
         .build();
@@ -176,8 +175,9 @@ public class CaravanHttpClientImplProtocolTest {
 
   @SuppressWarnings("unchecked")
   private void assertUrl(final String hostPort, final String protocol, final String expectedUrl) {
+    String serviceName = "protocolTestService_" + hostPort + "_" + protocol;
     ResilientHttpServiceConfig serviceConfig = context.registerInjectActivateService(new ResilientHttpServiceConfig(),
-        getServiceConfigProperties(hostPort, protocol));
+        getServiceConfigProperties(serviceName, hostPort, protocol));
 
     when(httpClient.execute(any(HttpUriRequest.class), any(FutureCallback.class))).then(new Answer<Future<HttpResponse>>() {
       @Override
@@ -200,7 +200,7 @@ public class CaravanHttpClientImplProtocolTest {
       }
     });
 
-    underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(URL).build()).toBlocking().first();
+    underTest.execute(new CaravanHttpRequestBuilder(serviceName).append(URL).build()).toBlocking().first();
     MockOsgi.deactivate(serviceConfig);
   }
 
