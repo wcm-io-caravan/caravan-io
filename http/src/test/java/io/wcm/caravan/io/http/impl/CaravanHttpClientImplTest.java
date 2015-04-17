@@ -85,7 +85,7 @@ public class CaravanHttpClientImplTest {
 
     wireMockHost = "localhost:" + wireMock.port();
 
-    serviceConfig = context.registerInjectActivateService(new ResilientHttpServiceConfig(), getServiceConfigProperties(wireMockHost));
+    serviceConfig = context.registerInjectActivateService(new ResilientHttpServiceConfig(), getServiceConfigProperties(wireMockHost, "auto"));
     threadPoolConfig = context.registerInjectActivateService(new ResilientHttpThreadPoolConfig(),
         ImmutableMap.of(ResilientHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
 
@@ -119,10 +119,11 @@ public class CaravanHttpClientImplTest {
             ));
   }
 
-  private static ImmutableMap<String, Object> getServiceConfigProperties(String hostAndPort) {
+  private static ImmutableMap<String, Object> getServiceConfigProperties(String hostAndPort, String protocol) {
     return ImmutableMap.<String, Object>builder()
         .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
         .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
+        .put(ResilientHttpServiceConfig.PROTOCOL_PROPERTY, protocol)
         .build();
   }
 
@@ -138,7 +139,7 @@ public class CaravanHttpClientImplTest {
   public void testWithoutConfig() {
 
     // remove host config - service name is required to clear archaius properties
-    MockOsgi.deactivate(serviceConfig, getServiceConfigProperties(""));
+    MockOsgi.deactivate(serviceConfig, getServiceConfigProperties("", ""));
 
     Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
     observable.toBlocking().single();

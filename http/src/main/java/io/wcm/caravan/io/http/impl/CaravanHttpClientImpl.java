@@ -112,7 +112,11 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
 
       @Override
       public Observable<CaravanHttpResponse> call(Server server) {
-        return getHttpObservable(RequestUtil.buildUrlPrefix(server), request);
+        String protcol = RequestUtil.PROTOCOL_AUTO;
+        if (StringUtils.isNotEmpty(request.getServiceName())) {
+          protcol = ArchaiusConfig.getConfiguration().getString(request.getServiceName() + ResilientHttpServiceConfig.HTTP_PARAM_PROTOCOL);
+        }
+        return getHttpObservable(RequestUtil.buildUrlPrefix(server, protcol), request);
       }
     };
     return command.submit(operation);

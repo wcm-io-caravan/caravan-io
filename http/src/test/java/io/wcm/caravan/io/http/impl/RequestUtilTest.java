@@ -47,10 +47,10 @@ public class RequestUtilTest {
 
   @Test
   public void testBuildUrlPrefix() {
-    assertEquals("http://host", RequestUtil.buildUrlPrefix(new Server("host", 80)));
-    assertEquals("https://host", RequestUtil.buildUrlPrefix(new Server("host", 443)));
-    assertEquals("http://host:8000", RequestUtil.buildUrlPrefix(new Server("host", 8000)));
-    assertEquals("https://host:8443", RequestUtil.buildUrlPrefix(new Server("host", 8443)));
+    assertEquals("http://host", RequestUtil.buildUrlPrefix(new Server("host", 80), RequestUtil.PROTOCOL_AUTO));
+    assertEquals("https://host", RequestUtil.buildUrlPrefix(new Server("host", 443), RequestUtil.PROTOCOL_AUTO));
+    assertEquals("http://host:8000", RequestUtil.buildUrlPrefix(new Server("host", 8000), RequestUtil.PROTOCOL_AUTO));
+    assertEquals("https://host:8443", RequestUtil.buildUrlPrefix(new Server("host", 8443), RequestUtil.PROTOCOL_AUTO));
   }
 
   @Test

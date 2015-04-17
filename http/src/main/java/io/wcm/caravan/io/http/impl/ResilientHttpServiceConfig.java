@@ -28,6 +28,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,19 @@ public class ResilientHttpServiceConfig {
           "load balancing is applied). Example entry: 'host1:80'.",
           cardinality = Integer.MAX_VALUE)
   static final String RIBBON_HOSTS_PROPERTY = "ribbonHosts";
+
+  @Property(label = "Protocol",
+      description = "Choose between HTTP and HTTPS protocol for communicating with the Hosts. "
+          + "If set to 'Auto' the protocol is detected automatically from the port number (443 and 8443 = HTTPS).",
+          value = ResilientHttpServiceConfig.PROTOCOL_PROPERTY_DEFAULT,
+          options = {
+      @PropertyOption(name = RequestUtil.PROTOCOL_AUTO, value = "Auto"),
+      @PropertyOption(name = RequestUtil.PROTOCOL_HTTP, value = "HTTP"),
+      @PropertyOption(name = RequestUtil.PROTOCOL_HTTPS, value = "HTTPS")
+  }
+      )
+  static final String PROTOCOL_PROPERTY = "http.protocol";
+  static final String PROTOCOL_PROPERTY_DEFAULT = RequestUtil.PROTOCOL_AUTO;
 
   @Property(label = "Max. Auto Retries",
       description = "Ribbon: Max number of retries on the same server (excluding the first try).",
@@ -137,6 +151,11 @@ public class ResilientHttpServiceConfig {
   private static final String HYSTRIX_PARAM_CIRCUITBREAKER_FORCECLOSED = ".circuitBreaker.forceClosed";
   private static final String HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE = ".threadPoolKeyOverride";
 
+  /**
+   * Custom archiaus property for protocol detection
+   */
+  public static final String HTTP_PARAM_PROTOCOL = ".http.protocol";
+
   @Activate
   protected void activate(Map<String, Object> config) {
     String serviceName = getServiceName(config);
@@ -218,6 +237,9 @@ public class ResilientHttpServiceConfig {
       archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE,
           config.get(HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY));
     }
+
+    // others
+    archaiusConfig.setProperty(serviceName + HTTP_PARAM_PROTOCOL, PropertiesUtil.toString(config.get(PROTOCOL_PROPERTY), PROTOCOL_PROPERTY_DEFAULT));
   }
 
   /**
@@ -243,6 +265,9 @@ public class ResilientHttpServiceConfig {
     archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_FORCEOPEN);
     archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_FORCECLOSED);
     archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE);
+
+    // others
+    archaiusConfig.clearProperty(serviceName + HTTP_PARAM_PROTOCOL);
   }
 
 }

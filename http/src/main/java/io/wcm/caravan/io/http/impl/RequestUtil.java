@@ -43,6 +43,10 @@ import com.netflix.loadbalancer.Server;
  */
 final class RequestUtil {
 
+  static final String PROTOCOL_AUTO = "auto";
+  static final String PROTOCOL_HTTP = "http";
+  static final String PROTOCOL_HTTPS = "https";
+
   private RequestUtil() {
     // static methods only
   }
@@ -51,17 +55,37 @@ final class RequestUtil {
    * @param server Server
    * @return URL prefix with scheme, hostname and port
    */
-  public static String buildUrlPrefix(Server server) {
+  public static String buildUrlPrefix(Server server, String protocol) {
     StringBuilder urlPrefix = new StringBuilder();
-    if (server.getPort() == 443 || server.getPort() == 8443) {
-      urlPrefix.append("https");
+    if (StringUtils.equals(protocol, PROTOCOL_HTTP)) {
+      urlPrefix.append("http://");
+      if (server.getPort() == 80) {
+        urlPrefix.append(server.getHost());
+      }
+      else {
+        urlPrefix.append(server.getHost()).append(":").append(server.getPort());
+      }
+    }
+    else if (StringUtils.equals(protocol, PROTOCOL_HTTPS)) {
+      urlPrefix.append("https://");
+      if (server.getPort() == 443 || server.getPort() == 80) {
+        urlPrefix.append(server.getHost());
+      }
+      else {
+        urlPrefix.append(server.getHost()).append(":").append(server.getPort());
+      }
     }
     else {
-      urlPrefix.append("http");
-    }
-    urlPrefix.append("://").append(server.getHost());
-    if (server.getPort() != 80 && server.getPort() != 443) {
-      urlPrefix.append(':').append(server.getPort());
+      if (server.getPort() == 443 || server.getPort() == 8443) {
+        urlPrefix.append("https");
+      }
+      else {
+        urlPrefix.append("http");
+      }
+      urlPrefix.append("://").append(server.getHost());
+      if (server.getPort() != 80 && server.getPort() != 443) {
+        urlPrefix.append(':').append(server.getPort());
+      }
     }
     return urlPrefix.toString();
   }
