@@ -30,8 +30,6 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Configures transport layer options for service access.
@@ -133,23 +131,21 @@ public class ResilientHttpServiceConfig {
       description = "Hystrix: Overrides the default thread pool for the service")
   static final String HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY = "hystrixThreadPoolKeyOverride";
 
-  private static final Logger log = LoggerFactory.getLogger(ResilientHttpServiceConfig.class);
+  static final String RIBBON_PARAM_LISTOFSERVERS = ".ribbon.listOfServers";
+  static final String RIBBON_PARAM_MAXAUTORETRIES = ".ribbon.MaxAutoRetries";
+  static final String RIBBON_PARAM_MAXAUTORETRIESONSERVER = ".ribbon.MaxAutoRetriesNextServer";
+  static final String RIBBON_PARAM_OKTORETRYONALLOPERATIONS = ".ribbon.OkToRetryOnAllOperations";
 
-  private static final String RIBBON_PARAM_LISTOFSERVERS = ".ribbon.listOfServers";
-  private static final String RIBBON_PARAM_MAXAUTORETRIES = ".ribbon.MaxAutoRetries";
-  private static final String RIBBON_PARAM_MAXAUTORETRIESONSERVER = ".ribbon.MaxAutoRetriesNextServer";
-  private static final String RIBBON_PARAM_OKTORETRYONALLOPERATIONS = ".ribbon.OkToRetryOnAllOperations";
-
-  private static final String HYSTRIX_COMMAND_PREFIX = "hystrix.command.";
-  private static final String HYSTRIX_PARAM_TIMEOUT_MS = ".execution.isolation.thread.timeoutInMilliseconds";
-  private static final String HYSTRIX_PARAM_FALLBACK_ENABLED = ".fallback.enabled";
-  private static final String HYSTRIX_PARAM_CIRCUITBREAKER_ENABLED = ".circuitBreaker.enabled";
-  private static final String HYSTRIX_PARAM_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD = ".circuitBreaker.requestVolumeThreshold";
-  private static final String HYSTRIX_PARAM_CIRCUITBREAKER_SLEEPWINDOW_MS = ".circuitBreaker.sleepWindowInMilliseconds";
-  private static final String HYSTRIX_PARAM_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE = ".circuitBreaker.errorThresholdPercentage";
-  private static final String HYSTRIX_PARAM_CIRCUITBREAKER_FORCEOPEN = ".circuitBreaker.forceOpen";
-  private static final String HYSTRIX_PARAM_CIRCUITBREAKER_FORCECLOSED = ".circuitBreaker.forceClosed";
-  private static final String HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE = ".threadPoolKeyOverride";
+  static final String HYSTRIX_COMMAND_PREFIX = "hystrix.command.";
+  static final String HYSTRIX_PARAM_TIMEOUT_MS = ".execution.isolation.thread.timeoutInMilliseconds";
+  static final String HYSTRIX_PARAM_FALLBACK_ENABLED = ".fallback.enabled";
+  static final String HYSTRIX_PARAM_CIRCUITBREAKER_ENABLED = ".circuitBreaker.enabled";
+  static final String HYSTRIX_PARAM_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD = ".circuitBreaker.requestVolumeThreshold";
+  static final String HYSTRIX_PARAM_CIRCUITBREAKER_SLEEPWINDOW_MS = ".circuitBreaker.sleepWindowInMilliseconds";
+  static final String HYSTRIX_PARAM_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE = ".circuitBreaker.errorThresholdPercentage";
+  static final String HYSTRIX_PARAM_CIRCUITBREAKER_FORCEOPEN = ".circuitBreaker.forceOpen";
+  static final String HYSTRIX_PARAM_CIRCUITBREAKER_FORCECLOSED = ".circuitBreaker.forceClosed";
+  static final String HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE = ".threadPoolKeyOverride";
 
   /**
    * Custom archiaus property for protocol detection
@@ -159,7 +155,7 @@ public class ResilientHttpServiceConfig {
   @Activate
   protected void activate(Map<String, Object> config) {
     String serviceName = getServiceName(config);
-    if (validateConfig(serviceName, config)) {
+    if (ResilientHttpServiceConfigValidator.isValidServiceConfig(serviceName, config)) {
       setArchiausProperties(serviceName, config);
     }
   }
@@ -173,24 +169,6 @@ public class ResilientHttpServiceConfig {
 
   private String getServiceName(Map<String, Object> config) {
     return PropertiesUtil.toString(config.get(SERVICE_NAME_PROPERTY), null);
-  }
-
-  /**
-   * Validates configuration
-   * @param serviceName Service name
-   * @param config OSGi config
-   */
-  private boolean validateConfig(String serviceName, Map<String, Object> config) {
-    if (StringUtils.isBlank(serviceName)) {
-      log.warn("Invalid transport layer service configuration without service name, ignoring.", serviceName);
-      return false;
-    }
-    String[] hosts = PropertiesUtil.toStringArray(config.get(RIBBON_HOSTS_PROPERTY));
-    if (hosts == null || hosts.length == 0) {
-      log.warn("Invalid transport layer service configuration for '{}' without hosts, ignoring.", serviceName);
-      return false;
-    }
-    return true;
   }
 
   /**

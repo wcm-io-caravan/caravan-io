@@ -23,6 +23,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import io.wcm.caravan.commons.httpclient.HttpClientFactory;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.CaravanHttpClient;
@@ -117,6 +119,8 @@ public class CaravanHttpClientImplTest {
             .withBody(DUMMY_CONTENT)
             .withFixedDelay(1000)
             ));
+
+    assertTrue(underTest.hasValidConfiguration(SERVICE_NAME));
   }
 
   private static ImmutableMap<String, Object> getServiceConfigProperties(String hostAndPort, String protocol) {
@@ -140,6 +144,8 @@ public class CaravanHttpClientImplTest {
 
     // remove host config - service name is required to clear archaius properties
     MockOsgi.deactivate(serviceConfig, getServiceConfigProperties("", ""));
+
+    assertFalse(underTest.hasValidConfiguration(SERVICE_NAME));
 
     Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
     observable.toBlocking().single();

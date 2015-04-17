@@ -191,4 +191,9 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
     });
   }
 
+  @Override
+  public boolean hasValidConfiguration(String serviceName) {
+    return ResilientHttpServiceConfigValidator.hasValidConfiguration(serviceName);
+  }
+
 }

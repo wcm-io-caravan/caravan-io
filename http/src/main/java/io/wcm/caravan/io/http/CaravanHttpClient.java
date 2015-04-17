@@ -44,4 +44,13 @@ public interface CaravanHttpClient {
    */
   Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback);
 
+  /**
+   * Checks if a valid configuration exists for the given service name. This does not mean that the host
+   * name is correct or returns correct responses, it only checks that the minimum required configuration
+   * properties are set to a value.
+   * @param serviceName Service name
+   * @return true if configuration is valid
+   */
+  boolean hasValidConfiguration(String serviceName);
+
 }
