@@ -36,6 +36,7 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.CharEncoding;
+import org.osgi.annotation.versioning.ProviderType;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -44,9 +45,9 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
 /**
- * An immutable response to an http invocation which only returns string
- * content.
+ * An immutable response to an http invocation which only returns string content.
  */
+@ProviderType
 public final class CaravanHttpResponse {
 
   private final int status;

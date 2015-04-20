@@ -34,6 +34,7 @@ import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.osgi.annotation.versioning.ProviderType;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.LinkedHashMultimap;
@@ -42,9 +43,13 @@ import com.google.common.collect.Multimap;
 /**
  * An immutable request to a HTTP server.
  */
+@ProviderType
 public final class CaravanHttpRequest {
 
-  public final static String CORRELATION_ID_HEADER_NAME = "X-Caravan-Correlation-Id";
+  /**
+   * Correlation ID Header name
+   */
+  public static final String CORRELATION_ID_HEADER_NAME = "X-Caravan-Correlation-Id";
 
   private final String serviceName;
   private final String method;

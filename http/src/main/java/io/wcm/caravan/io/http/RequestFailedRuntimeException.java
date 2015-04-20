@@ -21,9 +21,12 @@ package io.wcm.caravan.io.http;
 
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Exception is thrown when a resilient HTTP request failed before a response was received.
  */
+@ProviderType
 public final class RequestFailedRuntimeException extends RuntimeException {
 
   private static final long serialVersionUID = 1L;

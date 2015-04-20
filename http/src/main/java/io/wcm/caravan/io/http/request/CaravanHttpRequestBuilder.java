@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.http.client.methods.HttpGet;
+import org.osgi.annotation.versioning.ProviderType;
 
 import com.damnhandy.uri.template.Expression;
 import com.damnhandy.uri.template.UriTemplate;
@@ -50,7 +51,8 @@ import com.google.common.collect.Multimap;
 /**
  * UriTemplate using HTTP request builder.
  */
-public class CaravanHttpRequestBuilder {
+@ProviderType
+public final class CaravanHttpRequestBuilder {
 
   private final String serviceName;
   private String method = HttpGet.METHOD_NAME;

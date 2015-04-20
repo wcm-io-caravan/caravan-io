@@ -21,12 +21,16 @@ package io.wcm.caravan.io.http;
 
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+
+import org.osgi.annotation.versioning.ProviderType;
+
 import rx.Observable;
 
 /**
- * Resilient transport layer that can execute any request asynchronously and
+ * Resilient HTTP transport layer that can execute any request asynchronously and
  * applying software load balancing and circuit breaking.
  */
+@ProviderType
 public interface CaravanHttpClient {
 
   /**

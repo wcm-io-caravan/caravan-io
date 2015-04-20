@@ -36,6 +36,13 @@
 
   <dependencies>
 
+    <!-- Servlet API -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
     <!-- Caravan -->
     <dependency>
       <groupId>io.wcm.caravan</groupId>

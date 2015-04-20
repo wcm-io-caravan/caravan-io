@@ -21,9 +21,12 @@ package io.wcm.caravan.io.http;
 
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Exception is thrown when a resilient HTTP response was received, but rated illegal (e.g. beause of status code).
  */
+@ProviderType
 public final class IllegalResponseRuntimeException extends RuntimeException {
 
   private static final long serialVersionUID = 1L;
