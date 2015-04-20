@@ -21,7 +21,7 @@ package io.wcm.caravan.io.jsontransform;
 
 import static org.junit.Assert.assertEquals;
 import io.wcm.caravan.io.jsontransform.element.JsonElement;
-import io.wcm.caravan.io.jsontransform.element.JsonElement.Type;
+import io.wcm.caravan.io.jsontransform.element.JsonElementType;
 import io.wcm.caravan.io.jsontransform.sink.JacksonStreamSink;
 import io.wcm.caravan.io.jsontransform.source.JacksonStreamSource;
 import io.wcm.caravan.io.jsontransform.source.Source;
@@ -60,7 +60,7 @@ public class JsonTestHelper {
   }
 
   public JsonTestHelper assertStartObject(String key) {
-    return check(new JsonElement(key, null, Type.START_OBJECT));
+    return check(new JsonElement(key, null, JsonElementType.START_OBJECT));
   }
 
   public JsonTestHelper assertEndObject() {
@@ -68,7 +68,7 @@ public class JsonTestHelper {
   }
 
   public JsonTestHelper assertStartArray(String key) {
-    return check(new JsonElement(key, null, Type.START_ARRAY));
+    return check(new JsonElement(key, null, JsonElementType.START_ARRAY));
   }
 
   public JsonTestHelper assertEndArray() {
@@ -80,7 +80,7 @@ public class JsonTestHelper {
   }
 
   public JsonTestHelper assertValue(String key, Object value) {
-    return check(new JsonElement(key, value, Type.VALUE));
+    return check(new JsonElement(key, value, JsonElementType.VALUE));
   }
 
   private JsonTestHelper check(JsonElement element) {

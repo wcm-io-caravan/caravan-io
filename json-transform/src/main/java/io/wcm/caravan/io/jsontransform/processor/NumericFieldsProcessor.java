@@ -20,7 +20,7 @@
 package io.wcm.caravan.io.jsontransform.processor;
 
 import io.wcm.caravan.io.jsontransform.element.JsonElement;
-import io.wcm.caravan.io.jsontransform.element.JsonElement.Type;
+import io.wcm.caravan.io.jsontransform.element.JsonElementType;
 import io.wcm.caravan.io.jsontransform.source.Source;
 
 import java.io.IOException;
@@ -55,7 +55,7 @@ public final class NumericFieldsProcessor implements Processor {
   @Override
   public JsonElement next() {
     JsonElement next = source.next();
-    if (next != null && numericFields.contains(next.getKey()) && Type.VALUE.equals(next.getType())) {
+    if (next != null && numericFields.contains(next.getKey()) && JsonElementType.VALUE.equals(next.getType())) {
       return JsonElement.value(next.getKey(), new BigDecimal(next.getValue().toString()));
     }
     return next;

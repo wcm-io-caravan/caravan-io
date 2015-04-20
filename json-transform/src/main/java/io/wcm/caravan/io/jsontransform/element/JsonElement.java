@@ -33,47 +33,37 @@ public final class JsonElement {
   /**
    * The default JSON object start element
    */
-  public static final JsonElement DEFAULT_START_OBJECT = new JsonElement(null, null, Type.START_OBJECT);
+  public static final JsonElement DEFAULT_START_OBJECT = new JsonElement(null, null, JsonElementType.START_OBJECT);
 
   /**
    * The default JSON array start element
    */
-  public static final JsonElement DEFAULT_START_ARRAY = new JsonElement(null, null, Type.START_ARRAY);
+  public static final JsonElement DEFAULT_START_ARRAY = new JsonElement(null, null, JsonElementType.START_ARRAY);
 
   /**
    * The default JSON object end element
    */
-  public static final JsonElement DEFAULT_END_OBJECT = new JsonElement(null, null, Type.END_OBJECT);
+  public static final JsonElement DEFAULT_END_OBJECT = new JsonElement(null, null, JsonElementType.END_OBJECT);
 
   /**
    * The default JSON array end element
    */
-  public static final JsonElement DEFAULT_END_ARRAY = new JsonElement(null, null, Type.END_ARRAY);
+  public static final JsonElement DEFAULT_END_ARRAY = new JsonElement(null, null, JsonElementType.END_ARRAY);
 
   /**
-   * Possible JSON stream element type.
-   */
-  public enum Type {
-    /**
-     * All JSON stream element types.
-     */
-    START_OBJECT, END_OBJECT, START_ARRAY, END_ARRAY, VALUE
-  }
-
-  /**
-   * The key of the JSON stream element. If {@link Type} is END_OBJECT or END_ARRAY will be null. Otherwise can be null.
+   * The key of the JSON stream element. If {@link JsonElementType} is END_OBJECT or END_ARRAY will be null. Otherwise can be null.
    */
   private final String key;
 
   /**
-   * The value of the JSON stream element. Only set for VALUE {@link Type}.
+   * The value of the JSON stream element. Only set for VALUE {@link JsonElementType}.
    */
   private final Object value;
 
   /**
    * The JSON stream element type.
    */
-  private final Type type;
+  private final JsonElementType type;
 
   /**
    * Creator for JSON value element with value being NULL.
@@ -81,7 +71,7 @@ public final class JsonElement {
    * @return JSON value element with value NULL
    */
   public static JsonElement nullValue(String key) {
-    return new JsonElement(key, null, Type.VALUE);
+    return new JsonElement(key, null, JsonElementType.VALUE);
   }
 
   /**
@@ -90,7 +80,7 @@ public final class JsonElement {
    * @return JSON value element
    */
   public static JsonElement value(Object value) {
-    return new JsonElement(null, value, Type.VALUE);
+    return new JsonElement(null, value, JsonElementType.VALUE);
   }
 
   /**
@@ -100,7 +90,7 @@ public final class JsonElement {
    * @return JSON value element
    */
   public static JsonElement value(String key, Object value) {
-    return new JsonElement(key, value, Type.VALUE);
+    return new JsonElement(key, value, JsonElementType.VALUE);
   }
 
   /**
@@ -109,7 +99,7 @@ public final class JsonElement {
    * @return JSON object start element
    */
   public static JsonElement startObject(String key) {
-    return new JsonElement(key, null, Type.START_OBJECT);
+    return new JsonElement(key, null, JsonElementType.START_OBJECT);
   }
 
   /**
@@ -118,7 +108,7 @@ public final class JsonElement {
    * @return JSON array start element
    */
   public static JsonElement startArray(String key) {
-    return new JsonElement(key, null, Type.START_ARRAY);
+    return new JsonElement(key, null, JsonElementType.START_ARRAY);
   }
 
   /**
@@ -126,7 +116,7 @@ public final class JsonElement {
    * @param value JSON element value
    * @param type JSON element type
    */
-  public JsonElement(String key, Object value, Type type) {
+  public JsonElement(String key, Object value, JsonElementType type) {
     this.key = key;
     this.value = value;
     this.type = type;
@@ -149,7 +139,7 @@ public final class JsonElement {
   /**
    * @return the type
    */
-  public Type getType() {
+  public JsonElementType getType() {
     return this.type;
   }
 
@@ -172,14 +162,14 @@ public final class JsonElement {
    * @return True if is a starting element
    */
   public boolean isStartingElement() {
-    return Type.START_ARRAY.equals(type) || Type.START_OBJECT.equals(type);
+    return JsonElementType.START_ARRAY.equals(type) || JsonElementType.START_OBJECT.equals(type);
   }
 
   /**
    * @return True if is a closing element
    */
   public boolean isClosingElement() {
-    return Type.END_ARRAY.equals(type) || Type.END_OBJECT.equals(type);
+    return JsonElementType.END_ARRAY.equals(type) || JsonElementType.END_OBJECT.equals(type);
   }
 
 }
