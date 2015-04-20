@@ -19,6 +19,7 @@
  */
 package io.wcm.caravan.io.halclient.actions;
 
+import static io.wcm.caravan.io.http.request.CaravanHttpRequest.CORRELATION_ID_HEADER_NAME;
 import io.wcm.caravan.commons.hal.domain.HalResource;
 import io.wcm.caravan.commons.hal.domain.Link;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
@@ -29,7 +30,6 @@ import io.wcm.caravan.pipeline.JsonPipelineOutput;
 import io.wcm.caravan.pipeline.cache.CacheStrategy;
 import io.wcm.caravan.pipeline.util.JsonPipelineOutputUtil;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +37,7 @@ import rx.Observable;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 /**
  * Action to load a HAL link and insert the content as embedded resource.
@@ -107,14 +108,20 @@ public class EmbedLinks implements JsonPipelineAction {
   }
 
   private Observable<CaravanHttpRequest> getRequests(JsonPipelineOutput previousStepOutput, List<Link> links) {
-    Collection<String> cacheControl = previousStepOutput.getRequests().get(0).headers().get("Cache-Control");
+    Multimap<String, String> previousHeaders = previousStepOutput.getRequests().get(0).headers();
     return Observable.from(links)
         // create request, and main cache-control headers from previous request
         .map(link -> {
-          return new CaravanHttpRequestBuilder(serviceName)
+           CaravanHttpRequestBuilder builder = new CaravanHttpRequestBuilder(serviceName)
           .append(link.getHref())
-          .header("Cache-Control", cacheControl)
-          .build(parameters);
+          .header("Cache-Control", previousHeaders.get("Cache-Control"));
+
+           // also make sure that the correlation-id is passed on to the follow-up requests
+           if (previousStepOutput.getCorrelationId() != null) {
+             builder.header(CORRELATION_ID_HEADER_NAME, previousStepOutput.getCorrelationId());
+           }
+
+          return builder.build(parameters);
         });
   }
 

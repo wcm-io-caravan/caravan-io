@@ -19,6 +19,7 @@
  */
 package io.wcm.caravan.io.halclient.actions;
 
+import static io.wcm.caravan.io.http.request.CaravanHttpRequest.CORRELATION_ID_HEADER_NAME;
 import io.wcm.caravan.commons.hal.domain.HalResource;
 import io.wcm.caravan.commons.hal.domain.Link;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
@@ -87,10 +88,16 @@ public class FollowLink implements JsonPipelineAction {
     String href = getHref(previousStepOutput);
     Collection<String> cacheControlHeader = getCacheControlHeader(previousStepOutput);
     // create follow-up request, and main cache-control headers from previous request
-    return new CaravanHttpRequestBuilder(serviceName)
+    CaravanHttpRequestBuilder builder = new CaravanHttpRequestBuilder(serviceName)
     .append(href)
-    .header("Cache-Control", cacheControlHeader)
-    .build(parameters);
+    .header("Cache-Control", cacheControlHeader);
+
+    // also make sure that the correlation-id is passed on to the follow-up requests
+    if (previousStepOutput.getCorrelationId() != null) {
+      builder.header(CORRELATION_ID_HEADER_NAME, previousStepOutput.getCorrelationId());
+    }
+
+    return builder.build(parameters);
   }
 
   private String getHref(JsonPipelineOutput previousStepOutput) {
@@ -113,6 +120,6 @@ public class FollowLink implements JsonPipelineAction {
       pipeline = pipeline.addCachePoint(cacheStrategy);
     }
     return pipeline;
-  }
+   }
 
 }

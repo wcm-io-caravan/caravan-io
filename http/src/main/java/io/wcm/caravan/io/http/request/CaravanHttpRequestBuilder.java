@@ -41,6 +41,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -73,6 +74,16 @@ public class CaravanHttpRequestBuilder {
    */
   public CaravanHttpRequestBuilder(String serviceName) {
     this.serviceName = serviceName;
+  }
+
+  /**
+   * @param serviceName Logical service name. Can be null
+   */
+  public CaravanHttpRequestBuilder(String serviceName, String correlationId) {
+    this.serviceName = serviceName;
+    if (correlationId != null) {
+      header(CaravanHttpRequest.CORRELATION_ID_HEADER_NAME, ImmutableList.of(correlationId));
+    }
   }
 
   /**
