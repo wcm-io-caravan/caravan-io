@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Factory for HAL specific {@link JsonPipelineAction}s.
  */
-public class HalClientFactory {
+public class HalClient {
 
   private final String serviceName;
   private final CacheStrategy cacheStrategy;
@@ -46,7 +46,7 @@ public class HalClientFactory {
    * @param serviceName Service name
    * @param cacheStrategy default cache strategy to use for all actions that fetch additional resources
    */
-  public HalClientFactory(String serviceName, CacheStrategy cacheStrategy) {
+  public HalClient(String serviceName, CacheStrategy cacheStrategy) {
     this(serviceName, cacheStrategy, ImmutableMap.of());
   }
 
@@ -55,7 +55,7 @@ public class HalClientFactory {
    * @param cacheStrategy  default cache strategy to use for all actions that fetch additional resources
    * @param contextProperties a Map of properties to pass on to {@link JsonPipelineFactory#create(CaravanHttpRequest, Map)}
    */
-  public HalClientFactory(String serviceName, CacheStrategy cacheStrategy, Map<String, String> contextProperties) {
+  public HalClient(String serviceName, CacheStrategy cacheStrategy, Map<String, String> contextProperties) {
     this.serviceName = serviceName;
     this.cacheStrategy = cacheStrategy;
     this.contextProperties = contextProperties;
@@ -66,7 +66,7 @@ public class HalClientFactory {
    * @param factory Pipeline factory
    * @return JSON pipeline
    */
-  public JsonPipeline create(JsonPipelineFactory factory) {
+  public JsonPipeline createEntryPoint(JsonPipelineFactory factory) {
     return create(factory, "/");
   }
 
