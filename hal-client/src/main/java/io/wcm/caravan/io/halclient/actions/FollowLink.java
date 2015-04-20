@@ -20,8 +20,8 @@
 package io.wcm.caravan.io.halclient.actions;
 
 import static io.wcm.caravan.io.http.request.CaravanHttpRequest.CORRELATION_ID_HEADER_NAME;
-import io.wcm.caravan.commons.hal.domain.HalResource;
-import io.wcm.caravan.commons.hal.domain.Link;
+import io.wcm.caravan.commons.hal.resource.HalResource;
+import io.wcm.caravan.commons.hal.resource.Link;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.pipeline.JsonPipeline;
@@ -120,6 +120,6 @@ public class FollowLink implements JsonPipelineAction {
       pipeline = pipeline.addCachePoint(cacheStrategy);
     }
     return pipeline;
-   }
+  }
 
 }

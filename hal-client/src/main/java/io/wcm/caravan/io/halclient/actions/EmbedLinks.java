@@ -20,8 +20,8 @@
 package io.wcm.caravan.io.halclient.actions;
 
 import static io.wcm.caravan.io.http.request.CaravanHttpRequest.CORRELATION_ID_HEADER_NAME;
-import io.wcm.caravan.commons.hal.domain.HalResource;
-import io.wcm.caravan.commons.hal.domain.Link;
+import io.wcm.caravan.commons.hal.resource.HalResource;
+import io.wcm.caravan.commons.hal.resource.Link;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.pipeline.JsonPipelineAction;
@@ -112,14 +112,14 @@ public class EmbedLinks implements JsonPipelineAction {
     return Observable.from(links)
         // create request, and main cache-control headers from previous request
         .map(link -> {
-           CaravanHttpRequestBuilder builder = new CaravanHttpRequestBuilder(serviceName)
+          CaravanHttpRequestBuilder builder = new CaravanHttpRequestBuilder(serviceName)
           .append(link.getHref())
           .header("Cache-Control", previousHeaders.get("Cache-Control"));
 
-           // also make sure that the correlation-id is passed on to the follow-up requests
-           if (previousStepOutput.getCorrelationId() != null) {
-             builder.header(CORRELATION_ID_HEADER_NAME, previousStepOutput.getCorrelationId());
-           }
+          // also make sure that the correlation-id is passed on to the follow-up requests
+          if (previousStepOutput.getCorrelationId() != null) {
+            builder.header(CORRELATION_ID_HEADER_NAME, previousStepOutput.getCorrelationId());
+          }
 
           return builder.build(parameters);
         });

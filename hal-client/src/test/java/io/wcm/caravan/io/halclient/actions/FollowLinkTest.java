@@ -19,7 +19,7 @@
  */
 package io.wcm.caravan.io.halclient.actions;
 
-import io.wcm.caravan.commons.hal.HalResourceFactory;
+import io.wcm.caravan.commons.hal.resource.HalResourceFactory;
 import io.wcm.caravan.pipeline.JsonPipelineContext;
 import io.wcm.caravan.pipeline.JsonPipelineOutput;
 
