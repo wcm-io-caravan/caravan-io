@@ -20,11 +20,11 @@
 package io.wcm.caravan.io.jsontransform;
 
 import static org.junit.Assert.assertEquals;
-import io.wcm.caravan.io.jsontransform.domain.JsonElement;
-import io.wcm.caravan.io.jsontransform.domain.JsonElement.Type;
-import io.wcm.caravan.io.jsontransform.sinks.JacksonStreamSink;
-import io.wcm.caravan.io.jsontransform.sources.JacksonStreamSource;
-import io.wcm.caravan.io.jsontransform.sources.Source;
+import io.wcm.caravan.io.jsontransform.element.JsonElement;
+import io.wcm.caravan.io.jsontransform.element.JsonElement.Type;
+import io.wcm.caravan.io.jsontransform.sink.JacksonStreamSink;
+import io.wcm.caravan.io.jsontransform.source.JacksonStreamSource;
+import io.wcm.caravan.io.jsontransform.source.Source;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
