@@ -80,23 +80,13 @@ public class EmbedLinks implements JsonPipelineAction {
 
   @Override
   public Observable<JsonPipelineOutput> execute(JsonPipelineOutput previousStepOutput, JsonPipelineContext context) {
-
     HalResource halResource = new HalResource((ObjectNode)previousStepOutput.getPayload());
+
     Observable<JsonPipelineOutput> rxPipelineOutputsToEmbed = getPipelineOutputsForLinks(previousStepOutput, context, halResource).cache();
+    Observable<List<HalResource>> rxResourcesToEmbed = getResourcesToEmbed(rxPipelineOutputsToEmbed);
+    Observable<JsonPipelineOutput> rxReducedJsonPipelineOutput = getPipelineOutput(previousStepOutput, rxPipelineOutputsToEmbed);
 
-    Observable<List<HalResource>> rxResourcesToEmbed = rxPipelineOutputsToEmbed
-        .map(output -> (ObjectNode)output.getPayload())
-        .map(json -> new HalResource(json)).toList();
-
-    Observable<JsonPipelineOutput> rxReducedJsonPipelineOutput = rxPipelineOutputsToEmbed
-        .reduce(previousStepOutput, (recent, next) -> JsonPipelineOutputUtil.enrichWithLowestAge(recent, next));
-
-    return Observable.zip(rxResourcesToEmbed, rxReducedJsonPipelineOutput, (resourcesToEmbed, pipelineOutput) -> {
-      halResource.addEmbedded(relation, resourcesToEmbed);
-      removeLinks(halResource);
-      return pipelineOutput.withPayload(halResource.getModel());
-    });
-
+    return createOutput(halResource, rxResourcesToEmbed, rxReducedJsonPipelineOutput);
   }
 
   private Observable<JsonPipelineOutput> getPipelineOutputsForLinks(JsonPipelineOutput previousStepOutput, JsonPipelineContext context, HalResource halResource) {
@@ -126,6 +116,26 @@ public class EmbedLinks implements JsonPipelineAction {
           .header("Cache-Control", cacheControl)
           .build(parameters);
         });
+  }
+
+  private Observable<List<HalResource>> getResourcesToEmbed(Observable<JsonPipelineOutput> rxPipelineOutputsToEmbed) {
+    return rxPipelineOutputsToEmbed
+        .map(output -> (ObjectNode)output.getPayload())
+        .map(json -> new HalResource(json)).toList();
+  }
+
+  private Observable<JsonPipelineOutput> getPipelineOutput(JsonPipelineOutput previousStepOutput, Observable<JsonPipelineOutput> rxPipelineOutputsToEmbed) {
+    return rxPipelineOutputsToEmbed
+        .reduce(previousStepOutput, (recent, next) -> JsonPipelineOutputUtil.enrichWithLowestAge(recent, next));
+  }
+
+  private Observable<JsonPipelineOutput> createOutput(HalResource halResource, Observable<List<HalResource>> rxResourcesToEmbed,
+      Observable<JsonPipelineOutput> rxReducedJsonPipelineOutput) {
+    return Observable.zip(rxResourcesToEmbed, rxReducedJsonPipelineOutput, (resourcesToEmbed, pipelineOutput) -> {
+      halResource.addEmbedded(relation, resourcesToEmbed);
+      removeLinks(halResource);
+      return pipelineOutput.withPayload(halResource.getModel());
+    });
   }
 
   private void removeLinks(HalResource halResource) {

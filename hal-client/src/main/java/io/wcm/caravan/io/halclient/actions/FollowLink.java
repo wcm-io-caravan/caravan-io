@@ -20,6 +20,7 @@
 package io.wcm.caravan.io.halclient.actions;
 
 import io.wcm.caravan.commons.hal.domain.HalResource;
+import io.wcm.caravan.commons.hal.domain.Link;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.pipeline.JsonPipeline;
@@ -29,6 +30,8 @@ import io.wcm.caravan.pipeline.JsonPipelineContext;
 import io.wcm.caravan.pipeline.JsonPipelineOutput;
 import io.wcm.caravan.pipeline.cache.CacheStrategy;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import rx.Observable;
@@ -76,27 +79,40 @@ public class FollowLink implements JsonPipelineAction {
   @Override
   public Observable<JsonPipelineOutput> execute(JsonPipelineOutput previousStepOutput, JsonPipelineContext context) {
     CaravanHttpRequest request = getRequest(previousStepOutput);
-
-    JsonPipeline pipeline = context.getFactory().create(request, context.getProperties());
-    if (cacheStrategy != null) {
-      pipeline = pipeline.addCachePoint(cacheStrategy);
-    }
+    JsonPipeline pipeline = createPipeline(context, request);
     return pipeline.applyAction(JsonPipelineActions.enrichWithLowestAge(previousStepOutput)).getOutput();
   }
 
   private CaravanHttpRequest getRequest(JsonPipelineOutput previousStepOutput) {
-
-    CaravanHttpRequest previousRequest = previousStepOutput.getRequests().get(0);
-
-    HalResource halResource = new HalResource((ObjectNode)previousStepOutput.getPayload());
-    String href = halResource.getLinks(relation).get(index).getHref();
-
+    String href = getHref(previousStepOutput);
+    Collection<String> cacheControlHeader = getCacheControlHeader(previousStepOutput);
     // create follow-up request, and main cache-control headers from previous request
-
     return new CaravanHttpRequestBuilder(serviceName)
-      .append(href)
-      .header("Cache-Control",previousRequest.headers().get("Cache-Control"))
-      .build(parameters);
+    .append(href)
+    .header("Cache-Control", cacheControlHeader)
+    .build(parameters);
+  }
+
+  private String getHref(JsonPipelineOutput previousStepOutput) {
+    HalResource halResource = new HalResource((ObjectNode)previousStepOutput.getPayload());
+    List<Link> links = halResource.getLinks(relation);
+    if (links.size() <= index) {
+      throw new IllegalStateException("HAL resource has no link with relation " + relation + " and index " + index);
+    }
+    return links.get(index).getHref();
+  }
+
+  private Collection<String> getCacheControlHeader(JsonPipelineOutput previousStepOutput) {
+    CaravanHttpRequest previousRequest = previousStepOutput.getRequests().get(0);
+    return previousRequest.headers().get("Cache-Control");
+  }
+
+  private JsonPipeline createPipeline(JsonPipelineContext context, CaravanHttpRequest request) {
+    JsonPipeline pipeline = context.getFactory().create(request, context.getProperties());
+    if (cacheStrategy != null) {
+      pipeline = pipeline.addCachePoint(cacheStrategy);
+    }
+    return pipeline;
   }
 
 }
