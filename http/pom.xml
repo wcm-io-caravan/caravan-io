@@ -108,6 +108,13 @@
     <dependency>
       <groupId>commons-configuration</groupId>
       <artifactId>commons-configuration</artifactId>
+      <version>1.9</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.6</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -212,7 +219,9 @@
               netflix-commons-util;scope=provided;inline=false,
               netflix-statistics;scope=provided;inline=false,
               servo-core;scope=provided;inline=false,
-              servo-internal;scope=provided;inline=false
+              servo-internal;scope=provided;inline=false,
+              commons-configuration;scope=provided;inline=false,
+              commons-lang;scope=provided;inline=false
             </Embed-Dependency>
             <Embed-Transitive>false</Embed-Transitive>
             <Import-Package>
