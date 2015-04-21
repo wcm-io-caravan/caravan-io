@@ -230,6 +230,12 @@
               com.netflix.ribbon.transport.netty.*;resolution:=optional,
               io.netty.*;resolution:=optional,
               io.reactivex.netty.*;resolution:=optional,
+              org.apache.commons.codec.*;resolution:=optional,
+              org.apache.commons.digester.*;resolution:=optional,
+              org.apache.commons.jexl2.*;resolution:=optional,
+              org.apache.commons.jxpath.*;resolution:=optional,
+              org.apache.commons.vfs2.*;resolution:=optional,
+              org.apache.xml.resolver.*;resolution:=optional,
               *
             </Import-Package>
             <Bundle-Activator>io.wcm.caravan.io.http.impl.BundleActivator</Bundle-Activator>
