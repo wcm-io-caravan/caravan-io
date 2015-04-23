@@ -85,20 +85,20 @@ public class ResilientHttpRibbonTest {
         .willReturn(aResponse()
             .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
             .withBody("success")
-            ));
+        ));
     workingServer.stubFor(get(urlEqualTo(HTTP_404_URI))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_NOT_FOUND)
-            ));
+        ));
 
     defectServer1.stubFor(get(urlMatching(".*"))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
-            ));
+        ));
     defectServer2.stubFor(get(urlMatching(".*"))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
-            ));
+        ));
   }
 
   @Test(expected = IllegalResponseRuntimeException.class)

@@ -75,7 +75,8 @@ public final class CaravanHttpResponse {
   }
 
   /**
-   * Returns a specific header represented as a {@link Map}. Therefore splits the entries of one header by {@code :}. If the entry has no value gets interpreted
+   * Returns a specific header represented as a {@link Map}. Therefore splits the entries of one header by {@code :}. If
+   * the entry has no value gets interpreted
    * as a boolean and set to true.
    * @param headerName Name of the header to convert
    * @return A map representation of the header

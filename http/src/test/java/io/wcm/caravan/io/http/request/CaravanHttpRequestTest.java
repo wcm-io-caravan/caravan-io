@@ -37,7 +37,7 @@ public class CaravanHttpRequestTest {
 
   @Before
   public void setUp() {
-    Multimap<String, String> headers = ImmutableListMultimap.<String, String> builder()
+    Multimap<String, String> headers = ImmutableListMultimap.<String, String>builder()
         .putAll("Cache-Control", "public", "max-age: 100")
         .put(CaravanHttpRequest.CORRELATION_ID_HEADER_NAME, "test-id")
         .build();

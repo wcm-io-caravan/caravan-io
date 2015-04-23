@@ -54,9 +54,11 @@ public final class CaravanHttpRequest {
   private final Charset charset;
 
   /**
-   * @param serviceName Logical name of the request service. Used by {@link CaravanHttpClient} to resolve the real URL. If null, only {@code url} is used
+   * @param serviceName Logical name of the request service. Used by {@link CaravanHttpClient} to resolve the real URL.
+   *          If null, only {@code url} is used
    * @param method HTTP method verb
-   * @param url Service request URL. Can be an absolute URL or just an path getting combined with the URL of the logical service name
+   * @param url Service request URL. Can be an absolute URL or just an path getting combined with the URL of the logical
+   *          service name
    * @param headers HTTP headers
    * @param body HTTP Payload
    * @param charset Payload charset
@@ -96,7 +98,8 @@ public final class CaravanHttpRequest {
   }
 
   /**
-   * Returns a specific header represented as a {@link Map}. Therefore splits the entries of one header by {@code :}. If the entry has no value gets interpreted
+   * Returns a specific header represented as a {@link Map}. Therefore splits the entries of one header by {@code :}. If
+   * the entry has no value gets interpreted
    * as a boolean and set to true.
    * @param headerName Name of the header to convert
    * @return A map representation of the header
@@ -114,8 +117,8 @@ public final class CaravanHttpRequest {
   }
 
   /**
-   * The character set with which the body is encoded, or null if unknown or not applicable. When this is present, you can use
-   * {@code new String(req.body(), req.charset())} to access the body as a String.
+   * The character set with which the body is encoded, or null if unknown or not applicable. When this is present, you
+   * can use {@code new String(req.body(), req.charset())} to access the body as a String.
    * @return Charset
    */
   public Charset getCharset() {

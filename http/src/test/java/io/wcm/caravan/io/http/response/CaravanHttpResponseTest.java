@@ -36,7 +36,7 @@ public class CaravanHttpResponseTest {
 
   @Test
   public void test_getHeaderAsMap() throws Exception {
-    ImmutableListMultimap<String, String> headers = ImmutableListMultimap.<String, String> builder()
+    ImmutableListMultimap<String, String> headers = ImmutableListMultimap.<String, String>builder()
         .putAll("Cache-Control", "public", "max-age: 1", "no-cache").build();
     CaravanHttpResponse response = new CaravanHttpResponse(200, "OK", headers, null);
 

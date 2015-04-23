@@ -37,9 +37,9 @@ import org.slf4j.LoggerFactory;
  * The configuration is mapped to archaius configuration internally.
  */
 @Component(immediate = true, metatype = true,
-label = "wcm.io Caravan Resilient Http Thread Pool Configuration",
-description = " Configures thread pool options for the transport layer.",
-configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
+    label = "wcm.io Caravan Resilient Http Thread Pool Configuration",
+    description = " Configures thread pool options for the transport layer.",
+    configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
 @Property(name = "webconsole.configurationFactory.nameHint", value = "{threadPoolName}: {hystrixThreadpoolCoresize}")
 public class ResilientHttpThreadPoolConfig {
 

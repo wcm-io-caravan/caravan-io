@@ -180,6 +180,7 @@ public class CaravanHttpClientImplProtocolTest {
         getServiceConfigProperties(serviceName, hostPort, protocol));
 
     when(httpClient.execute(any(HttpUriRequest.class), any(FutureCallback.class))).then(new Answer<Future<HttpResponse>>() {
+
       @Override
       public Future<HttpResponse> answer(InvocationOnMock invocation) {
         HttpUriRequest request = invocation.getArgumentAt(0, HttpUriRequest.class);

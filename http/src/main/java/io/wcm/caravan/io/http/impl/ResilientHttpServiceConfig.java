@@ -36,9 +36,9 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
  * The configuration is mapped to archaius configuration internally.
  */
 @Component(immediate = true, metatype = true,
-label = "wcm.io Caravan Resilient Http Service Configuration",
-description = "Configures transport layer options for service access.",
-configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
+    label = "wcm.io Caravan Resilient Http Service Configuration",
+    description = "Configures transport layer options for service access.",
+    configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
 @Property(name = "webconsole.configurationFactory.nameHint", value = "{serviceName}: {ribbonHosts}")
 public class ResilientHttpServiceConfig {
 
@@ -48,19 +48,18 @@ public class ResilientHttpServiceConfig {
   @Property(label = "Hosts",
       description = "Ribbon: List of hostnames/IP addresses and ports to use for service (if multiple are defined software " +
           "load balancing is applied). Example entry: 'host1:80'.",
-          cardinality = Integer.MAX_VALUE)
+      cardinality = Integer.MAX_VALUE)
   static final String RIBBON_HOSTS_PROPERTY = "ribbonHosts";
 
   @Property(label = "Protocol",
       description = "Choose between HTTP and HTTPS protocol for communicating with the Hosts. "
           + "If set to 'Auto' the protocol is detected automatically from the port number (443 and 8443 = HTTPS).",
-          value = ResilientHttpServiceConfig.PROTOCOL_PROPERTY_DEFAULT,
-          options = {
-      @PropertyOption(name = RequestUtil.PROTOCOL_AUTO, value = "Auto"),
-      @PropertyOption(name = RequestUtil.PROTOCOL_HTTP, value = "HTTP"),
-      @PropertyOption(name = RequestUtil.PROTOCOL_HTTPS, value = "HTTPS")
-  }
-      )
+      value = ResilientHttpServiceConfig.PROTOCOL_PROPERTY_DEFAULT,
+      options = {
+          @PropertyOption(name = RequestUtil.PROTOCOL_AUTO, value = "Auto"),
+          @PropertyOption(name = RequestUtil.PROTOCOL_HTTP, value = "HTTP"),
+          @PropertyOption(name = RequestUtil.PROTOCOL_HTTPS, value = "HTTPS")
+      })
   static final String PROTOCOL_PROPERTY = "http.protocol";
   static final String PROTOCOL_PROPERTY_DEFAULT = RequestUtil.PROTOCOL_AUTO;
 
@@ -79,7 +78,7 @@ public class ResilientHttpServiceConfig {
   @Property(label = "Isolation Timeout",
       description = "Hystrix: Time in milliseconds after which the calling thread will timeout and walk away from the "
           + "HystrixCommand.run() execution and mark the HystrixCommand as a TIMEOUT and perform fallback logic.",
-          intValue = ResilientHttpServiceConfig.HYSTRIX_TIMEOUT_MS_DEFAULT)
+      intValue = ResilientHttpServiceConfig.HYSTRIX_TIMEOUT_MS_DEFAULT)
   static final String HYSTRIX_TIMEOUT_MS_PROPERTY = "hystrixTimeoutMs";
   static final int HYSTRIX_TIMEOUT_MS_DEFAULT = 120000;
 
@@ -104,14 +103,14 @@ public class ResilientHttpServiceConfig {
   @Property(label = "Sleep Window",
       description = "Hystrix: Circuit Breaker - After tripping the circuit how long in milliseconds to reject requests before allowing "
           + "attempts again to determine if the circuit should be closed.",
-          intValue = ResilientHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_SLEEPWINDOW_MS_DEFAULT)
+      intValue = ResilientHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_SLEEPWINDOW_MS_DEFAULT)
   static final String HYSTRIX_CIRCUITBREAKER_SLEEPWINDOW_MS_PROPERTY = "hystrixCircuitBreakerSleepWindowMs";
   static final int HYSTRIX_CIRCUITBREAKER_SLEEPWINDOW_MS_DEFAULT = 5000;
 
   @Property(label = "Error Threshold Percentage",
       description = "Hystrix: Circuit Breaker - Error percentage at which the circuit should trip open and start short-circuiting "
           + "requests to fallback logic.",
-          intValue = ResilientHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE_DEFAULT)
+      intValue = ResilientHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE_DEFAULT)
   static final String HYSTRIX_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE_PROPERTY = "hystrixCircuitBreakerErrorThresholdPercentage";
   static final int HYSTRIX_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE_DEFAULT = 50;
 
