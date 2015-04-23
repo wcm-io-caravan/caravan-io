@@ -20,74 +20,140 @@
 package io.wcm.caravan.io.http.request;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import io.wcm.caravan.io.http.impl.CaravanHttpHelper;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 
 public class CaravanHttpRequestBuilderTest {
 
+  private static final String SERVICE_NAME = "test-service";
+  private static final String CORRELATION_ID = "123";
+
   private CaravanHttpRequestBuilder builder;
 
   @Before
   public void setUp() {
-    builder = new CaravanHttpRequestBuilder();
+    builder = new CaravanHttpRequestBuilder(SERVICE_NAME, CORRELATION_ID);
   }
 
   @Test
-  public void test_append() {
-    builder.append("/path{/pathParts*}{?q1,q2}").append("/subPath{?q3}");
-    assertEquals("GET /path{/pathParts*}/subPath{?q1,q2,q3} HTTP/1.1\n", builder.toString());
-    assertEquals("GET /path/subPath?q1=v1&q3=v3 HTTP/1.1\n", builder.build(ImmutableMap.of("q1", "v1", "q3", "v3")).toString());
+  public void testConstructor() {
+    CaravanHttpRequest request = builder.build();
+    assertEquals(SERVICE_NAME, request.getServiceName());
+    assertEquals(CORRELATION_ID, request.getCorrelationId());
+  }
+
+  @Test
+  public void testMethod() {
+    assertEquals("GET", builder.build().getMethod());
+    assertEquals("POST", builder.method("POST").build().getMethod());
+  }
+
+  @Test
+  public void testHeaderStringString() {
+    assertEquals(ImmutableList.of("value"), builder.header("key", "value").build().getHeaders().get("key"));
+  }
+
+  @Test
+  public void testHeaderStringString_placeHolder() throws Exception {
+    assertEquals(ImmutableList.of("v1"), builder.header("key", "{value}").build(ImmutableMap.of("value", "v1")).getHeaders().get("key"));
+  }
+
+  @Test
+  public void testHeaderStringCollection() {
+    ImmutableList<String> values = ImmutableList.of("value1", "value2");
+    assertEquals(values, builder.header("key", values).build().getHeaders().get("key"));
+  }
+
+  @Test
+  public void testBodyString() {
+    CaravanHttpRequest request = builder.body("key={value}").build(ImmutableMap.of("value", "123"));
+    String body = new String(request.getBody(), request.getCharset());
+    assertEquals("key=123", body);
+  }
+
+  @Test
+  public void testBodyByteArrayCharset() {
+    String content = "key=123";
+    CaravanHttpRequest request = builder.body(content.getBytes(), Charsets.UTF_8).build();
+    String body = new String(request.getBody(), request.getCharset());
+    assertEquals(content, body);
+  }
+
+  @Test
+  public void testAppend() {
+    assertEquals("/path1/path2", builder.append("/path1").append("/path2").build().getUrl());
+  }
+
+  @Test
+  public void testAppend_path() {
+    assertEquals("/xyz/1", builder.append("/xyz{/path}").build(ImmutableMap.of("path", 1)).getUrl());
+  }
+
+  @Test
+  public void testAppend_query() {
+    assertEquals("/path?a=1", builder.append("/path{?a}").build(ImmutableMap.of("a", "1")).getUrl());
+  }
+
+  @Test
+  public void testAppend_queryEndoded() throws Exception {
+    assertEquals("/path?a=" + CaravanHttpHelper.urlEncode("/encoded&"), builder.append("/path{?a}").build(ImmutableMap.of("a", "/encoded&")).getUrl());
+  }
+
+  @Test
+  public void testAppend_queryWithExistingQuery() {
+    assertEquals("/path?a=1&b=2&c=3", builder.append("/path?c=3&b=2{&a}").build(ImmutableMap.of("a", "1")).getUrl());
+  }
+
+  @Test
+  public void testAppend_continuation() {
+    assertEquals("/path?a=1", builder.append("/path{&a}").build(ImmutableMap.of("a", "1")).getUrl());
+  }
+
+  @Test
+  public void testAppend_multiValues() {
+    assertEquals("/path?a=2&a=1", builder.append("/path?a=2&a=1").build().getUrl());
+  }
+
+  @Test
+  public void testAppend_queryNoValue() {
+    assertEquals("/path", builder.append("/path{?a}").build().getUrl());
+  }
+
+  @Test
+  public void testAppend_queries() {
+    assertEquals("/path?a=1&b=2", builder.append("/path{?a}").append("{?b}").build(ImmutableMap.of("a", 1, "b", 2)).getUrl());
+  }
+
+  @Test
+  public void testAppend_queriesOrder() {
+    assertEquals("/path?a=1&b=2", builder.append("/path{?b}").append("{?a}").build(ImmutableMap.of("a", 1, "b", 2)).getUrl());
+  }
+
+  @Test
+  public void testAppend_encoded() throws Exception {
+    String encoded = CaravanHttpHelper.urlEncode("/encoded&");
+    assertEquals("/path?encoded=" + encoded, builder.append("/path?encoded=" + encoded).build().getUrl());
   }
 
   @Test
   public void test_query() {
-    builder.append("/path{?q1,q2}").query("q3", Lists.newArrayList("v3.1", "v3.2")).append("/subPath{?q4}");
-    assertEquals("GET /path/subPath{?q1,q2}&q3=v3.1,v3.2{&q4} HTTP/1.1\n", builder.toString());
-    assertEquals("GET /path/subPath?q3=v3.1,v3.2 HTTP/1.1\n", builder.build().toString());
-    assertEquals("GET /path/subPath?q1=v1&q3=v3.1,v3.2&q4=v4 HTTP/1.1\n", builder.build(ImmutableMap.of("q1", "v1", "q4", "v4")).toString());
+    builder.append("/path{?q1,q2}").query("q4", Lists.newArrayList("v4.1", "v4.2")).append("/subPath{?q3}");
+    assertEquals("/path/subPath?q4=v4.1,v4.2", builder.build().getUrl());
+    assertEquals("/path/subPath?q1=v1&q3=v3&q4=v4.1,v4.2", builder.build(ImmutableMap.of("q1", "v1", "q3", "v3")).getUrl());
   }
 
   @Test
-  public void test_method() {
-    builder.append("/").method("POST");
-    assertEquals("POST", builder.method());
-    assertEquals("POST / HTTP/1.1\n", builder.toString());
+  public void test_complex() {
+    String url = builder.append("/path1/path2?doIt=yes&z=z&var=value10&var=value1{&version}").build(ImmutableMap.of("version", 1)).getUrl();
+    assertEquals("/path1/path2?doIt=yes&var=value10&var=value1&version=1&z=z", url);
   }
 
-  @Test
-  public void test_body() {
-    builder.append("/").body("BODY".getBytes(Charsets.UTF_8), Charsets.UTF_8);
-    assertEquals(Charsets.UTF_8, builder.charset());
-    assertNull(builder.bodyTemplate());
-    assertEquals("BODY", new String(builder.body()));
-    assertEquals("GET / HTTP/1.1\n\nBODY", builder.toString());
-  }
-
-  @Test
-  public void test_bodyTemplate() {
-    builder.append("/").body("x={x}");
-    assertEquals(Charsets.UTF_8, builder.charset());
-    assertNull(builder.body());
-    assertEquals("x={x}", new String(builder.bodyTemplate()));
-    assertEquals("GET / HTTP/1.1\n\nx={x}", builder.toString());
-    assertEquals("GET / HTTP/1.1\n\nx=", builder.build().toString());
-    assertEquals("GET / HTTP/1.1\n\nx=v", builder.build(ImmutableMap.of("x", "v")).toString());
-  }
-
-  @Test
-  public void test_header() {
-    builder.append("/").header("Cache-Control", "public").header("Cache-Control", "max-age={maxAge}");
-    assertEquals(2, builder.headers().size());
-    assertEquals(2, builder.headers().get("Cache-Control").size());
-    assertEquals("GET / HTTP/1.1\nCache-Control: public, max-age={maxAge}\n", builder.toString());
-    assertEquals("GET / HTTP/1.1\nCache-Control: public, max-age=\n", builder.build().toString());
-    assertEquals("GET / HTTP/1.1\nCache-Control: public, max-age=100\n", builder.build(ImmutableMap.of("maxAge", 100)).toString());
-  }
 }

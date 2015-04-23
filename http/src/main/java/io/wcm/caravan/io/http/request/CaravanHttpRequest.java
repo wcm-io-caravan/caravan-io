@@ -20,20 +20,15 @@
 package io.wcm.caravan.io.http.request;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.wcm.caravan.commons.stream.Streams;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.impl.CaravanHttpHelper;
 
-import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
 import org.osgi.annotation.versioning.ProviderType;
 
 import com.google.common.collect.ImmutableMultimap;
@@ -59,11 +54,9 @@ public final class CaravanHttpRequest {
   private final Charset charset;
 
   /**
-   * @param serviceName Logical name of the request service. Used by {@link CaravanHttpClient} to resolve the real URL.
-   *          If null, only {@code url} is used
+   * @param serviceName Logical name of the request service. Used by {@link CaravanHttpClient} to resolve the real URL. If null, only {@code url} is used
    * @param method HTTP method verb
-   * @param url Service request URL. Can be an absolute URL or just an path getting combined with the URL of the logical
-   *          service name
+   * @param url Service request URL. Can be an absolute URL or just an path getting combined with the URL of the logical service name
    * @param headers HTTP headers
    * @param body HTTP Payload
    * @param charset Payload charset
@@ -82,7 +75,7 @@ public final class CaravanHttpRequest {
    * Method to invoke on the server.
    * @return HTTP method
    */
-  public String method() {
+  public String getMethod() {
     return method;
   }
 
@@ -90,7 +83,7 @@ public final class CaravanHttpRequest {
    * Fully resolved url including query.
    * @return URL
    */
-  public String url() {
+  public String getUrl() {
     return url;
   }
 
@@ -98,13 +91,13 @@ public final class CaravanHttpRequest {
    * Ordered list of headers that will be sent to the server.
    * @return HTTP headers
    */
-  public Multimap<String, String> headers() {
+  public Multimap<String, String> getHeaders() {
     return headers;
   }
 
   /**
-   * Returns a specific header represented as a {@link Map}. Therefore splits the entries of one header by {@code :}. If
-   * the entry has no value gets interpreted as a boolean and set to true.
+   * Returns a specific header represented as a {@link Map}. Therefore splits the entries of one header by {@code :}. If the entry has no value gets interpreted
+   * as a boolean and set to true.
    * @param headerName Name of the header to convert
    * @return A map representation of the header
    */
@@ -117,29 +110,24 @@ public final class CaravanHttpRequest {
    * @return true if the parameter exists in this request's query
    */
   public boolean hasParameter(String name) {
-    // TODO: is there really no easier function for this on the classpath (e.g. parse into some MultiValueMap)
-    List<NameValuePair> parameters = URLEncodedUtils.parse(URI.create(url), CharEncoding.UTF_8);
-    // TODO: use Streams.of(parameters).exists(p -> name.equals(p.getName()))
-    return Streams.of(parameters)
-        .filter(param -> param.getName().equals(name))
-        .iterator().hasNext();
+    return Pattern.compile("[\\?|\\&](" + name + "\\=[^\\&]).*$").matcher(url).find();
   }
 
   /**
-   * The character set with which the body is encoded, or null if unknown or not applicable. When this is
-   * present, you can use {@code new String(req.body(), req.charset())} to access the body as a String.
+   * The character set with which the body is encoded, or null if unknown or not applicable. When this is present, you can use
+   * {@code new String(req.body(), req.charset())} to access the body as a String.
    * @return Charset
    */
-  public Charset charset() {
+  public Charset getCharset() {
     return charset;
   }
 
   /**
    * If present, this is the replayable body to send to the server. In some cases, this may be interpretable as text.
-   * @see #charset()
+   * @see #getCharset()
    * @return HTTP body
    */
-  public byte[] body() {
+  public byte[] getBody() {
     return body;
   }
 
@@ -167,7 +155,8 @@ public final class CaravanHttpRequest {
    * @return the value of the correlation-id header or null if it wasn't set
    */
   public String getCorrelationId() {
-    Collection<String> correlationHeaders = headers().get(CaravanHttpRequest.CORRELATION_ID_HEADER_NAME);
-    return correlationHeaders.size() >= 1 ? correlationHeaders.iterator().next() : null;
+    Collection<String> correlationHeaders = getHeaders().get(CaravanHttpRequest.CORRELATION_ID_HEADER_NAME);
+    return correlationHeaders.isEmpty() ? null : correlationHeaders.iterator().next();
   }
+
 }

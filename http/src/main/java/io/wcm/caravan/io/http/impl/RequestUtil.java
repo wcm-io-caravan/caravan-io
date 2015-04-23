@@ -96,11 +96,11 @@ final class RequestUtil {
    * @return HTTP client request object
    */
   public static HttpUriRequest buildHttpRequest(String urlPrefix, CaravanHttpRequest request) {
-    String url = urlPrefix + request.url();
+    String url = urlPrefix + request.getUrl();
 
     // http method
     HttpUriRequest httpRequest;
-    String method = StringUtils.upperCase(request.method());
+    String method = StringUtils.upperCase(request.getMethod());
     switch (method) {
       case HttpGet.METHOD_NAME:
         httpRequest = new HttpGet(url);
@@ -115,20 +115,20 @@ final class RequestUtil {
         httpRequest = new HttpDelete(url);
         break;
       default:
-        throw new IllegalArgumentException("Unsupported HTTP method type: " + request.method());
+        throw new IllegalArgumentException("Unsupported HTTP method type: " + request.getMethod());
     }
 
     // headers
-    Streams.of(request.headers().entries()).forEach(e -> httpRequest.addHeader(e.getKey(), e.getValue()));
+    Streams.of(request.getHeaders().entries()).forEach(e -> httpRequest.addHeader(e.getKey(), e.getValue()));
 
     // body
-    if ((httpRequest instanceof HttpEntityEnclosingRequest) && request.body() != null) {
+    if ((httpRequest instanceof HttpEntityEnclosingRequest) && request.getBody() != null) {
       HttpEntityEnclosingRequest entityHttpRequest = (HttpEntityEnclosingRequest)httpRequest;
-      if (request.charset() != null) {
-        entityHttpRequest.setEntity(new StringEntity(new String(request.body(), request.charset()), request.charset()));
+      if (request.getCharset() != null) {
+        entityHttpRequest.setEntity(new StringEntity(new String(request.getBody(), request.getCharset()), request.getCharset()));
       }
       else {
-        entityHttpRequest.setEntity(new ByteArrayEntity(request.body()));
+        entityHttpRequest.setEntity(new ByteArrayEntity(request.getBody()));
       }
     }
 
