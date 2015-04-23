@@ -25,6 +25,7 @@ import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -83,7 +84,7 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
           ILoadBalancer loadBalancer = (ILoadBalancer)ClientFactory.instantiateInstanceWithClientConfig(loadBalancerClassName, clientConfig);
           IClientConfig config = ClientFactory.getNamedConfig(key, DefaultClientConfigImpl.class);
 
-          LoadBalancerCommand<CaravanHttpResponse> command = LoadBalancerCommand.<CaravanHttpResponse>builder()
+          LoadBalancerCommand<CaravanHttpResponse> command = LoadBalancerCommand.<CaravanHttpResponse> builder()
               .withLoadBalancer(loadBalancer)
               .withClientConfig(config)
               .withRetryHandler(new CaravanLoadBalancerRetryHandler(config))
@@ -102,8 +103,8 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
   public Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request, final Observable<CaravanHttpResponse> fallback) {
     Observable<CaravanHttpResponse> ribbon = request.getServiceName() != null ? getRibbonObservable(request) : getHttpObservable("", request);
     Observable<CaravanHttpResponse> hystrix = new HttpHystrixCommand(StringUtils.defaultString(request.getServiceName(), "UNKNOWN"), ribbon, fallback)
-    .toObservable();
-    return hystrix.onErrorResumeNext(exception -> Observable.<CaravanHttpResponse>error(mapToKnownException(request, exception)));
+        .toObservable();
+    return hystrix.onErrorResumeNext(exception -> Observable.<CaravanHttpResponse> error(mapToKnownException(request, exception)));
   }
 
   private Observable<CaravanHttpResponse> getRibbonObservable(final CaravanHttpRequest request) {
@@ -133,7 +134,7 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
   }
 
   private Observable<CaravanHttpResponse> getHttpObservable(final String urlPrefix, final CaravanHttpRequest request) {
-    return Observable.<CaravanHttpResponse>create(new Observable.OnSubscribe<CaravanHttpResponse>() {
+    return Observable.<CaravanHttpResponse> create(new Observable.OnSubscribe<CaravanHttpResponse>() {
 
       @Override
       public void call(final Subscriber<? super CaravanHttpResponse> subscriber) {
@@ -157,9 +158,12 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
                 EntityUtils.consumeQuietly(entity);
               }
               else {
-                CaravanHttpResponse response = CaravanHttpResponse.create(status.getStatusCode(), status.getReasonPhrase(),
-                    RequestUtil.toHeadersMap(result.getAllHeaders()),
-                    entity.getContent(), entity.getContentLength() > 0 ? (int)entity.getContentLength() : null);
+                CaravanHttpResponse response = new CaravanHttpResponseBuilder()
+                    .status(status.getStatusCode())
+                    .reason(status.getReasonPhrase())
+                    .headers(RequestUtil.toHeadersMap(result.getAllHeaders()))
+                    .body(entity.getContent(), entity.getContentLength() > 0 ? (int)entity.getContentLength() : null)
+                    .build();
                 subscriber.onNext(response);
                 subscriber.onCompleted();
               }
