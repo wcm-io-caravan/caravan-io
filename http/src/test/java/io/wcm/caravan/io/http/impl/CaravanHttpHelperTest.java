@@ -21,13 +21,13 @@ package io.wcm.caravan.io.http.impl;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 
 public class CaravanHttpHelperTest {
@@ -42,11 +42,46 @@ public class CaravanHttpHelperTest {
     assertEquals("%26", CaravanHttpHelper.urlEncode("&"));
   }
 
+
   @Test
-  public void testConvertHeaderToMap() throws Exception {
-    List<String> header = ImmutableList.of("public", "max-age: 1234");
-    Map<String, Object> map = CaravanHttpHelper.convertHeaderToMap(header);
-    assertEquals(ImmutableMap.of("public", true, "max-age", "1234"), map);
+  public void testConvertCacheControlToMap_singleEntry() throws Exception {
+    List<String> header = ImmutableList.of("max-age=1234");
+    Map<String, String> map = CaravanHttpHelper.convertMultiValueHeaderToMap(header);
+
+    assertEquals("map contains a single entry?", 1, map.size());
+    assertEquals("max-age extracted correctly?", map.get("max-age"), "1234");
   }
 
+  @Test
+  public void testConvertCacheControlToMap_twoEntries() throws Exception {
+    List<String> header = ImmutableList.of("public,max-age=1234");
+    Map<String, String> map = CaravanHttpHelper.convertMultiValueHeaderToMap(header);
+
+    assertEquals("map contains two entries?", 2, map.size());
+    assertEquals("max-age extracted correctly?", map.get("max-age"), "1234");
+    assertEquals("public extracted correctly?", map.get("public"), "true");
+  }
+
+  @Test
+  public void testConvertCacheControlToMap_twoLines() throws Exception {
+    List<String> header = ImmutableList.of("public", "max-age=1234");
+    Map<String, String> map = CaravanHttpHelper.convertMultiValueHeaderToMap(header);
+
+    assertEquals("map contains two entries?", 2, map.size());
+    assertEquals("max-age extracted correctly?", map.get("max-age"), "1234");
+    assertEquals("public extracted correctly?", map.get("public"), "true");
+  }
+
+  @Test
+  public void testConvertCacheControlToMap_maintainOrder() throws Exception {
+    List<String> header = ImmutableList.of("1,2,3,4", "5,6,7", "8,9,10,11", "12", "13,14,15", "16");
+    Map<String, String> map = CaravanHttpHelper.convertMultiValueHeaderToMap(header);
+
+    assertEquals("map contains all entries?", 16, map.size());
+
+    Iterator<String> keyIterator = map.keySet().iterator();
+    for (int i=1; i<=map.size(); i++) {
+      assertEquals(String.valueOf(i), keyIterator.next());
+    }
+  }
 }

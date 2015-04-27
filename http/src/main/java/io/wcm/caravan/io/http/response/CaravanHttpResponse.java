@@ -75,14 +75,13 @@ public final class CaravanHttpResponse {
   }
 
   /**
-   * Returns a specific header represented as a {@link Map}. Therefore splits the entries of one header by {@code :}. If
-   * the entry has no value gets interpreted
-   * as a boolean and set to true.
-   * @param headerName Name of the header to convert
-   * @return A map representation of the header
+   * Collects all "Cache-Control" directives from the request headers into a single map. The keys in the map are the
+   * directive names (e.g. "max-age", "no-cache"), and everything after the "=" is taken as value. For directives that
+   * don't have a value "true" is used as a value instead.
+   * @return the map of Cache-Control directice
    */
-  public Map<String, Object> getHeaderAsMap(final String headerName) {
-    return CaravanHttpHelper.convertHeaderToMap(headers.get(headerName));
+  public Map<String, String> getCacheControl() {
+    return CaravanHttpHelper.convertMultiValueHeaderToMap(headers.get("Cache-Control"));
   }
 
   /**

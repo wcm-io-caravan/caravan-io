@@ -23,12 +23,12 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.Maps;
 
 /**
  * Helper class for standard URL tasks.
@@ -66,15 +66,33 @@ public final class CaravanHttpHelper {
   }
 
   /**
-   * Converts a multi value header to a {@link Map}. If header segment has no value gets stored as boolean.
-   * @param header Multi value header to parse
+   * Constructs a Map from a multi-value header (i.e. one that can have multiple values that either split up into
+   * multiple lines with the same name, or given as a comma-separated list of values in a single header line)
+   * For example, see the following header:
+   *
+   * <pre>
+   * Cache-Control: public, max-age=120
+   * </pre>
+   *
+   * That will return a map with two entries: ("public" -&gt; "true", "max-age" -&gt; "120")
+   * The following header will result in the same map.
+   *
+   * <pre>
+   * Cache-Control: public
+   * Cache-Control: max-age=120
+   * </pre>
+   * @param header the collection of header values (one entry for each line)
    * @return Header map
    */
-  public static Map<String, Object> convertHeaderToMap(final Collection<String> header) {
-    Map<String, Object> headerMap = Maps.newHashMap();
+  public static Map<String, String> convertMultiValueHeaderToMap(final Collection<String> header) {
+    // we use linked hash map, because the order of entries is important
+    Map<String, String> headerMap = new LinkedHashMap<>();
     for (String line : header) {
-      String[] tokens = line.split(":", 2);
-      headerMap.put(tokens[0], tokens.length == 1 ? true : StringUtils.trim(tokens[1]));
+      String[] tokens = StringUtils.split(line, ',');
+      for (String token : tokens) {
+        String[] keyValue = StringUtils.split(token, '=');
+        headerMap.put(StringUtils.trim(keyValue[0]), keyValue.length == 1 ? "true" : StringUtils.trim(keyValue[1]));
+      }
     }
     return headerMap;
   }

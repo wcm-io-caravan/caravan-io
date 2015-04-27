@@ -38,7 +38,7 @@ public class CaravanHttpRequestTest {
   @Before
   public void setUp() {
     Multimap<String, String> headers = ImmutableListMultimap.<String, String>builder()
-        .putAll("Cache-Control", "public", "max-age: 100")
+        .putAll("Cache-Control", "public", "max-age= 100")
         .put(CaravanHttpRequest.CORRELATION_ID_HEADER_NAME, "test-id")
         .build();
     request = new CaravanHttpRequest("service", "GET", "/path?x=1&y=2", headers, "body".getBytes(Charsets.UTF_8), Charsets.UTF_8);
@@ -46,7 +46,7 @@ public class CaravanHttpRequestTest {
 
   @Test
   public void testToString() throws Exception {
-    assertEquals("GET /path?x=1&y=2 HTTP/1.1\nCache-Control: public, max-age: 100\nX-Caravan-Correlation-Id: test-id\n\nbody", request.toString());
+    assertEquals("GET /path?x=1&y=2 HTTP/1.1\nCache-Control: public, max-age= 100\nX-Caravan-Correlation-Id: test-id\n\nbody", request.toString());
   }
 
   @Test
