@@ -19,13 +19,11 @@
  */
 package io.wcm.caravan.io.http.impl;
 
+import io.wcm.caravan.common.performance.PerformanceMetrics;
 import io.wcm.caravan.commons.httpclient.HttpClientFactory;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
-import io.wcm.caravan.io.http.impl.ribbon.CachingLoadBalancerFactory;
-import io.wcm.caravan.io.http.impl.ribbon.DefaultLoadBalancerFactory;
-import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerFactory;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
@@ -40,8 +38,9 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.nio.client.HttpAsyncClient;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,9 +48,16 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.netflix.client.ClientException;
-import com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy;
+import com.netflix.client.ClientFactory;
+import com.netflix.client.config.CommonClientConfigKey;
+import com.netflix.client.config.DefaultClientConfigImpl;
+import com.netflix.client.config.IClientConfig;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
+import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
 import com.netflix.loadbalancer.reactive.ServerOperation;
@@ -63,12 +69,31 @@ import com.netflix.loadbalancer.reactive.ServerOperation;
 @Service(CaravanHttpClient.class)
 public class CaravanHttpClientImpl implements CaravanHttpClient {
 
-  private static final Logger LOG = LoggerFactory.getLogger(CaravanHttpClientImpl.class);
-
   @Reference
   private HttpClientFactory httpClientFactory;
 
-  private final LoadBalancerFactory loadBalancerFactory = new CachingLoadBalancerFactory(new DefaultLoadBalancerFactory());
+  private static final Logger LOG = LoggerFactory.getLogger(CaravanHttpClientImpl.class);
+
+  /** a cached map of pre-configured LoadBalancerCommand instances for every logical service name */
+  private final LoadingCache<String, LoadBalancerCommand<CaravanHttpResponse>> namedLoadBalancercommands = CacheBuilder.newBuilder().build(
+      new CacheLoader<String, LoadBalancerCommand<CaravanHttpResponse>>() {
+
+        @Override
+        public LoadBalancerCommand<CaravanHttpResponse> load(String key) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+          IClientConfig clientConfig = ClientFactory.getNamedConfig(key, DefaultClientConfigImpl.class);
+          String loadBalancerClassName = clientConfig.get(CommonClientConfigKey.NFLoadBalancerClassName);
+          ILoadBalancer loadBalancer = (ILoadBalancer)ClientFactory.instantiateInstanceWithClientConfig(loadBalancerClassName, clientConfig);
+          IClientConfig config = ClientFactory.getNamedConfig(key, DefaultClientConfigImpl.class);
+
+          LoadBalancerCommand<CaravanHttpResponse> command = LoadBalancerCommand.<CaravanHttpResponse>builder()
+              .withLoadBalancer(loadBalancer)
+              .withClientConfig(config)
+              .withRetryHandler(new CaravanLoadBalancerRetryHandler(config))
+              .build();
+
+          return command;
+        }
+      });
 
   @Override
   public Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request) {
@@ -77,22 +102,24 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
 
   @Override
   public Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request, final Observable<CaravanHttpResponse> fallback) {
+    Observable<CaravanHttpResponse> ribbon = request.getServiceName() != null ? getRibbonObservable(request) : getHttpObservable("", request);
+    Observable<CaravanHttpResponse> hystrix = new HttpHystrixCommand(StringUtils.defaultString(request.getServiceName(), "UNKNOWN"), ribbon, fallback)
+        .toObservable();
+    return hystrix.onErrorResumeNext(exception -> Observable.<CaravanHttpResponse>error(mapToKnownException(request, exception)));
 
-    String serviceName = request.getServiceName();
-    Observable<CaravanHttpResponse> httpRequest = StringUtils.isEmpty(serviceName) ? createHttpRequest("", request) : createRibbonRequest(request);
-    ExecutionIsolationStrategy isolationStrategy = getIsolationStrategy(serviceName);
-    Observable<CaravanHttpResponse> hystrixRequest = new HttpHystrixCommand(StringUtils.defaultString(serviceName, "UNKNOWN"), isolationStrategy, httpRequest,
-        fallback).toObservable();
-    return hystrixRequest.onErrorResumeNext(exception -> Observable.<CaravanHttpResponse> error(mapToKnownException(request, exception)));
+
+    Observable<CaravanHttpResponse> ribbon = request.getServiceName() != null ? getRibbonObservable(request) : getHttpObservable("", request);
+    Observable<CaravanHttpResponse> hystrix = new HttpHystrixCommand(StringUtils.defaultString(request.getServiceName(), "UNKNOWN"), ribbon, fallback)
+        .toObservable();
+    PerformanceMetrics metrics = request.getPerformanceMetrics();
+    return hystrix.onErrorResumeNext(exception -> Observable.<CaravanHttpResponse>error(mapToKnownException(request, exception)))
+        .doOnSubscribe(metrics.getStartAction()).doOnTerminate(metrics.getEndAction());
+
 
   }
 
-  private ExecutionIsolationStrategy getIsolationStrategy(String serviceName) {
-    return loadBalancerFactory.isLocalRequest(serviceName) ? ExecutionIsolationStrategy.SEMAPHORE : ExecutionIsolationStrategy.THREAD;
-  }
-
-  private Observable<CaravanHttpResponse> createRibbonRequest(final CaravanHttpRequest request) {
-    LoadBalancerCommand<CaravanHttpResponse> command = loadBalancerFactory.createCommand(request.getServiceName());
+  private Observable<CaravanHttpResponse> getRibbonObservable(final CaravanHttpRequest request) {
+    LoadBalancerCommand<CaravanHttpResponse> command = namedLoadBalancercommands.getUnchecked(request.getServiceName());
     ServerOperation<CaravanHttpResponse> operation = new ServerOperation<CaravanHttpResponse>() {
 
       @Override
@@ -101,67 +128,10 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
         if (StringUtils.isNotEmpty(request.getServiceName())) {
           protcol = ArchaiusConfig.getConfiguration().getString(request.getServiceName() + ResilientHttpServiceConfig.HTTP_PARAM_PROTOCOL);
         }
-        return createHttpRequest(RequestUtil.buildUrlPrefix(server, protcol), request);
+        return getHttpObservable(RequestUtil.buildUrlPrefix(server, protcol), request);
       }
     };
     return command.submit(operation);
-  }
-
-  private Observable<CaravanHttpResponse> createHttpRequest(final String urlPrefix, final CaravanHttpRequest request) {
-    return Observable.create(new Observable.OnSubscribe<CaravanHttpResponse>() {
-
-      @Override
-      public void call(final Subscriber<? super CaravanHttpResponse> subscriber) {
-        HttpUriRequest httpRequest = RequestUtil.buildHttpRequest(urlPrefix, request);
-
-        if (LOG.isDebugEnabled()) {
-          LOG.debug("Execute: " + httpRequest.getURI() + "\n" + request.toString());
-        }
-
-        HttpClient httpClient = httpClientFactory.get(httpRequest.getURI());
-
-        long start = System.currentTimeMillis();
-        try {
-          HttpResponse result = httpClient.execute(httpRequest);
-
-          StatusLine status = result.getStatusLine();
-          HttpEntity entity = result.getEntity();
-
-          try {
-            if (status.getStatusCode() >= 500) {
-              subscriber.onError(new IllegalResponseRuntimeException(request, httpRequest.getURI().toString(), status.getStatusCode(), EntityUtils
-                  .toString(entity), "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine()));
-              EntityUtils.consumeQuietly(entity);
-            }
-            else {
-
-              CaravanHttpResponse response = new CaravanHttpResponseBuilder()
-                  .status(status.getStatusCode())
-                  .reason(status.getReasonPhrase())
-                  .headers(RequestUtil.toHeadersMap(result.getAllHeaders()))
-                  .body(entity.getContent(), entity.getContentLength() > 0 ? (int)entity.getContentLength() : null)
-                  .build();
-
-              subscriber.onNext(response);
-              subscriber.onCompleted();
-            }
-          }
-          catch (Throwable ex) {
-            subscriber.onError(new IOException("Reading response of '" + httpRequest.getURI() + "' failed.", ex));
-            EntityUtils.consumeQuietly(entity);
-          }
-        }
-        catch (SocketTimeoutException ex) {
-          subscriber.onError(new IOException("Socket timeout executing '" + httpRequest.getURI() + "'.", ex));
-        }
-        catch (IOException ex) {
-          subscriber.onError(new IOException("Executing '" + httpRequest.getURI() + "' failed.", ex));
-        }
-        finally {
-          LOG.debug("Took " + (System.currentTimeMillis() - start) + "ms to load " + httpRequest.getURI().toString());
-        }
-      }
-    });
   }
 
   private Throwable mapToKnownException(final CaravanHttpRequest request, final Throwable ex) {
@@ -172,6 +142,68 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
       return mapToKnownException(request, ex.getCause());
     }
     throw new RequestFailedRuntimeException(request, StringUtils.defaultString(ex.getMessage(), ex.getClass().getSimpleName()), ex);
+  }
+
+  private Observable<CaravanHttpResponse> getHttpObservable(final String urlPrefix, final CaravanHttpRequest request) {
+    return Observable.<CaravanHttpResponse>create(new Observable.OnSubscribe<CaravanHttpResponse>() {
+
+      @Override
+      public void call(final Subscriber<? super CaravanHttpResponse> subscriber) {
+        HttpUriRequest httpRequest = RequestUtil.buildHttpRequest(urlPrefix, request);
+
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Execute: " + httpRequest.getURI() + "\n" + request.toString());
+        }
+
+        HttpAsyncClient httpClient = httpClientFactory.getAsync(httpRequest.getURI());
+        httpClient.execute(httpRequest, new FutureCallback<HttpResponse>() {
+
+          @Override
+          public void completed(HttpResponse result) {
+            StatusLine status = result.getStatusLine();
+            HttpEntity entity = result.getEntity();
+            try {
+              if (status.getStatusCode() >= 500) {
+                subscriber.onError(new IllegalResponseRuntimeException(request, httpRequest.getURI().toString(), status.getStatusCode(), EntityUtils
+                    .toString(entity), "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine()));
+                EntityUtils.consumeQuietly(entity);
+              }
+              else {
+                CaravanHttpResponse response = new CaravanHttpResponseBuilder()
+                    .status(status.getStatusCode())
+                    .reason(status.getReasonPhrase())
+                    .headers(RequestUtil.toHeadersMap(result.getAllHeaders()))
+                    .body(entity.getContent(), entity.getContentLength() > 0 ? (int)entity.getContentLength() : null)
+                    .build();
+                subscriber.onNext(response);
+                subscriber.onCompleted();
+              }
+            }
+            catch (Throwable ex) {
+              subscriber.onError(new IOException("Reading response of '" + httpRequest.getURI() + "' failed.", ex));
+              EntityUtils.consumeQuietly(entity);
+            }
+          }
+
+          @Override
+          public void failed(Exception ex) {
+            if (ex instanceof SocketTimeoutException) {
+              subscriber.onError(new IOException("Socket timeout executing '" + httpRequest.getURI() + "'.", ex));
+            }
+            else {
+              subscriber.onError(new IOException("Executing '" + httpRequest.getURI() + "' failed.", ex));
+            }
+          }
+
+          @Override
+          public void cancelled() {
+            subscriber.onError(new IOException("Getting " + httpRequest.getURI() + " was cancelled."));
+          }
+
+        });
+      }
+
+    });
   }
 
   @Override

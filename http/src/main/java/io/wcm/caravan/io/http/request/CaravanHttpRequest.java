@@ -20,6 +20,7 @@
 package io.wcm.caravan.io.http.request;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import io.wcm.caravan.common.performance.PerformanceMetrics;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.impl.CaravanHttpHelper;
 
@@ -52,6 +53,7 @@ public final class CaravanHttpRequest {
   private final Multimap<String, String> headers;
   private final byte[] body;
   private final Charset charset;
+  private PerformanceMetrics performanceMetrics;
 
   /**
    * @param serviceName Logical name of the request service. Used by {@link CaravanHttpClient} to resolve the real URL.
@@ -71,6 +73,8 @@ public final class CaravanHttpRequest {
     this.headers = ImmutableMultimap.copyOf(LinkedHashMultimap.create(checkNotNull(headers, "headers of %s %s", method, url)));
     this.body = body; // nullable
     this.charset = charset; // nullable
+    this.performanceMetrics = PerformanceMetrics.createNew(
+        StringUtils.defaultString(serviceName, "UNKNOWN SERVICE") + " : " + StringUtils.defaultString(method, "UNKNOWN METHOD"), url, getCorrelationId());
   }
 
   /**
@@ -159,6 +163,10 @@ public final class CaravanHttpRequest {
   public String getCorrelationId() {
     Collection<String> correlationHeaders = getHeaders().get(CaravanHttpRequest.CORRELATION_ID_HEADER_NAME);
     return correlationHeaders.isEmpty() ? null : correlationHeaders.iterator().next();
+  }
+
+  public PerformanceMetrics getPerformanceMetrics() {
+    return this.performanceMetrics;
   }
 
 }
