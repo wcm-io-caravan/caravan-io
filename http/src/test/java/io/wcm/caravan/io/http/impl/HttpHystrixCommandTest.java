@@ -27,6 +27,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
+import com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy;
 
 
 public class HttpHystrixCommandTest {
@@ -43,22 +44,22 @@ public class HttpHystrixCommandTest {
 
   @Test
   public void test_defaultThreadPool() {
-    context.registerInjectActivateService(new ResilientHttpServiceConfig(), ImmutableMap.<String, Object>builder()
+    context.registerInjectActivateService(new ResilientHttpServiceConfig(), ImmutableMap.<String, Object> builder()
         .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
         .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, "localhost")
         .build());
-    HttpHystrixCommand underTest = new HttpHystrixCommand(SERVICE_NAME, null, null);
+    HttpHystrixCommand underTest = new HttpHystrixCommand(SERVICE_NAME, ExecutionIsolationStrategy.THREAD, null, null);
     assertEquals("transportLayer", underTest.getThreadPoolKey().name());
   }
 
   @Test
   public void test_customThreadPool() {
-    context.registerInjectActivateService(new ResilientHttpServiceConfig(), ImmutableMap.<String, Object>builder()
+    context.registerInjectActivateService(new ResilientHttpServiceConfig(), ImmutableMap.<String, Object> builder()
         .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
         .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, "localhost")
         .put(ResilientHttpServiceConfig.HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY, "testThreadPool")
         .build());
-    HttpHystrixCommand underTest = new HttpHystrixCommand(SERVICE_NAME, null, null);
+    HttpHystrixCommand underTest = new HttpHystrixCommand(SERVICE_NAME, ExecutionIsolationStrategy.THREAD, null, null);
     assertEquals("testThreadPool", underTest.getThreadPoolKey().name());
   }
 

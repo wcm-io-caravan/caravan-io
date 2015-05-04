@@ -28,16 +28,14 @@ import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 
 import java.net.URI;
-import java.util.concurrent.Future;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.concurrent.FutureCallback;
-import org.apache.http.nio.client.HttpAsyncClient;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.junit.After;
@@ -66,14 +64,14 @@ public class CaravanHttpClientImplProtocolTest {
   @Mock
   private HttpClientFactory httpClientFactory;
   @Mock
-  private HttpAsyncClient httpClient;
+  private HttpClient httpClient;
 
   private ResilientHttpThreadPoolConfig threadPoolConfig;
   private CaravanHttpClient underTest;
 
   @Before
   public void setUp() {
-    when(httpClientFactory.getAsync(any(URI.class))).thenReturn(httpClient);
+    when(httpClientFactory.get(any(URI.class))).thenReturn(httpClient);
 
     ArchaiusConfig.initialize();
 
@@ -91,103 +89,100 @@ public class CaravanHttpClientImplProtocolTest {
   }
 
   @Test
-  public void testAutoOnlyHost() {
+  public void testAutoOnlyHost() throws Exception {
     assertUrl("myhost", "auto", "http://myhost/my/url");
   }
 
   @Test
-  public void testAutoHostPort80() {
+  public void testAutoHostPort80() throws Exception {
     assertUrl("myhost:80", "auto", "http://myhost/my/url");
   }
 
   @Test
-  public void testAutoHostPort8080() {
+  public void testAutoHostPort8080() throws Exception {
     assertUrl("myhost:8080", "auto", "http://myhost:8080/my/url");
   }
 
   @Test
-  public void testAutoHostPort443() {
+  public void testAutoHostPort443() throws Exception {
     assertUrl("myhost:443", "auto", "https://myhost/my/url");
   }
 
   @Test
-  public void testAutoHostPort8443() {
+  public void testAutoHostPort8443() throws Exception {
     assertUrl("myhost:8443", "auto", "https://myhost:8443/my/url");
   }
 
   @Test
-  public void testHttpOnlyHost() {
+  public void testHttpOnlyHost() throws Exception {
     assertUrl("myhost", "http", "http://myhost/my/url");
   }
 
   @Test
-  public void testHttpHostPort80() {
+  public void testHttpHostPort80() throws Exception {
     assertUrl("myhost:80", "http", "http://myhost/my/url");
   }
 
   @Test
-  public void testHttpHostPort8080() {
+  public void testHttpHostPort8080() throws Exception {
     assertUrl("myhost:8080", "http", "http://myhost:8080/my/url");
   }
 
   @Test
-  public void testHttpHostPort443() {
+  public void testHttpHostPort443() throws Exception {
     assertUrl("myhost:443", "http", "http://myhost:443/my/url");
   }
 
   @Test
-  public void testHttpHostPort8443() {
+  public void testHttpHostPort8443() throws Exception {
     assertUrl("myhost:8443", "http", "http://myhost:8443/my/url");
   }
 
   @Test
-  public void testHttpsOnlyHost() {
+  public void testHttpsOnlyHost() throws Exception {
     assertUrl("myhost", "https", "https://myhost/my/url");
   }
 
   @Test
-  public void testHttpsHostPort80() {
+  public void testHttpsHostPort80() throws Exception {
     assertUrl("myhost:80", "https", "https://myhost/my/url");
   }
 
   @Test
-  public void testHttpsHostPort8080() {
+  public void testHttpsHostPort8080() throws Exception {
     assertUrl("myhost:8080", "https", "https://myhost:8080/my/url");
   }
 
   @Test
-  public void testHttpsHostPort443() {
+  public void testHttpsHostPort443() throws Exception {
     assertUrl("myhost:443", "https", "https://myhost/my/url");
   }
 
   @Test
-  public void testHttpsHostPort8443() {
+  public void testHttpsHostPort8443() throws Exception {
     assertUrl("myhost:8443", "https", "https://myhost:8443/my/url");
   }
 
   private static ImmutableMap<String, Object> getServiceConfigProperties(String serviceName, String hostAndPort, String protocol) {
-    return ImmutableMap.<String, Object>builder()
+    return ImmutableMap.<String, Object> builder()
         .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, serviceName)
         .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
         .put(ResilientHttpServiceConfig.PROTOCOL_PROPERTY, protocol)
         .build();
   }
 
-  @SuppressWarnings("unchecked")
-  private void assertUrl(final String hostPort, final String protocol, final String expectedUrl) {
+  private void assertUrl(final String hostPort, final String protocol, final String expectedUrl) throws Exception {
     String serviceName = "protocolTestService_" + hostPort + "_" + protocol;
     ResilientHttpServiceConfig serviceConfig = context.registerInjectActivateService(new ResilientHttpServiceConfig(),
         getServiceConfigProperties(serviceName, hostPort, protocol));
 
-    when(httpClient.execute(any(HttpUriRequest.class), any(FutureCallback.class))).then(new Answer<Future<HttpResponse>>() {
+    when(httpClient.execute(any(HttpUriRequest.class))).then(new Answer<HttpResponse>() {
 
       @Override
-      public Future<HttpResponse> answer(InvocationOnMock invocation) {
+      public HttpResponse answer(InvocationOnMock invocation) {
         HttpUriRequest request = invocation.getArgumentAt(0, HttpUriRequest.class);
         assertEquals(expectedUrl, request.getURI().toString());
 
-        // simulate valid async HTTP response
-        FutureCallback<HttpResponse> futureCallback = invocation.getArgumentAt(1, FutureCallback.class);
         HttpResponse response = mock(HttpResponse.class);
         StatusLine statusLine = mock(StatusLine.class);
         HttpEntity entity = mock(HttpEntity.class);
@@ -196,8 +191,7 @@ public class CaravanHttpClientImplProtocolTest {
         when(statusLine.getReasonPhrase()).thenReturn("OK");
         when(response.getAllHeaders()).thenReturn(new Header[0]);
         when(response.getEntity()).thenReturn(entity);
-        futureCallback.completed(response);
-        return null;
+        return response;
       }
     });
 

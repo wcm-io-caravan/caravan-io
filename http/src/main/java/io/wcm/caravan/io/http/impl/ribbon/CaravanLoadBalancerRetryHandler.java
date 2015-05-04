@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.wcm.caravan.io.http.impl;
+package io.wcm.caravan.io.http.impl.ribbon;
 
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 

@@ -19,7 +19,6 @@
  */
 package io.wcm.caravan.io.http.impl;
 
-import static com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy.THREAD;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
 import org.slf4j.Logger;
@@ -31,6 +30,7 @@ import rx.functions.Action1;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandProperties;
+import com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy;
 import com.netflix.hystrix.HystrixObservableCommand;
 
 /**
@@ -46,12 +46,13 @@ class HttpHystrixCommand extends HystrixObservableCommand<CaravanHttpResponse> {
 
   private static final Logger log = LoggerFactory.getLogger(HttpHystrixCommand.class);
 
-  public HttpHystrixCommand(String serviceName, Observable<CaravanHttpResponse> observable, Observable<CaravanHttpResponse> fallback) {
+  public HttpHystrixCommand(String serviceName, ExecutionIsolationStrategy isolationStrategy, Observable<CaravanHttpResponse> observable,
+      Observable<CaravanHttpResponse> fallback) {
 
     super(Setter
         .withGroupKey(HystrixCommandGroupKey.Factory.asKey(GROUP_KEY))
         .andCommandKey(HystrixCommandKey.Factory.asKey(serviceName))
-        .andCommandPropertiesDefaults(HystrixCommandProperties.Setter().withExecutionIsolationStrategy(THREAD)));
+        .andCommandPropertiesDefaults(HystrixCommandProperties.Setter().withExecutionIsolationStrategy(isolationStrategy)));
 
     this.serviceName = serviceName;
     this.observable = observable;
