@@ -87,7 +87,7 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
 
     PerformanceMetrics metrics = request.getPerformanceMetrics();
     return hystrixRequest.onErrorResumeNext(exception -> Observable.<CaravanHttpResponse>error(mapToKnownException(request, exception)))
-        .doOnSubscribe(metrics.getStartAction()).doOnTerminate(metrics.getEndAction());
+        .doOnSubscribe(metrics.getStartAction()).doOnNext(metrics.getOnNextAction()).doOnTerminate(metrics.getEndAction());
 
   }
 
