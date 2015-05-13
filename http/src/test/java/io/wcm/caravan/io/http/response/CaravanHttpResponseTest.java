@@ -50,6 +50,23 @@ public class CaravanHttpResponseTest {
   }
 
   @Test
+  public void test_getCacheControl_Lowercase() throws Exception {
+
+    // servers can also serve the headers with lower-case names!
+    ImmutableListMultimap<String, String> headers = ImmutableListMultimap.<String, String>builder()
+        .putAll("cache-control", "public", "max-age= 1", "no-cache").build();
+    CaravanHttpResponse response = new CaravanHttpResponse(200, "OK", headers, null);
+
+    assertEquals(3, response.headers().size());
+
+    Map<String, String> cacheControl = response.getCacheControl();
+    assertTrue(cacheControl.containsKey("public"));
+    assertEquals("1", cacheControl.get("max-age"));
+    assertTrue(cacheControl.containsKey("no-cache"));
+    assertFalse(cacheControl.containsKey("private"));
+  }
+
+  @Test
   public void test_getCacheControl_emptyMap() throws Exception {
     ImmutableListMultimap<String, String> headers = ImmutableListMultimap.of();
     CaravanHttpResponse response = new CaravanHttpResponse(200, "OK", headers, null);

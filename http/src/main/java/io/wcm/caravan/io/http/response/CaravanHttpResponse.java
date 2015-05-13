@@ -23,6 +23,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import io.wcm.caravan.io.http.impl.CaravanHttpHelper;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.osgi.annotation.versioning.ProviderType;
@@ -75,13 +77,21 @@ public final class CaravanHttpResponse {
   }
 
   /**
-   * Collects all "Cache-Control" directives from the request headers into a single map. The keys in the map are the
+   * Collects all "Cache-Control" directives from the response headers into a single map. The keys in the map are the
    * directive names (e.g. "max-age", "no-cache"), and everything after the "=" is taken as value. For directives that
    * don't have a value "true" is used as a value instead.
    * @return the map of Cache-Control directice
    */
   public Map<String, String> getCacheControl() {
-    return CaravanHttpHelper.convertMultiValueHeaderToMap(headers.get("Cache-Control"));
+
+    // http headers are case-insensitive, and even if we write all our headers in upper-case,
+    // any proxy in-between can turn them into lower-case variants.
+    // We need to make sure that we don't miss the lower-case variants here
+    List<String> cacheControlHeaders = new LinkedList<>();
+    cacheControlHeaders.addAll(headers.get("Cache-Control"));
+    cacheControlHeaders.addAll(headers.get("cache-control"));
+
+    return CaravanHttpHelper.convertMultiValueHeaderToMap(cacheControlHeaders);
   }
 
   /**
