@@ -23,6 +23,7 @@ import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,7 @@ public class DefaultLoadBalancerFactory implements LoadBalancerFactory {
 
     IClientConfig config = ClientFactory.getNamedConfig(key, DefaultClientConfigImpl.class);
 
-    return LoadBalancerCommand.<CaravanHttpResponse> builder()
+    return LoadBalancerCommand.<CaravanHttpResponse>builder()
         .withLoadBalancer(loadBalancer)
         .withClientConfig(config)
         .withRetryHandler(new CaravanLoadBalancerRetryHandler(config))
@@ -68,8 +69,7 @@ public class DefaultLoadBalancerFactory implements LoadBalancerFactory {
     }
 
     List<Server> serverList = loadBalancer.getServerList(true);
-    return serverList.size() == 1 && serverList.get(0).getHost().equals("localhost");
-
+    return serverList.size() == 1 && StringUtils.equals(serverList.get(0).getHost(), "localhost");
   }
 
   private ILoadBalancer createLoadBalancer(String key) {

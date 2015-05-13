@@ -164,7 +164,7 @@ public class CaravanHttpClientImplProtocolTest {
   }
 
   private static ImmutableMap<String, Object> getServiceConfigProperties(String serviceName, String hostAndPort, String protocol) {
-    return ImmutableMap.<String, Object> builder()
+    return ImmutableMap.<String, Object>builder()
         .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, serviceName)
         .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
         .put(ResilientHttpServiceConfig.PROTOCOL_PROPERTY, protocol)

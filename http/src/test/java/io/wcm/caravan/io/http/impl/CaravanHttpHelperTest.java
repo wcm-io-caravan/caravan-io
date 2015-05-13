@@ -80,7 +80,7 @@ public class CaravanHttpHelperTest {
     assertEquals("map contains all entries?", 16, map.size());
 
     Iterator<String> keyIterator = map.keySet().iterator();
-    for (int i=1; i<=map.size(); i++) {
+    for (int i = 1; i <= map.size(); i++) {
       assertEquals(String.valueOf(i), keyIterator.next());
     }
   }
