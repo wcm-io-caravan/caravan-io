@@ -103,7 +103,7 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
       public Observable<CaravanHttpResponse> call(Server server) {
         String protcol = RequestUtil.PROTOCOL_AUTO;
         if (StringUtils.isNotEmpty(request.getServiceName())) {
-          protcol = ArchaiusConfig.getConfiguration().getString(request.getServiceName() + ResilientHttpServiceConfig.HTTP_PARAM_PROTOCOL);
+          protcol = ArchaiusConfig.getConfiguration().getString(request.getServiceName() + CaravanHttpServiceConfig.HTTP_PARAM_PROTOCOL);
         }
         return createHttpRequest(RequestUtil.buildUrlPrefix(server, protcol), request);
       }
@@ -180,7 +180,7 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
 
   @Override
   public boolean hasValidConfiguration(String serviceName) {
-    return ResilientHttpServiceConfigValidator.hasValidConfiguration(serviceName);
+    return CaravanHttpServiceConfigValidator.hasValidConfiguration(serviceName);
   }
 
 }

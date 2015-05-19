@@ -75,8 +75,8 @@ public class CaravanHttpClientImplTest {
 
 
   private String wireMockHost;
-  private ResilientHttpServiceConfig serviceConfig;
-  private ResilientHttpThreadPoolConfig threadPoolConfig;
+  private CaravanHttpServiceConfig serviceConfig;
+  private CaravanHttpThreadPoolConfig threadPoolConfig;
   private HttpClientFactory httpClientFactory;
   private CaravanHttpClient underTest;
 
@@ -87,9 +87,9 @@ public class CaravanHttpClientImplTest {
 
     wireMockHost = "localhost:" + wireMock.port();
 
-    serviceConfig = context.registerInjectActivateService(new ResilientHttpServiceConfig(), getServiceConfigProperties(wireMockHost, "auto"));
-    threadPoolConfig = context.registerInjectActivateService(new ResilientHttpThreadPoolConfig(),
-        ImmutableMap.of(ResilientHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
+    serviceConfig = context.registerInjectActivateService(new CaravanHttpServiceConfig(), getServiceConfigProperties(wireMockHost, "auto"));
+    threadPoolConfig = context.registerInjectActivateService(new CaravanHttpThreadPoolConfig(),
+        ImmutableMap.of(CaravanHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
 
     httpClientFactory = context.registerInjectActivateService(new HttpClientFactoryImpl());
     underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
@@ -125,9 +125,9 @@ public class CaravanHttpClientImplTest {
 
   private static ImmutableMap<String, Object> getServiceConfigProperties(String hostAndPort, String protocol) {
     return ImmutableMap.<String, Object>builder()
-        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
-        .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
-        .put(ResilientHttpServiceConfig.PROTOCOL_PROPERTY, protocol)
+        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
+        .put(CaravanHttpServiceConfig.PROTOCOL_PROPERTY, protocol)
         .build();
   }
 

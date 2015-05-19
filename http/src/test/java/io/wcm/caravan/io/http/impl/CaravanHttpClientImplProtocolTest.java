@@ -66,7 +66,7 @@ public class CaravanHttpClientImplProtocolTest {
   @Mock
   private HttpClient httpClient;
 
-  private ResilientHttpThreadPoolConfig threadPoolConfig;
+  private CaravanHttpThreadPoolConfig threadPoolConfig;
   private CaravanHttpClient underTest;
 
   @Before
@@ -75,8 +75,8 @@ public class CaravanHttpClientImplProtocolTest {
 
     ArchaiusConfig.initialize();
 
-    threadPoolConfig = context.registerInjectActivateService(new ResilientHttpThreadPoolConfig(),
-        ImmutableMap.of(ResilientHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
+    threadPoolConfig = context.registerInjectActivateService(new CaravanHttpThreadPoolConfig(),
+        ImmutableMap.of(CaravanHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
 
     context.registerService(HttpClientFactory.class, httpClientFactory);
     underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
@@ -165,15 +165,15 @@ public class CaravanHttpClientImplProtocolTest {
 
   private static ImmutableMap<String, Object> getServiceConfigProperties(String serviceName, String hostAndPort, String protocol) {
     return ImmutableMap.<String, Object>builder()
-        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, serviceName)
-        .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
-        .put(ResilientHttpServiceConfig.PROTOCOL_PROPERTY, protocol)
+        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, serviceName)
+        .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
+        .put(CaravanHttpServiceConfig.PROTOCOL_PROPERTY, protocol)
         .build();
   }
 
   private void assertUrl(final String hostPort, final String protocol, final String expectedUrl) throws Exception {
     String serviceName = "protocolTestService_" + hostPort + "_" + protocol;
-    ResilientHttpServiceConfig serviceConfig = context.registerInjectActivateService(new ResilientHttpServiceConfig(),
+    CaravanHttpServiceConfig serviceConfig = context.registerInjectActivateService(new CaravanHttpServiceConfig(),
         getServiceConfigProperties(serviceName, hostPort, protocol));
 
     when(httpClient.execute(any(HttpUriRequest.class))).then(new Answer<HttpResponse>() {

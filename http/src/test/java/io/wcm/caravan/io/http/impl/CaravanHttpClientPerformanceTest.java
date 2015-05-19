@@ -71,7 +71,7 @@ public class CaravanHttpClientPerformanceTest {
 
 
   private String wireMockHost;
-  private ResilientHttpServiceConfig serviceConfig;
+  private CaravanHttpServiceConfig serviceConfig;
   private HttpClientFactory httpClientFactory;
   private CaravanHttpClient underTest;
 
@@ -82,7 +82,7 @@ public class CaravanHttpClientPerformanceTest {
 
     wireMockHost = "localhost:" + wireMock.port();
 
-    serviceConfig = context.registerInjectActivateService(new ResilientHttpServiceConfig(), getServiceConfigProperties(wireMockHost, "auto"));
+    serviceConfig = context.registerInjectActivateService(new CaravanHttpServiceConfig(), getServiceConfigProperties(wireMockHost, "auto"));
 
     httpClientFactory = context.registerInjectActivateService(new HttpClientFactoryImpl());
     underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
@@ -98,9 +98,9 @@ public class CaravanHttpClientPerformanceTest {
 
   private static ImmutableMap<String, Object> getServiceConfigProperties(String hostAndPort, String protocol) {
     return ImmutableMap.<String, Object>builder()
-        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
-        .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
-        .put(ResilientHttpServiceConfig.PROTOCOL_PROPERTY, protocol)
+        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
+        .put(CaravanHttpServiceConfig.PROTOCOL_PROPERTY, protocol)
         .build();
   }
 

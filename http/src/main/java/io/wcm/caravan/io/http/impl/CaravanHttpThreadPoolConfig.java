@@ -37,30 +37,42 @@ import org.slf4j.LoggerFactory;
  * The configuration is mapped to archaius configuration internally.
  */
 @Component(immediate = true, metatype = true,
-    label = "wcm.io Caravan Resilient Http Thread Pool Configuration",
-    description = " Configures thread pool options for the transport layer.",
-    configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
+label = "wcm.io Caravan Resilient Http Thread Pool Configuration",
+description = " Configures thread pool options for the transport layer.",
+configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
 @Property(name = "webconsole.configurationFactory.nameHint", value = "{threadPoolName}: {hystrixThreadpoolCoresize}")
-public class ResilientHttpThreadPoolConfig {
+public class CaravanHttpThreadPoolConfig {
 
-  private static final Logger log = LoggerFactory.getLogger(ResilientHttpThreadPoolConfig.class);
+  private static final Logger log = LoggerFactory.getLogger(CaravanHttpThreadPoolConfig.class);
 
+  /**
+   * Thread Pool Name
+   */
   @Property(label = "Thread Pool Name", description = "Internal thread pool name.")
-  static final String THREAD_POOL_NAME_PROPERTY = "threadPoolName";
+  public static final String THREAD_POOL_NAME_PROPERTY = "threadPoolName";
 
+  /**
+   * Threadpool size
+   */
   @Property(label = "Threadpool size",
       description = "Hystrix: Maximum number of HystrixCommands that can execute concurrently.")
-  static final String HYSTRIX_THREADPOOL_CORESIZE_PROPERTY = "hystrixThreadpoolCoresize";
+  public static final String HYSTRIX_THREADPOOL_CORESIZE_PROPERTY = "hystrixThreadpoolCoresize";
   static final int HYSTRIX_THREADPOOL_CORESIZE_DEFAULT = 10;
 
+  /**
+   * Max. Threadpool Queue Size
+   */
   @Property(label = "Max. Threadpool Queue Size",
       description = "Hystrix: Maximum queue size at which rejections will occur. Note: This property only applies at initialization time.")
-  static final String HYSTRIX_THREADPOOL_MAXQUEUESIZE_PROPERTY = "hystrixThreadpoolMaxqueuesize";
+  public static final String HYSTRIX_THREADPOOL_MAXQUEUESIZE_PROPERTY = "hystrixThreadpoolMaxqueuesize";
   static final int HYSTRIX_THREADPOOL_MAXQUEUESIZE_DEFAULT = 4096;
 
+  /**
+   * Dynamic Threadpool Queue Size
+   */
   @Property(label = "Dynamic Threadpool Queue Size",
       description = "Hystrix: Artificial maximum queue size at which rejections will occur even if hystrixThreadpoolDefaultMaxqueuesize has not been reached.")
-  static final String HYSTRIX_THREADPOOL_QUEUESIZEREJECTIONTHRESHOLD_PROPERTY = "hystrixThreadpoolQueuesizerejectionthreshold";
+  public static final String HYSTRIX_THREADPOOL_QUEUESIZEREJECTIONTHRESHOLD_PROPERTY = "hystrixThreadpoolQueuesizerejectionthreshold";
   static final int HYSTRIX_THREADPOOL_QUEUESIZEREJECTIONTHRESHOLD_DEFAULT = 4096;
 
   private static final String HYSTRIX_THREADPOOL_PREFIX = "hystrix.threadpool.";

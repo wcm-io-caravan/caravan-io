@@ -44,9 +44,9 @@ public class HttpHystrixCommandTest {
 
   @Test
   public void test_defaultThreadPool() {
-    context.registerInjectActivateService(new ResilientHttpServiceConfig(), ImmutableMap.<String, Object>builder()
-        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
-        .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, "localhost")
+    context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
+        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, "localhost")
         .build());
     HttpHystrixCommand underTest = new HttpHystrixCommand(SERVICE_NAME, ExecutionIsolationStrategy.THREAD, null, null);
     assertEquals("transportLayer", underTest.getThreadPoolKey().name());
@@ -54,10 +54,10 @@ public class HttpHystrixCommandTest {
 
   @Test
   public void test_customThreadPool() {
-    context.registerInjectActivateService(new ResilientHttpServiceConfig(), ImmutableMap.<String, Object>builder()
-        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
-        .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, "localhost")
-        .put(ResilientHttpServiceConfig.HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY, "testThreadPool")
+    context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
+        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, "localhost")
+        .put(CaravanHttpServiceConfig.HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY, "testThreadPool")
         .build());
     HttpHystrixCommand underTest = new HttpHystrixCommand(SERVICE_NAME, ExecutionIsolationStrategy.THREAD, null, null);
     assertEquals("testThreadPool", underTest.getThreadPoolKey().name());

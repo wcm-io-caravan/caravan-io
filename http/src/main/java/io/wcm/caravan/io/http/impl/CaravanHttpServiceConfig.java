@@ -36,94 +36,133 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
  * The configuration is mapped to archaius configuration internally.
  */
 @Component(immediate = true, metatype = true,
-    label = "wcm.io Caravan Resilient Http Service Configuration",
-    description = "Configures transport layer options for service access.",
-    configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
+label = "wcm.io Caravan Resilient Http Service Configuration",
+description = "Configures transport layer options for service access.",
+configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
 @Property(name = "webconsole.configurationFactory.nameHint", value = "{serviceName}: {ribbonHosts}")
-public class ResilientHttpServiceConfig {
+public class CaravanHttpServiceConfig {
 
+  /**
+   * Service Name
+   */
   @Property(label = "Service Name", description = "Internal or external service name.")
-  static final String SERVICE_NAME_PROPERTY = "serviceName";
+  public static final String SERVICE_NAME_PROPERTY = "serviceName";
 
+  /**
+   * Hosts
+   */
   @Property(label = "Hosts",
       description = "Ribbon: List of hostnames/IP addresses and ports to use for service (if multiple are defined software " +
           "load balancing is applied). Example entry: 'host1:80'.",
-      cardinality = Integer.MAX_VALUE)
-  static final String RIBBON_HOSTS_PROPERTY = "ribbonHosts";
+          cardinality = Integer.MAX_VALUE)
+  public static final String RIBBON_HOSTS_PROPERTY = "ribbonHosts";
 
+  /**
+   * Protocol
+   */
   @Property(label = "Protocol",
       description = "Choose between HTTP and HTTPS protocol for communicating with the Hosts. "
           + "If set to 'Auto' the protocol is detected automatically from the port number (443 and 8443 = HTTPS).",
-      value = ResilientHttpServiceConfig.PROTOCOL_PROPERTY_DEFAULT,
-      options = {
-          @PropertyOption(name = RequestUtil.PROTOCOL_AUTO, value = "Auto"),
-          @PropertyOption(name = RequestUtil.PROTOCOL_HTTP, value = "HTTP"),
-          @PropertyOption(name = RequestUtil.PROTOCOL_HTTPS, value = "HTTPS")
-      })
-  static final String PROTOCOL_PROPERTY = "http.protocol";
+          value = CaravanHttpServiceConfig.PROTOCOL_PROPERTY_DEFAULT,
+          options = {
+      @PropertyOption(name = RequestUtil.PROTOCOL_AUTO, value = "Auto"),
+      @PropertyOption(name = RequestUtil.PROTOCOL_HTTP, value = "HTTP"),
+      @PropertyOption(name = RequestUtil.PROTOCOL_HTTPS, value = "HTTPS")
+  })
+  public static final String PROTOCOL_PROPERTY = "http.protocol";
   static final String PROTOCOL_PROPERTY_DEFAULT = RequestUtil.PROTOCOL_AUTO;
 
+  /**
+   * Max. Auto Retries
+   */
   @Property(label = "Max. Auto Retries",
       description = "Ribbon: Max number of retries on the same server (excluding the first try).",
-      intValue = ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIES_DEFAULT)
-  static final String RIBBON_MAXAUTORETRIES_PROPERTY = "ribbonMaxAutoRetries";
+      intValue = CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIES_DEFAULT)
+  public static final String RIBBON_MAXAUTORETRIES_PROPERTY = "ribbonMaxAutoRetries";
   static final int RIBBON_MAXAUTORETRIES_DEFAULT = 0;
 
+  /**
+   * Max. Auto Retries Next Server
+   */
   @Property(label = "Max. Auto Retries Next Server",
       description = "Ribbon: Max number of next servers to retry (excluding the first server).",
-      intValue = ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIESONSERVER_DEFAULT)
-  static final String RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY = "ribbonMaxAutoRetriesNextServer";
+      intValue = CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESONSERVER_DEFAULT)
+  public static final String RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY = "ribbonMaxAutoRetriesNextServer";
   static final int RIBBON_MAXAUTORETRIESONSERVER_DEFAULT = 0;
 
+  /**
+   * Isolation Timeout
+   */
   @Property(label = "Isolation Timeout",
       description = "Hystrix: Time in milliseconds after which the calling thread will timeout and walk away from the "
           + "HystrixCommand.run() execution and mark the HystrixCommand as a TIMEOUT and perform fallback logic.",
-      intValue = ResilientHttpServiceConfig.HYSTRIX_TIMEOUT_MS_DEFAULT)
-  static final String HYSTRIX_TIMEOUT_MS_PROPERTY = "hystrixTimeoutMs";
+          intValue = CaravanHttpServiceConfig.HYSTRIX_TIMEOUT_MS_DEFAULT)
+  public static final String HYSTRIX_TIMEOUT_MS_PROPERTY = "hystrixTimeoutMs";
   static final int HYSTRIX_TIMEOUT_MS_DEFAULT = 120000;
 
+  /**
+   * Fallback
+   */
   @Property(label = "Fallback",
       description = "Hystrix: Whether HystrixCommand.getFallback() will be attempted when failure or rejection occurs.",
-      boolValue = ResilientHttpServiceConfig.HYSTRIX_FALLBACK_ENABLED_DEFAULT)
-  static final String HYSTRIX_FALLBACK_ENABLED_PROPERTY = "hystrixFallbackEnabled";
+      boolValue = CaravanHttpServiceConfig.HYSTRIX_FALLBACK_ENABLED_DEFAULT)
+  public static final String HYSTRIX_FALLBACK_ENABLED_PROPERTY = "hystrixFallbackEnabled";
   static final boolean HYSTRIX_FALLBACK_ENABLED_DEFAULT = true;
 
+  /**
+   * Circuit Breaker
+   */
   @Property(label = "Circuit Breaker",
       description = "Hystrix: Whether a circuit breaker will be used to track health and short-circuit requests if it trips.",
-      boolValue = ResilientHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_ENABLED_DEFAULT)
-  static final String HYSTRIX_CIRCUITBREAKER_ENABLED_PROPERTY = "hystrixCircuitBreakerEnabled";
+      boolValue = CaravanHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_ENABLED_DEFAULT)
+  public static final String HYSTRIX_CIRCUITBREAKER_ENABLED_PROPERTY = "hystrixCircuitBreakerEnabled";
   static final boolean HYSTRIX_CIRCUITBREAKER_ENABLED_DEFAULT = true;
 
+  /**
+   * Request Volume Threshold
+   */
   @Property(label = "Request Volume Threshold",
       description = "Hystrix: Circuit Breaker - Minimum number of requests in rolling window needed before tripping the circuit will occur.",
-      intValue = ResilientHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD_DEFAULT)
-  static final String HYSTRIX_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD_PROPERTY = "hystrixCircuitBreakerRequestVolumeThreshold";
+      intValue = CaravanHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD_DEFAULT)
+  public static final String HYSTRIX_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD_PROPERTY = "hystrixCircuitBreakerRequestVolumeThreshold";
   static final int HYSTRIX_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD_DEFAULT = 20;
 
+  /**
+   * Sleep Window
+   */
   @Property(label = "Sleep Window",
       description = "Hystrix: Circuit Breaker - After tripping the circuit how long in milliseconds to reject requests before allowing "
           + "attempts again to determine if the circuit should be closed.",
-      intValue = ResilientHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_SLEEPWINDOW_MS_DEFAULT)
-  static final String HYSTRIX_CIRCUITBREAKER_SLEEPWINDOW_MS_PROPERTY = "hystrixCircuitBreakerSleepWindowMs";
+          intValue = CaravanHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_SLEEPWINDOW_MS_DEFAULT)
+  public static final String HYSTRIX_CIRCUITBREAKER_SLEEPWINDOW_MS_PROPERTY = "hystrixCircuitBreakerSleepWindowMs";
   static final int HYSTRIX_CIRCUITBREAKER_SLEEPWINDOW_MS_DEFAULT = 5000;
 
+  /**
+   * Error Threshold Percentage
+   */
   @Property(label = "Error Threshold Percentage",
       description = "Hystrix: Circuit Breaker - Error percentage at which the circuit should trip open and start short-circuiting "
           + "requests to fallback logic.",
-      intValue = ResilientHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE_DEFAULT)
-  static final String HYSTRIX_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE_PROPERTY = "hystrixCircuitBreakerErrorThresholdPercentage";
+          intValue = CaravanHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE_DEFAULT)
+  public static final String HYSTRIX_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE_PROPERTY = "hystrixCircuitBreakerErrorThresholdPercentage";
   static final int HYSTRIX_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE_DEFAULT = 50;
 
+  /**
+   * Force Open
+   */
   @Property(label = "Force Open",
       description = "Hystrix: Circuit Breaker - If true the circuit breaker will be forced open (tripped) and reject all requests.",
-      boolValue = ResilientHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_FORCEOPEN_DEFAULT)
-  static final String HYSTRIX_CIRCUITBREAKER_FORCEOPEN_PROPERTY = "hystrixCircuitBreakerForceOpen";
+      boolValue = CaravanHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_FORCEOPEN_DEFAULT)
+  public static final String HYSTRIX_CIRCUITBREAKER_FORCEOPEN_PROPERTY = "hystrixCircuitBreakerForceOpen";
   static final boolean HYSTRIX_CIRCUITBREAKER_FORCEOPEN_DEFAULT = false;
 
+  /**
+   * Force Closed
+   */
   @Property(label = "Force Closed",
       description = "Hystrix: Circuit Breaker - If true the circuit breaker will remain closed and allow requests regardless of the error percentage.",
-      boolValue = ResilientHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_FORCECLOSED_DEFAULT)
-  static final String HYSTRIX_CIRCUITBREAKER_FORCECLOSED_PROPERTY = "hystrixCircuitBreakerForceClosed";
+      boolValue = CaravanHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_FORCECLOSED_DEFAULT)
+  public static final String HYSTRIX_CIRCUITBREAKER_FORCECLOSED_PROPERTY = "hystrixCircuitBreakerForceClosed";
   static final boolean HYSTRIX_CIRCUITBREAKER_FORCECLOSED_DEFAULT = false;
 
   @Property(label = "Thread Pool Name",
@@ -154,7 +193,7 @@ public class ResilientHttpServiceConfig {
   @Activate
   protected void activate(Map<String, Object> config) {
     String serviceName = getServiceName(config);
-    if (ResilientHttpServiceConfigValidator.isValidServiceConfig(serviceName, config)) {
+    if (CaravanHttpServiceConfigValidator.isValidServiceConfig(serviceName, config)) {
       setArchiausProperties(serviceName, config);
     }
   }
@@ -188,9 +227,9 @@ public class ResilientHttpServiceConfig {
     archaiusConfig.setProperty(serviceName + RIBBON_PARAM_OKTORETRYONALLOPERATIONS, "true");
 
     // hystrix parameters
-    archaiusConfig.setProperty("hystrix.threadpool.default.maxQueueSize", ResilientHttpThreadPoolConfig.HYSTRIX_THREADPOOL_MAXQUEUESIZE_DEFAULT);
+    archaiusConfig.setProperty("hystrix.threadpool.default.maxQueueSize", CaravanHttpThreadPoolConfig.HYSTRIX_THREADPOOL_MAXQUEUESIZE_DEFAULT);
     archaiusConfig.setProperty("hystrix.threadpool.default.queueSizeRejectionThreshold",
-        ResilientHttpThreadPoolConfig.HYSTRIX_THREADPOOL_QUEUESIZEREJECTIONTHRESHOLD_DEFAULT);
+        CaravanHttpThreadPoolConfig.HYSTRIX_THREADPOOL_QUEUESIZEREJECTIONTHRESHOLD_DEFAULT);
 
     archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_TIMEOUT_MS,
         PropertiesUtil.toInteger(config.get(HYSTRIX_TIMEOUT_MS_PROPERTY), HYSTRIX_TIMEOUT_MS_DEFAULT));

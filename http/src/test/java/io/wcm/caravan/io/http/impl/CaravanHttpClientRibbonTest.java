@@ -47,7 +47,7 @@ import com.github.tomakehurst.wiremock.matching.RequestPattern;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
-public class ResilientHttpRibbonTest {
+public class CaravanHttpClientRibbonTest {
 
   private static final String SERVICE_NAME = "testRibbonService";
   private static final String HTTP_200_URI = "/request";
@@ -103,11 +103,11 @@ public class ResilientHttpRibbonTest {
 
   @Test(expected = IllegalResponseRuntimeException.class)
   public void test_retryOnOneServerThrowing500() {
-    context.registerInjectActivateService(new ResilientHttpServiceConfig(), ImmutableMap.<String, Object>builder()
-        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
-        .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, defectServer1Host)
-        .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 4)
-        .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 0)
+    context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
+        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, defectServer1Host)
+        .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 4)
+        .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 0)
         .build());
     try {
       Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
@@ -121,11 +121,11 @@ public class ResilientHttpRibbonTest {
 
   @Test(expected = IllegalResponseRuntimeException.class)
   public void test_retryOnMultipleServersThrowing500() {
-    context.registerInjectActivateService(new ResilientHttpServiceConfig(), ImmutableMap.<String, Object>builder()
-        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
-        .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(defectServer1Host, defectServer2Host))
-        .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 0)
-        .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
+    context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
+        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(defectServer1Host, defectServer2Host))
+        .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 0)
+        .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
         .build());
     try {
       Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
@@ -140,11 +140,11 @@ public class ResilientHttpRibbonTest {
 
   @Test(expected = IllegalResponseRuntimeException.class)
   public void test_retryOnMultipleServerThrowing500WithoutChangingTheServer() {
-    context.registerInjectActivateService(new ResilientHttpServiceConfig(), ImmutableMap.<String, Object>builder()
-        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
-        .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(defectServer1Host, defectServer2Host))
-        .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 4)
-        .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 0)
+    context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
+        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(defectServer1Host, defectServer2Host))
+        .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 4)
+        .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 0)
         .build());
     try {
       Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
@@ -161,11 +161,11 @@ public class ResilientHttpRibbonTest {
 
   @Test
   public void test_retryOnMultipleServersOnlyOne200() {
-    context.registerInjectActivateService(new ResilientHttpServiceConfig(), ImmutableMap.<String, Object>builder()
-        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
-        .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(workingServerHost, defectServer1Host, defectServer2Host))
-        .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 1)
-        .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
+    context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
+        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(workingServerHost, defectServer1Host, defectServer2Host))
+        .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 1)
+        .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
         .build());
     Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
     CaravanHttpResponse response = observable.toBlocking().single();
@@ -179,10 +179,10 @@ public class ResilientHttpRibbonTest {
 
   @Test
   public void test_noRetryOn404() {
-    context.registerInjectActivateService(new ResilientHttpServiceConfig(), ImmutableMap.<String, Object>builder()
-        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
-        .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(workingServerHost, defectServer1Host, defectServer2Host))
-        .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
+    context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
+        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(workingServerHost, defectServer1Host, defectServer2Host))
+        .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
         .build());
     Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_404_URI).build());
     CaravanHttpResponse response = observable.toBlocking().single();

@@ -47,7 +47,7 @@ import com.netflix.hystrix.HystrixCircuitBreaker;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandMetrics;
 
-public class ResilientHttpHystrixTest {
+public class CaravanHttpClientHystrixTest {
 
   private static final String SERVICE_NAME = "testHystrixService";
   private static final String HTTP_200_URI = "/request";
@@ -85,13 +85,13 @@ public class ResilientHttpHystrixTest {
             .withStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
         ));
 
-    context.registerInjectActivateService(new ResilientHttpServiceConfig(), ImmutableMap.<String, Object>builder()
-        .put(ResilientHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
-        .put(ResilientHttpServiceConfig.RIBBON_HOSTS_PROPERTY, host)
-        .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 0)
-        .put(ResilientHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 0)
-        .put(ResilientHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD_PROPERTY, 20)
-        .put(ResilientHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE_PROPERTY, 50)
+    context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
+        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, host)
+        .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 0)
+        .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 0)
+        .put(CaravanHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD_PROPERTY, 20)
+        .put(CaravanHttpServiceConfig.HYSTRIX_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE_PROPERTY, 50)
         .build());
   }
 
