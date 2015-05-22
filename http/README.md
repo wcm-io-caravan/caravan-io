@@ -28,7 +28,7 @@ CaravanHttpRequest request = new CaravanHttpRequestBuilder("my-service")
   .build(ImmutableMap.of("param", "test-value"));
 
 // HTTP client gets injected by OSGI
-CaravanHttpClient client = ... 
+CaravanHttpClient client = ...
 
 // execute the request
 Observable<CaravanHttpResponse> rxResponse = client.execute(request);
