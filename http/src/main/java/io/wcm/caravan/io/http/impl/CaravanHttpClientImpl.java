@@ -119,7 +119,7 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
         HttpUriRequest httpRequest = RequestUtil.buildHttpRequest(urlPrefix, request);
 
         if (LOG.isDebugEnabled()) {
-          LOG.debug("Execute: " + httpRequest.getURI() + "\n" + request.toString());
+          LOG.debug("Execute: " + httpRequest.getURI() + ", correlationId: " + request.getCorrelationId() + "\n" + request.toString());
         }
 
         HttpClient httpClient = httpClientFactory.get(httpRequest.getURI());
@@ -162,7 +162,8 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
           subscriber.onError(new IOException("Executing '" + httpRequest.getURI() + "' failed.", ex));
         }
         finally {
-          LOG.debug("Took " + (System.currentTimeMillis() - start) + "ms to load " + httpRequest.getURI().toString());
+          LOG.debug("Took " + (System.currentTimeMillis() - start) + "ms to load " + httpRequest.getURI().toString() + ", correlationId: "
+              + request.getCorrelationId());
         }
       }
     });
