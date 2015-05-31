@@ -45,7 +45,7 @@ public final class CaravanHttpRequest {
   /**
    * Correlation ID Header name
    */
-  public static final String CORRELATION_ID_HEADER_NAME = "X-Caravan-Correlation-Id";
+  public static final String CORRELATION_ID_HEADER_NAME = "Caravan-Correlation-Id";
 
   private final String serviceName;
   private final String method;

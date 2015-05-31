@@ -46,7 +46,7 @@ public class CaravanHttpRequestTest {
 
   @Test
   public void testToString() throws Exception {
-    assertEquals("GET /path?x=1&y=2 HTTP/1.1\nCache-Control: public, max-age= 100\nX-Caravan-Correlation-Id: test-id\n\nbody", request.toString());
+    assertEquals("GET /path?x=1&y=2 HTTP/1.1\nCache-Control: public, max-age= 100\nCaravan-Correlation-Id: test-id\n\nbody", request.toString());
   }
 
   @Test
