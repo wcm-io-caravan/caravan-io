@@ -58,6 +58,7 @@ public final class XmlSource implements Source {
   private final Stack<String> breadCrumb = new Stack<String>();
 
   private boolean nextHasBeenExecutedBefore;
+  private boolean uncapitalizeProperties = true;
 
   private JsonElement firstElement = JsonElement.DEFAULT_START_OBJECT;
   private JsonElement lastElement = JsonElement.DEFAULT_END_OBJECT;
@@ -87,6 +88,20 @@ public final class XmlSource implements Source {
   public JsonElement next() {
     fillOutputBufferIfNeeded();
     return outputBuffer.isEmpty() ? null : outputBuffer.poll();
+  }
+
+  /**
+   * @return true if all JSON property names should be converted to start with a lower-case letter
+   */
+  public boolean isUncapitalizeProperties() {
+    return this.uncapitalizeProperties;
+  }
+
+  /**
+   * @param uncapitalizeProperties true if all JSON property names should be converted to start with a lower-case letter
+   */
+  public void setUncapitalizeProperties(boolean uncapitalizeProperties) {
+    this.uncapitalizeProperties = uncapitalizeProperties;
   }
 
   private void fillOutputBufferIfNeeded() {
@@ -195,7 +210,10 @@ public final class XmlSource implements Source {
   }
 
   private String convertName(final String name) {
-    return StringUtils.uncapitalize(name);
+    if (uncapitalizeProperties) {
+      return StringUtils.uncapitalize(name);
+    }
+    return name;
   }
 
   private JsonElement createValueElement(final String key, final String value) {
@@ -222,5 +240,6 @@ public final class XmlSource implements Source {
       throw new IOException(ex);
     }
   }
+
 
 }
