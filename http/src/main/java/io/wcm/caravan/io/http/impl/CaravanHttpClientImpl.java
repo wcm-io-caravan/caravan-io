@@ -119,7 +119,7 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
         HttpUriRequest httpRequest = RequestUtil.buildHttpRequest(urlPrefix, request);
 
         if (LOG.isDebugEnabled()) {
-          LOG.debug("Execute: " + httpRequest.getURI() + ", correlationId: " + request.getCorrelationId() + "\n" + request.toString());
+          LOG.debug("Execute: {}, correlationId: <{}>,\n {}", httpRequest.getURI(), request.getCorrelationId(), request.toString());
         }
 
         HttpClient httpClient = httpClientFactory.get(httpRequest.getURI());
@@ -134,7 +134,8 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
           try {
             if (status.getStatusCode() >= 500) {
               subscriber.onError(new IllegalResponseRuntimeException(request, httpRequest.getURI().toString(), status.getStatusCode(), EntityUtils
-                  .toString(entity), "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine()));
+                  .toString(entity), "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine() + ", correlationId: <"
+                      + request.getCorrelationId() + ">"));
               EntityUtils.consumeQuietly(entity);
             }
             else {
@@ -151,19 +152,22 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
             }
           }
           catch (Throwable ex) {
-            subscriber.onError(new IOException("Reading response of '" + httpRequest.getURI() + "' failed.", ex));
+            subscriber.onError(new IOException("Reading response of '" + httpRequest.getURI() + "' failed, correlationId: <"
+                + request.getCorrelationId() + ">", ex));
             EntityUtils.consumeQuietly(entity);
           }
         }
         catch (SocketTimeoutException ex) {
-          subscriber.onError(new IOException("Socket timeout executing '" + httpRequest.getURI() + "'.", ex));
+          subscriber.onError(new IOException("Socket timeout executing '" + httpRequest.getURI() + "', correlationId: <"
+              + request.getCorrelationId() + ">", ex));
         }
         catch (IOException ex) {
-          subscriber.onError(new IOException("Executing '" + httpRequest.getURI() + "' failed.", ex));
+          subscriber.onError(new IOException("Executing '" + httpRequest.getURI() + "' failed, correlationId: <"
+              + request.getCorrelationId() + ">", ex));
         }
         finally {
-          LOG.debug("Took " + (System.currentTimeMillis() - start) + "ms to load " + httpRequest.getURI().toString() + ", correlationId: "
-              + request.getCorrelationId());
+          LOG.debug("Took {} ms to load {}, correlationId: <{}>", (System.currentTimeMillis() - start), httpRequest.getURI().toString(),
+              request.getCorrelationId());
         }
       }
     });
