@@ -134,8 +134,7 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
           try {
             if (status.getStatusCode() >= 500) {
               subscriber.onError(new IllegalResponseRuntimeException(request, httpRequest.getURI().toString(), status.getStatusCode(), EntityUtils
-                  .toString(entity), "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine()
-                  + ",\n" + request.getCorrelationId()));
+                  .toString(entity), "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine()));
               EntityUtils.consumeQuietly(entity);
             }
             else {
@@ -152,18 +151,15 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
             }
           }
           catch (Throwable ex) {
-            subscriber.onError(new IOException("Reading response of '" + httpRequest.getURI() + "' failed,\n"
-                + request.getCorrelationId(), ex));
+            subscriber.onError(new IOException("Reading response of '" + httpRequest.getURI() + "' failed", ex));
             EntityUtils.consumeQuietly(entity);
           }
         }
         catch (SocketTimeoutException ex) {
-          subscriber.onError(new IOException("Socket timeout executing '" + httpRequest.getURI() + "',\n"
-              + request.getCorrelationId(), ex));
+          subscriber.onError(new IOException("Socket timeout executing '" + httpRequest.getURI(), ex));
         }
         catch (IOException ex) {
-          subscriber.onError(new IOException("Executing '" + httpRequest.getURI() + "' failed,\n"
-              + request.getCorrelationId(), ex));
+          subscriber.onError(new IOException("Executing '" + httpRequest.getURI() + "' failed", ex));
         }
         finally {
           LOG.debug("Took {} ms to load {},\n{}", (System.currentTimeMillis() - start), httpRequest.getURI().toString(),
