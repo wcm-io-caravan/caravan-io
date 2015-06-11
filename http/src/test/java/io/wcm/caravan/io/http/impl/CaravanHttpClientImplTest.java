@@ -57,7 +57,7 @@ import com.google.common.collect.ImmutableMap;
  */
 public class CaravanHttpClientImplTest {
 
-  private static final String SERVICE_NAME = "testService";
+  private static final String SERVICE_NAME = "/test/service";
 
   private static final String HTTP_200_URI = "/http/200";
   private static final String HTTP_404_URI = "/http/404";
@@ -99,26 +99,26 @@ public class CaravanHttpClientImplTest {
         .willReturn(aResponse()
             .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
             .withBody(DUMMY_CONTENT)
-        ));
+            ));
     wireMock.stubFor(get(urlEqualTo(HTTP_404_URI))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_NOT_FOUND)
-        ));
+            ));
     wireMock.stubFor(get(urlEqualTo(HTTP_500_URI))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
-        ));
+            ));
     wireMock.stubFor(get(urlEqualTo(CONNECT_TIMEOUT_URI))
         .willReturn(aResponse()
             .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
             .withBody(DUMMY_CONTENT)
-        ));
+            ));
     wireMock.stubFor(get(urlEqualTo(RESPONSE_TIMEOUT_URI))
         .willReturn(aResponse()
             .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
             .withBody(DUMMY_CONTENT)
             .withFixedDelay(1000)
-        ));
+            ));
 
     assertTrue(underTest.hasValidConfiguration(SERVICE_NAME));
   }

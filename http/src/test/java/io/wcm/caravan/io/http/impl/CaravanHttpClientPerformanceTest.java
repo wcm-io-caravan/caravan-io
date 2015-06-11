@@ -57,7 +57,7 @@ import com.google.common.collect.ImmutableMap;
  */
 public class CaravanHttpClientPerformanceTest {
 
-  private static final String SERVICE_NAME = "testService";
+  private static final String SERVICE_NAME = "/test/service";
 
   private static final String HTTP_200_URI = "/http/200";
 

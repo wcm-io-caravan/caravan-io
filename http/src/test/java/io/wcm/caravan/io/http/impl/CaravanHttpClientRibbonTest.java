@@ -49,7 +49,7 @@ import com.google.common.collect.Lists;
 
 public class CaravanHttpClientRibbonTest {
 
-  private static final String SERVICE_NAME = "testRibbonService";
+  private static final String SERVICE_NAME = "/test/ribbon/service";
   private static final String HTTP_200_URI = "/request";
   private static final String HTTP_404_URI = "/invalid";
 
@@ -85,20 +85,20 @@ public class CaravanHttpClientRibbonTest {
         .willReturn(aResponse()
             .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
             .withBody("success")
-        ));
+            ));
     workingServer.stubFor(get(urlEqualTo(HTTP_404_URI))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_NOT_FOUND)
-        ));
+            ));
 
     defectServer1.stubFor(get(urlMatching(".*"))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
-        ));
+            ));
     defectServer2.stubFor(get(urlMatching(".*"))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
-        ));
+            ));
   }
 
   @Test(expected = IllegalResponseRuntimeException.class)

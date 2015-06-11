@@ -49,7 +49,7 @@ import com.netflix.hystrix.HystrixCommandMetrics;
 
 public class CaravanHttpClientHystrixTest {
 
-  private static final String SERVICE_NAME = "testHystrixService";
+  private static final String SERVICE_NAME = "/test/hystrix/service";
   private static final String HTTP_200_URI = "/request";
   private static final String HTTP_404_URI = "/http/404";
   private static final String HTTP_500_URI = "/http/500";
@@ -75,15 +75,15 @@ public class CaravanHttpClientHystrixTest {
         .willReturn(aResponse()
             .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
             .withBody("success")
-        ));
+            ));
     server.stubFor(get(urlEqualTo(HTTP_404_URI))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_NOT_FOUND)
-        ));
+            ));
     server.stubFor(get(urlEqualTo(HTTP_500_URI))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
-        ));
+            ));
 
     context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
         .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)

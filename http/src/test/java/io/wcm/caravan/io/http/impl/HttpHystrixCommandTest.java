@@ -32,7 +32,7 @@ import com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy;
 
 public class HttpHystrixCommandTest {
 
-  private static final String SERVICE_NAME = "testHystrixService";
+  private static final String SERVICE_NAME = "/test/hystrix/service";
 
   @Rule
   public OsgiContext context = new OsgiContext();
