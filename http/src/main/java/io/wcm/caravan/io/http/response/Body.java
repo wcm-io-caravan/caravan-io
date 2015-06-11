@@ -24,9 +24,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Generic HTTP body.
  */
+@ProviderType
 public interface Body extends Closeable {
 
   /**
