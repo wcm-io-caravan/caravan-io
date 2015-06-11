@@ -40,7 +40,7 @@ public class CaravanHttpRequestBuilderTest {
 
   @Before
   public void setUp() {
-    builder = new CaravanHttpRequestBuilder(SERVICE_NAME, CORRELATION_ID);
+    builder = new CaravanHttpRequestBuilder(SERVICE_NAME).correlationId(CORRELATION_ID);
   }
 
   @Test

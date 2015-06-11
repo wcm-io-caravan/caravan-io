@@ -79,14 +79,14 @@ public final class CaravanHttpRequestBuilder {
   }
 
   /**
-   * @param serviceName Logical service name. Can be null
-   * @param correlationId Correlation ID. Can be null
+   * @param correlationId Correlation Id. Can be null.
+   * @return Builder
    */
-  public CaravanHttpRequestBuilder(String serviceName, String correlationId) {
-    this.serviceName = serviceName;
+  public CaravanHttpRequestBuilder correlationId(String correlationId) {
     if (correlationId != null) {
       header(CaravanHttpRequest.CORRELATION_ID_HEADER_NAME, ImmutableList.of(correlationId));
     }
+    return this;
   }
 
   /**
