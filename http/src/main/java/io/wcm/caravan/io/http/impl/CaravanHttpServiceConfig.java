@@ -39,14 +39,15 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 label = "wcm.io Caravan Resilient Http Service Configuration",
 description = "Configures transport layer options for service access.",
 configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
-@Property(name = "webconsole.configurationFactory.nameHint", value = "{serviceName}: {ribbonHosts}")
+@Property(name = "webconsole.configurationFactory.nameHint", value = "{serviceId}{serviceName}: {ribbonHosts}")
 public class CaravanHttpServiceConfig {
 
   /**
-   * Service Name
+   * Service ID
    */
-  @Property(label = "Service Name", description = "Internal or external service name.")
-  public static final String SERVICE_NAME_PROPERTY = "serviceName";
+  @Property(label = "Service ID", description = "Internal or external service identifier.")
+  public static final String SERVICE_ID_PROPERTY = "serviceId";
+  private static final String DEPRECATED_SERVICE_NAME_PROPERTY = "serviceName";
 
   /**
    * Hosts
@@ -192,98 +193,99 @@ public class CaravanHttpServiceConfig {
 
   @Activate
   protected void activate(Map<String, Object> config) {
-    String serviceName = getServiceName(config);
-    if (CaravanHttpServiceConfigValidator.isValidServiceConfig(serviceName, config)) {
-      setArchiausProperties(serviceName, config);
+    String serviceId = getServiceId(config);
+    if (CaravanHttpServiceConfigValidator.isValidServiceConfig(serviceId, config)) {
+      setArchiausProperties(serviceId, config);
     }
   }
 
   @Deactivate
   protected void deactivate(Map<String, Object> config) {
     // clear configuration by writing empty properties
-    String serviceName = getServiceName(config);
-    clearArchiausProperties(serviceName);
+    String serviceId = getServiceId(config);
+    clearArchiausProperties(serviceId);
   }
 
-  private String getServiceName(Map<String, Object> config) {
-    return PropertiesUtil.toString(config.get(SERVICE_NAME_PROPERTY), null);
+  private String getServiceId(Map<String, Object> config) {
+    return PropertiesUtil.toString(config.get(SERVICE_ID_PROPERTY),
+        PropertiesUtil.toString(config.get(DEPRECATED_SERVICE_NAME_PROPERTY), null));
   }
 
   /**
    * Writes OSGi configuration to archaius configuration.
-   * @param serviceName Service name
+   * @param serviceId Service ID
    * @param config OSGi config
    */
-  private void setArchiausProperties(String serviceName, Map<String, Object> config) {
+  private void setArchiausProperties(String serviceId, Map<String, Object> config) {
     Configuration archaiusConfig = ArchaiusConfig.getConfiguration();
 
     // ribbon parameters
-    archaiusConfig.setProperty(serviceName + RIBBON_PARAM_LISTOFSERVERS,
+    archaiusConfig.setProperty(serviceId + RIBBON_PARAM_LISTOFSERVERS,
         StringUtils.join(PropertiesUtil.toStringArray(config.get(RIBBON_HOSTS_PROPERTY), new String[0]), ","));
-    archaiusConfig.setProperty(serviceName + RIBBON_PARAM_MAXAUTORETRIES,
+    archaiusConfig.setProperty(serviceId + RIBBON_PARAM_MAXAUTORETRIES,
         PropertiesUtil.toInteger(config.get(RIBBON_MAXAUTORETRIES_PROPERTY), RIBBON_MAXAUTORETRIES_DEFAULT));
-    archaiusConfig.setProperty(serviceName + RIBBON_PARAM_MAXAUTORETRIESONSERVER,
+    archaiusConfig.setProperty(serviceId + RIBBON_PARAM_MAXAUTORETRIESONSERVER,
         PropertiesUtil.toInteger(config.get(RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY), RIBBON_MAXAUTORETRIESONSERVER_DEFAULT));
-    archaiusConfig.setProperty(serviceName + RIBBON_PARAM_OKTORETRYONALLOPERATIONS, "true");
+    archaiusConfig.setProperty(serviceId + RIBBON_PARAM_OKTORETRYONALLOPERATIONS, "true");
 
     // hystrix parameters
     archaiusConfig.setProperty("hystrix.threadpool.default.maxQueueSize", CaravanHttpThreadPoolConfig.HYSTRIX_THREADPOOL_MAXQUEUESIZE_DEFAULT);
     archaiusConfig.setProperty("hystrix.threadpool.default.queueSizeRejectionThreshold",
         CaravanHttpThreadPoolConfig.HYSTRIX_THREADPOOL_QUEUESIZEREJECTIONTHRESHOLD_DEFAULT);
 
-    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_TIMEOUT_MS,
+    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_TIMEOUT_MS,
         PropertiesUtil.toInteger(config.get(HYSTRIX_TIMEOUT_MS_PROPERTY), HYSTRIX_TIMEOUT_MS_DEFAULT));
-    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_FALLBACK_ENABLED,
+    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_FALLBACK_ENABLED,
         PropertiesUtil.toBoolean(config.get(HYSTRIX_FALLBACK_ENABLED_PROPERTY), HYSTRIX_FALLBACK_ENABLED_DEFAULT));
-    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_ENABLED,
+    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_CIRCUITBREAKER_ENABLED,
         PropertiesUtil.toBoolean(config.get(HYSTRIX_CIRCUITBREAKER_ENABLED_PROPERTY), HYSTRIX_CIRCUITBREAKER_ENABLED_DEFAULT));
-    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD,
+    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD,
         PropertiesUtil.toInteger(config.get(HYSTRIX_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD_PROPERTY), HYSTRIX_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD_DEFAULT));
-    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_SLEEPWINDOW_MS,
+    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_CIRCUITBREAKER_SLEEPWINDOW_MS,
         PropertiesUtil.toInteger(config.get(HYSTRIX_CIRCUITBREAKER_SLEEPWINDOW_MS_PROPERTY), HYSTRIX_CIRCUITBREAKER_SLEEPWINDOW_MS_DEFAULT));
-    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE,
+    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE,
         PropertiesUtil.toInteger(config.get(HYSTRIX_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE_PROPERTY),
             HYSTRIX_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE_DEFAULT));
-    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_FORCEOPEN,
+    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_CIRCUITBREAKER_FORCEOPEN,
         PropertiesUtil.toBoolean(config.get(HYSTRIX_CIRCUITBREAKER_FORCEOPEN_PROPERTY), HYSTRIX_CIRCUITBREAKER_FORCEOPEN_DEFAULT));
-    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_FORCECLOSED,
+    archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_CIRCUITBREAKER_FORCECLOSED,
         PropertiesUtil.toBoolean(config.get(HYSTRIX_CIRCUITBREAKER_FORCECLOSED_PROPERTY), HYSTRIX_CIRCUITBREAKER_FORCECLOSED_DEFAULT));
     if (config.get(HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY) != null) {
       // thread pool name
-      archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE,
+      archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE,
           config.get(HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY));
     }
 
     // others
-    archaiusConfig.setProperty(serviceName + HTTP_PARAM_PROTOCOL, PropertiesUtil.toString(config.get(PROTOCOL_PROPERTY), PROTOCOL_PROPERTY_DEFAULT));
+    archaiusConfig.setProperty(serviceId + HTTP_PARAM_PROTOCOL, PropertiesUtil.toString(config.get(PROTOCOL_PROPERTY), PROTOCOL_PROPERTY_DEFAULT));
   }
 
   /**
    * Removes OSGi configuration from archaius configuration.
-   * @param serviceName Service name
+   * @param serviceId Service ID
    */
-  private void clearArchiausProperties(String serviceName) {
+  private void clearArchiausProperties(String serviceId) {
     Configuration archaiusConfig = ArchaiusConfig.getConfiguration();
 
     // ribbon parameters
-    archaiusConfig.clearProperty(serviceName + RIBBON_PARAM_LISTOFSERVERS);
-    archaiusConfig.clearProperty(serviceName + RIBBON_PARAM_MAXAUTORETRIES);
-    archaiusConfig.clearProperty(serviceName + RIBBON_PARAM_MAXAUTORETRIESONSERVER);
-    archaiusConfig.clearProperty(serviceName + RIBBON_PARAM_OKTORETRYONALLOPERATIONS);
+    archaiusConfig.clearProperty(serviceId + RIBBON_PARAM_LISTOFSERVERS);
+    archaiusConfig.clearProperty(serviceId + RIBBON_PARAM_MAXAUTORETRIES);
+    archaiusConfig.clearProperty(serviceId + RIBBON_PARAM_MAXAUTORETRIESONSERVER);
+    archaiusConfig.clearProperty(serviceId + RIBBON_PARAM_OKTORETRYONALLOPERATIONS);
 
     // hystrix parameters
-    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_TIMEOUT_MS);
-    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_FALLBACK_ENABLED);
-    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_ENABLED);
-    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD);
-    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_SLEEPWINDOW_MS);
-    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE);
-    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_FORCEOPEN);
-    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_CIRCUITBREAKER_FORCECLOSED);
-    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceName + HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE);
+    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_TIMEOUT_MS);
+    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_FALLBACK_ENABLED);
+    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_CIRCUITBREAKER_ENABLED);
+    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_CIRCUITBREAKER_REQUESTVOLUMETHRESHOLD);
+    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_CIRCUITBREAKER_SLEEPWINDOW_MS);
+    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_CIRCUITBREAKER_ERRORTHRESHOLDPERCENTAGE);
+    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_CIRCUITBREAKER_FORCEOPEN);
+    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_CIRCUITBREAKER_FORCECLOSED);
+    archaiusConfig.clearProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE);
 
     // others
-    archaiusConfig.clearProperty(serviceName + HTTP_PARAM_PROTOCOL);
+    archaiusConfig.clearProperty(serviceId + HTTP_PARAM_PROTOCOL);
   }
 
 }

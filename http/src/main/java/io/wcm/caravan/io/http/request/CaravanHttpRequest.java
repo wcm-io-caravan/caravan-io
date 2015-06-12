@@ -47,7 +47,7 @@ public final class CaravanHttpRequest {
    */
   public static final String CORRELATION_ID_HEADER_NAME = "Caravan-Correlation-Id";
 
-  private final String serviceName;
+  private final String serviceId;
   private final String method;
   private final String url;
   private final Multimap<String, String> headers;
@@ -56,25 +56,25 @@ public final class CaravanHttpRequest {
   private PerformanceMetrics performanceMetrics;
 
   /**
-   * @param serviceName Logical name of the request service. Used by {@link CaravanHttpClient} to resolve the real URL.
+   * @param serviceId Logical name of the request service. Used by {@link CaravanHttpClient} to resolve the real URL.
    *          If null, only {@code url} is used
    * @param method HTTP method verb
    * @param url Service request URL. Can be an absolute URL or just an path getting combined with the URL of the logical
-   *          service name
+   *          service ID
    * @param headers HTTP headers
    * @param body HTTP Payload
    * @param charset Payload charset
    */
-  CaravanHttpRequest(final String serviceName, final String method, final String url, final Multimap<String, String> headers, final byte[] body,
+  CaravanHttpRequest(final String serviceId, final String method, final String url, final Multimap<String, String> headers, final byte[] body,
       final Charset charset) {
-    this.serviceName = serviceName; // nullable
+    this.serviceId = serviceId; // nullable
     this.method = checkNotNull(method, "method of %s", url);
     this.url = checkNotNull(url, "url");
     this.headers = ImmutableMultimap.copyOf(LinkedHashMultimap.create(checkNotNull(headers, "headers of %s %s", method, url)));
     this.body = body; // nullable
     this.charset = charset; // nullable
     this.performanceMetrics = PerformanceMetrics.createNew(
-        StringUtils.defaultString(serviceName, "UNKNOWN SERVICE") + " : " + StringUtils.defaultString(method, "UNKNOWN METHOD"), url, getCorrelationId());
+        StringUtils.defaultString(serviceId, "UNKNOWN SERVICE") + " : " + StringUtils.defaultString(method, "UNKNOWN METHOD"), url, getCorrelationId());
   }
 
   /**
@@ -151,10 +151,19 @@ public final class CaravanHttpRequest {
   }
 
   /**
-   * @return the serviceName
+   * @return the service ID
    */
+  public String getServiceId() {
+    return serviceId;
+  }
+
+  /**
+   * @return the service ID
+   * @deprecated Please use {@link #getServiceId()}
+   */
+  @Deprecated
   public String getServiceName() {
-    return serviceName;
+    return serviceId;
   }
 
   /**

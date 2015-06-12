@@ -63,19 +63,19 @@ public class CachingLoadBalancerFactory implements LoadBalancerFactory {
   }
 
   @Override
-  public LoadBalancerCommand<CaravanHttpResponse> createCommand(String serviceName) {
-    if (serviceName == null) {
+  public LoadBalancerCommand<CaravanHttpResponse> createCommand(String serviceId) {
+    if (serviceId == null) {
       return null;
     }
-    return loadBalancerCommandCache.getUnchecked(serviceName);
+    return loadBalancerCommandCache.getUnchecked(serviceId);
   }
 
   @Override
-  public boolean isLocalRequest(String serviceName) {
-    if (serviceName == null) {
+  public boolean isLocalRequest(String serviceId) {
+    if (serviceId == null) {
       return false;
     }
-    return isLocalCache.getUnchecked(serviceName);
+    return isLocalCache.getUnchecked(serviceId);
   }
 
 }

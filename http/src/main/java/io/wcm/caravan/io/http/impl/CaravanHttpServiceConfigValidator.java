@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Validates http service configuration for service names.
+ * Validates http service configuration for service IDs.
  */
 final class CaravanHttpServiceConfigValidator {
 
@@ -42,30 +42,30 @@ final class CaravanHttpServiceConfigValidator {
   }
 
   /**
-   * Checks if a valid configuration exists for the given service name. This does not mean that the host
+   * Checks if a valid configuration exists for the given service ID. This does not mean that the host
    * name is correct or returns correct responses, it only checks that the minimum required configuration
    * properties are set to a value.
-   * @param serviceName Service name
+   * @param serviceId Service ID
    * @return true if configuration is valid
    */
-  public static boolean hasValidConfiguration(String serviceName) {
+  public static boolean hasValidConfiguration(String serviceId) {
     Configuration archaiusConfig = ArchaiusConfig.getConfiguration();
-    return StringUtils.isNotEmpty(archaiusConfig.getString(serviceName + RIBBON_PARAM_LISTOFSERVERS));
+    return StringUtils.isNotEmpty(archaiusConfig.getString(serviceId + RIBBON_PARAM_LISTOFSERVERS));
   }
 
   /**
    * Validates service configuration when reading the configuration.
-   * @param serviceName Service name
+   * @param serviceId Service ID
    * @param config OSGi config
    */
-  public static boolean isValidServiceConfig(String serviceName, Map<String, Object> config) {
-    if (StringUtils.isBlank(serviceName)) {
-      log.warn("Invalid transport layer service configuration without service name, ignoring.", serviceName);
+  public static boolean isValidServiceConfig(String serviceId, Map<String, Object> config) {
+    if (StringUtils.isBlank(serviceId)) {
+      log.warn("Invalid transport layer service configuration without service ID, ignoring.", serviceId);
       return false;
     }
     String[] hosts = PropertiesUtil.toStringArray(config.get(RIBBON_HOSTS_PROPERTY));
     if (hosts == null || hosts.length == 0) {
-      log.warn("Invalid transport layer service configuration for '{}' without hosts, ignoring.", serviceName);
+      log.warn("Invalid transport layer service configuration for '{}' without hosts, ignoring.", serviceId);
       return false;
     }
     return true;

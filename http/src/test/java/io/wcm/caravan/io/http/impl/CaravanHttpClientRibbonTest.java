@@ -104,7 +104,7 @@ public class CaravanHttpClientRibbonTest {
   @Test(expected = IllegalResponseRuntimeException.class)
   public void test_retryOnOneServerThrowing500() {
     context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
-        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.SERVICE_ID_PROPERTY, SERVICE_NAME)
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, defectServer1Host)
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 4)
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 0)
@@ -122,7 +122,7 @@ public class CaravanHttpClientRibbonTest {
   @Test(expected = IllegalResponseRuntimeException.class)
   public void test_retryOnMultipleServersThrowing500() {
     context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
-        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.SERVICE_ID_PROPERTY, SERVICE_NAME)
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(defectServer1Host, defectServer2Host))
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 0)
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
@@ -141,7 +141,7 @@ public class CaravanHttpClientRibbonTest {
   @Test(expected = IllegalResponseRuntimeException.class)
   public void test_retryOnMultipleServerThrowing500WithoutChangingTheServer() {
     context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
-        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.SERVICE_ID_PROPERTY, SERVICE_NAME)
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(defectServer1Host, defectServer2Host))
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 4)
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 0)
@@ -162,7 +162,7 @@ public class CaravanHttpClientRibbonTest {
   @Test
   public void test_retryOnMultipleServersOnlyOne200() {
     context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
-        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.SERVICE_ID_PROPERTY, SERVICE_NAME)
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(workingServerHost, defectServer1Host, defectServer2Host))
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 1)
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
@@ -180,7 +180,7 @@ public class CaravanHttpClientRibbonTest {
   @Test
   public void test_noRetryOn404() {
     context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
-        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.SERVICE_ID_PROPERTY, SERVICE_NAME)
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(workingServerHost, defectServer1Host, defectServer2Host))
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
         .build());

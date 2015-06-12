@@ -33,20 +33,20 @@ import com.google.common.collect.Lists;
 
 public class CaravanHttpRequestBuilderTest {
 
-  private static final String SERVICE_NAME = "test-service";
+  private static final String SERVICE_ID = "test-service";
   private static final String CORRELATION_ID = "123";
 
   private CaravanHttpRequestBuilder builder;
 
   @Before
   public void setUp() {
-    builder = new CaravanHttpRequestBuilder(SERVICE_NAME).correlationId(CORRELATION_ID);
+    builder = new CaravanHttpRequestBuilder(SERVICE_ID).correlationId(CORRELATION_ID);
   }
 
   @Test
   public void testConstructor() {
     CaravanHttpRequest request = builder.build();
-    assertEquals(SERVICE_NAME, request.getServiceName());
+    assertEquals(SERVICE_ID, request.getServiceId());
     assertEquals(CORRELATION_ID, request.getCorrelationId());
   }
 

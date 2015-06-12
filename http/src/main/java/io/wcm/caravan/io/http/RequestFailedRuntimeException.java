@@ -39,7 +39,7 @@ public final class RequestFailedRuntimeException extends RuntimeException {
    * @param cause Cause (may be null)
    */
   public RequestFailedRuntimeException(final CaravanHttpRequest request, final String message, final Throwable cause) {
-    super(request.getServiceName() + ": " + message, cause);
+    super(request.getServiceId() + ": " + message, cause);
     this.request = request;
   }
 

@@ -91,8 +91,8 @@ public class CaravanHttpThreadPoolConfig {
   @Deactivate
   protected void deactivate(Map<String, Object> config) {
     // clear configuration by writing empty properties
-    String serviceName = getThreadPoolName(config);
-    clearArchiausProperties(serviceName);
+    String threadPoolName = getThreadPoolName(config);
+    clearArchiausProperties(threadPoolName);
   }
 
   private String getThreadPoolName(Map<String, Object> config) {
@@ -114,31 +114,31 @@ public class CaravanHttpThreadPoolConfig {
 
   /**
    * Writes OSGi configuration to archaius configuration.
-   * @param serviceName Service name
+   * @param threadPoolName Thread pool name
    * @param config OSGi config
    */
-  private void setArchiausProperties(String serviceName, Map<String, Object> config) {
+  private void setArchiausProperties(String threadPoolName, Map<String, Object> config) {
     Configuration archaiusConfig = ArchaiusConfig.getConfiguration();
     // thread pool size
-    archaiusConfig.setProperty(HYSTRIX_THREADPOOL_PREFIX + serviceName + HYSTRIX_PARAM_THREADPOOL_CORESIZE,
+    archaiusConfig.setProperty(HYSTRIX_THREADPOOL_PREFIX + threadPoolName + HYSTRIX_PARAM_THREADPOOL_CORESIZE,
         PropertiesUtil.toInteger(config.get(HYSTRIX_THREADPOOL_CORESIZE_PROPERTY), HYSTRIX_THREADPOOL_CORESIZE_DEFAULT));
     // maximum thread queue size
-    archaiusConfig.setProperty(HYSTRIX_THREADPOOL_PREFIX + serviceName + HYSTRIX_PARAM_THREADPOOL_MAXQUEUESIZE,
+    archaiusConfig.setProperty(HYSTRIX_THREADPOOL_PREFIX + threadPoolName + HYSTRIX_PARAM_THREADPOOL_MAXQUEUESIZE,
         PropertiesUtil.toInteger(config.get(HYSTRIX_THREADPOOL_MAXQUEUESIZE_PROPERTY), HYSTRIX_THREADPOOL_MAXQUEUESIZE_DEFAULT));
     // dynamic thread queue size
-    archaiusConfig.setProperty(HYSTRIX_THREADPOOL_PREFIX + serviceName + HYSTRIX_PARAM_THREADPOOL_QUEUESIZEREJECTIONTHRESHOLD,
+    archaiusConfig.setProperty(HYSTRIX_THREADPOOL_PREFIX + threadPoolName + HYSTRIX_PARAM_THREADPOOL_QUEUESIZEREJECTIONTHRESHOLD,
         PropertiesUtil.toInteger(config.get(HYSTRIX_THREADPOOL_QUEUESIZEREJECTIONTHRESHOLD_PROPERTY), HYSTRIX_THREADPOOL_QUEUESIZEREJECTIONTHRESHOLD_DEFAULT));
   }
 
   /**
    * Removes OSGi configuration from archaius configuration.
-   * @param serviceName Service name
+   * @param threadPoolName Thread pool name
    */
-  private void clearArchiausProperties(String serviceName) {
+  private void clearArchiausProperties(String threadPoolName) {
     Configuration archaiusConfig = ArchaiusConfig.getConfiguration();
-    archaiusConfig.clearProperty(HYSTRIX_THREADPOOL_PREFIX + serviceName + HYSTRIX_PARAM_THREADPOOL_CORESIZE);
-    archaiusConfig.clearProperty(HYSTRIX_THREADPOOL_PREFIX + serviceName + HYSTRIX_PARAM_THREADPOOL_MAXQUEUESIZE);
-    archaiusConfig.clearProperty(HYSTRIX_THREADPOOL_PREFIX + serviceName + HYSTRIX_PARAM_THREADPOOL_QUEUESIZEREJECTIONTHRESHOLD);
+    archaiusConfig.clearProperty(HYSTRIX_THREADPOOL_PREFIX + threadPoolName + HYSTRIX_PARAM_THREADPOOL_CORESIZE);
+    archaiusConfig.clearProperty(HYSTRIX_THREADPOOL_PREFIX + threadPoolName + HYSTRIX_PARAM_THREADPOOL_MAXQUEUESIZE);
+    archaiusConfig.clearProperty(HYSTRIX_THREADPOOL_PREFIX + threadPoolName + HYSTRIX_PARAM_THREADPOOL_QUEUESIZEREJECTIONTHRESHOLD);
   }
 
 }

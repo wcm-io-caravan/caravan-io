@@ -163,18 +163,18 @@ public class CaravanHttpClientImplProtocolTest {
     assertUrl("myhost:8443", "https", "https://myhost:8443/my/url");
   }
 
-  private static ImmutableMap<String, Object> getServiceConfigProperties(String serviceName, String hostAndPort, String protocol) {
+  private static ImmutableMap<String, Object> getServiceConfigProperties(String serviceId, String hostAndPort, String protocol) {
     return ImmutableMap.<String, Object>builder()
-        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, serviceName)
+        .put(CaravanHttpServiceConfig.SERVICE_ID_PROPERTY, serviceId)
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
         .put(CaravanHttpServiceConfig.PROTOCOL_PROPERTY, protocol)
         .build();
   }
 
   private void assertUrl(final String hostPort, final String protocol, final String expectedUrl) throws Exception {
-    String serviceName = "protocolTestService_" + hostPort + "_" + protocol;
+    String serviceId = "protocolTestService_" + hostPort + "_" + protocol;
     CaravanHttpServiceConfig serviceConfig = context.registerInjectActivateService(new CaravanHttpServiceConfig(),
-        getServiceConfigProperties(serviceName, hostPort, protocol));
+        getServiceConfigProperties(serviceId, hostPort, protocol));
 
     when(httpClient.execute(any(HttpUriRequest.class))).then(new Answer<HttpResponse>() {
 
@@ -195,7 +195,7 @@ public class CaravanHttpClientImplProtocolTest {
       }
     });
 
-    underTest.execute(new CaravanHttpRequestBuilder(serviceName).append(URL).build()).toBlocking().first();
+    underTest.execute(new CaravanHttpRequestBuilder(serviceId).append(URL).build()).toBlocking().first();
     MockOsgi.deactivate(serviceConfig);
   }
 

@@ -125,7 +125,7 @@ public class CaravanHttpClientImplTest {
 
   private static ImmutableMap<String, Object> getServiceConfigProperties(String hostAndPort, String protocol) {
     return ImmutableMap.<String, Object>builder()
-        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.SERVICE_ID_PROPERTY, SERVICE_NAME)
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
         .put(CaravanHttpServiceConfig.PROTOCOL_PROPERTY, protocol)
         .build();
@@ -142,7 +142,7 @@ public class CaravanHttpClientImplTest {
   @Test(expected = RequestFailedRuntimeException.class)
   public void testWithoutConfig() {
 
-    // remove host config - service name is required to clear archaius properties
+    // remove host config - service ID is required to clear archaius properties
     MockOsgi.deactivate(serviceConfig, getServiceConfigProperties("", ""));
 
     assertFalse(underTest.hasValidConfiguration(SERVICE_NAME));
@@ -152,7 +152,7 @@ public class CaravanHttpClientImplTest {
   }
 
   @Test(expected = RequestFailedRuntimeException.class)
-  public void testMissingServiceName() {
+  public void testMissingServiceId() {
     underTest.execute(new CaravanHttpRequestBuilder().append(HTTP_200_URI).build()).toBlocking().first();
   }
 

@@ -79,10 +79,10 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
   @Override
   public Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request, final Observable<CaravanHttpResponse> fallback) {
 
-    String serviceName = request.getServiceName();
-    Observable<CaravanHttpResponse> httpRequest = StringUtils.isEmpty(serviceName) ? createHttpRequest("", request) : createRibbonRequest(request);
-    ExecutionIsolationStrategy isolationStrategy = getIsolationStrategy(serviceName);
-    Observable<CaravanHttpResponse> hystrixRequest = new HttpHystrixCommand(StringUtils.defaultString(serviceName, "UNKNOWN"), isolationStrategy, httpRequest,
+    String serviceId = request.getServiceId();
+    Observable<CaravanHttpResponse> httpRequest = StringUtils.isEmpty(serviceId) ? createHttpRequest("", request) : createRibbonRequest(request);
+    ExecutionIsolationStrategy isolationStrategy = getIsolationStrategy(serviceId);
+    Observable<CaravanHttpResponse> hystrixRequest = new HttpHystrixCommand(StringUtils.defaultString(serviceId, "UNKNOWN"), isolationStrategy, httpRequest,
         fallback).toObservable();
 
     PerformanceMetrics metrics = request.getPerformanceMetrics();
@@ -91,19 +91,19 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
 
   }
 
-  private ExecutionIsolationStrategy getIsolationStrategy(String serviceName) {
-    return loadBalancerFactory.isLocalRequest(serviceName) ? ExecutionIsolationStrategy.SEMAPHORE : ExecutionIsolationStrategy.THREAD;
+  private ExecutionIsolationStrategy getIsolationStrategy(String serviceId) {
+    return loadBalancerFactory.isLocalRequest(serviceId) ? ExecutionIsolationStrategy.SEMAPHORE : ExecutionIsolationStrategy.THREAD;
   }
 
   private Observable<CaravanHttpResponse> createRibbonRequest(final CaravanHttpRequest request) {
-    LoadBalancerCommand<CaravanHttpResponse> command = loadBalancerFactory.createCommand(request.getServiceName());
+    LoadBalancerCommand<CaravanHttpResponse> command = loadBalancerFactory.createCommand(request.getServiceId());
     ServerOperation<CaravanHttpResponse> operation = new ServerOperation<CaravanHttpResponse>() {
 
       @Override
       public Observable<CaravanHttpResponse> call(Server server) {
         String protcol = RequestUtil.PROTOCOL_AUTO;
-        if (StringUtils.isNotEmpty(request.getServiceName())) {
-          protcol = ArchaiusConfig.getConfiguration().getString(request.getServiceName() + CaravanHttpServiceConfig.HTTP_PARAM_PROTOCOL);
+        if (StringUtils.isNotEmpty(request.getServiceId())) {
+          protcol = ArchaiusConfig.getConfiguration().getString(request.getServiceId() + CaravanHttpServiceConfig.HTTP_PARAM_PROTOCOL);
         }
         return createHttpRequest(RequestUtil.buildUrlPrefix(server, protcol), request);
       }
@@ -180,8 +180,8 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
   }
 
   @Override
-  public boolean hasValidConfiguration(String serviceName) {
-    return CaravanHttpServiceConfigValidator.hasValidConfiguration(serviceName);
+  public boolean hasValidConfiguration(String serviceId) {
+    return CaravanHttpServiceConfigValidator.hasValidConfiguration(serviceId);
   }
 
 }

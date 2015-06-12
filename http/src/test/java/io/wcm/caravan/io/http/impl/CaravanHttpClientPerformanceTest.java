@@ -98,7 +98,7 @@ public class CaravanHttpClientPerformanceTest {
 
   private static ImmutableMap<String, Object> getServiceConfigProperties(String hostAndPort, String protocol) {
     return ImmutableMap.<String, Object>builder()
-        .put(CaravanHttpServiceConfig.SERVICE_NAME_PROPERTY, SERVICE_NAME)
+        .put(CaravanHttpServiceConfig.SERVICE_ID_PROPERTY, SERVICE_NAME)
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
         .put(CaravanHttpServiceConfig.PROTOCOL_PROPERTY, protocol)
         .build();

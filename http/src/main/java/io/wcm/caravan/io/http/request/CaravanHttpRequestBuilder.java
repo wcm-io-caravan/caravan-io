@@ -54,7 +54,7 @@ import com.google.common.collect.Multimap;
 @ProviderType
 public final class CaravanHttpRequestBuilder {
 
-  private final String serviceName;
+  private final String serviceId;
   private String method = HttpGet.METHOD_NAME;
   private String path = "";
   private final List<VarSpec> queryExpressions = Lists.newArrayList();
@@ -68,14 +68,14 @@ public final class CaravanHttpRequestBuilder {
    * Default constructor.
    */
   public CaravanHttpRequestBuilder() {
-    serviceName = null;
+    serviceId = null;
   }
 
   /**
-   * @param serviceName Logical service name. Can be null
+   * @param serviceId Logical service ID. Can be null.
    */
-  public CaravanHttpRequestBuilder(String serviceName) {
-    this.serviceName = serviceName;
+  public CaravanHttpRequestBuilder(String serviceId) {
+    this.serviceId = serviceId;
   }
 
   /**
@@ -237,7 +237,7 @@ public final class CaravanHttpRequestBuilder {
     String expandedUrl = getExpandedUrl(parameters);
     Multimap<String, String> expandedHeaders = getExpandedHeaders(parameters);
     byte[] expandedBody = getExpandedBody(parameters);
-    return new CaravanHttpRequest(serviceName, method, expandedUrl, expandedHeaders, expandedBody, charset);
+    return new CaravanHttpRequest(serviceId, method, expandedUrl, expandedHeaders, expandedBody, charset);
   }
 
   private String getExpandedUrl(Map<String, Object> parameters) {

@@ -44,7 +44,7 @@ public final class IllegalResponseRuntimeException extends RuntimeException {
    * @param message Error message
    */
   public IllegalResponseRuntimeException(final CaravanHttpRequest request, String requestUri, int responseStatusCode, String responseBody, String message) {
-    super(request.getServiceName() + ": " + message);
+    super(request.getServiceId() + ": " + message);
     this.request = request;
     this.requestUri = requestUri;
     this.responseStatusCode = responseStatusCode;

@@ -24,21 +24,22 @@ import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
 
 /**
- * Factory to create Ribbon LoadBalancer commands for a logical service name. Additionally checks if the Ribbon hosts pointing to localhost.
+ * Factory to create Ribbon LoadBalancer commands for a logical service ID. Additionally checks if the Ribbon hosts
+ * pointing to localhost.
  */
 public interface LoadBalancerFactory {
 
   /**
    * Creates LoadBalancer command.
-   * @param serviceName Logical service name
+   * @param serviceId Logical service ID
    * @return LoadBalancer command
    */
-  LoadBalancerCommand<CaravanHttpResponse> createCommand(String serviceName);
+  LoadBalancerCommand<CaravanHttpResponse> createCommand(String serviceId);
 
   /**
-   * @param serviceName Logical service name
+   * @param serviceId Logical service ID
    * @return True, if hosts defined for service point to localhost
    */
-  boolean isLocalRequest(String serviceName);
+  boolean isLocalRequest(String serviceId);
 
 }
