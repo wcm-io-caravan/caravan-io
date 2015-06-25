@@ -23,7 +23,7 @@
     xsi:schemaLocation="http://maven.apache.org/changes/1.0.0 http://maven.apache.org/plugins/maven-changes-plugin/xsd/changes-1.0.0.xsd">
   <body>
 
-    <release version="0.6.0" date="Not released">
+    <release version="0.6.0" date="2015-06-25">
       <action type="update" dev="sseifert">
         Deprecate "serviceName" and use "serviceId" instead.
       </action>
