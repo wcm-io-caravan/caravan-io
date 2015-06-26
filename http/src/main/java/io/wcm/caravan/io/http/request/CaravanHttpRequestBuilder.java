@@ -20,7 +20,6 @@
 package io.wcm.caravan.io.http.request;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.wcm.caravan.commons.stream.Collectors;
 import io.wcm.caravan.commons.stream.Streams;
 import io.wcm.caravan.io.http.impl.CaravanHttpHelper;
 
@@ -29,24 +28,21 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.methods.HttpGet;
 import org.osgi.annotation.versioning.ProviderType;
 
-import com.damnhandy.uri.template.Expression;
 import com.damnhandy.uri.template.UriTemplate;
-import com.damnhandy.uri.template.impl.Operator;
-import com.damnhandy.uri.template.impl.VarSpec;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 /**
  * UriTemplate using HTTP request builder.
@@ -56,9 +52,9 @@ public final class CaravanHttpRequestBuilder {
 
   private final String serviceId;
   private String method = HttpGet.METHOD_NAME;
-  private String path = "";
-  private final List<VarSpec> queryExpressions = Lists.newArrayList();
-  private final Map<String, Object> queryValues = Maps.newHashMap();
+  private StringBuilder path = new StringBuilder();
+  private Set<String> queryNames = Sets.newHashSet();
+  private Map<String, Object> values = Maps.newHashMap();
   private final Multimap<String, String> headers = ArrayListMultimap.create();
   private Charset charset;
   private byte[] body;
@@ -115,82 +111,54 @@ public final class CaravanHttpRequestBuilder {
    * Sets and replaces a header for the HTTP request
    * @see CaravanHttpRequest#getHeaders()
    * @param name Header name
-   * @param values Header values
+   * @param headerValues Header values
    * @return Builder
    */
-  public CaravanHttpRequestBuilder header(String name, Collection<String> values) {
-    headers.putAll(name, values);
+  public CaravanHttpRequestBuilder header(String name, Collection<String> headerValues) {
+    headers.putAll(name, headerValues);
     return this;
   }
 
   /**
-   * @see CaravanHttpRequest#getUrl()
-   * @param urlFragment In URI template format
+   * Appends a URL fragment.
+   * @param urlFragment URL fragment
    * @return Builder
    */
   public CaravanHttpRequestBuilder append(String urlFragment) {
-    String slicedPath = parseTemplateExpressions(urlFragment);
-    slicedPath = parseQueries(slicedPath);
-    path += slicedPath;
+    this.path.append(urlFragment);
     return this;
   }
 
-  private String parseTemplateExpressions(String urlFragment) {
-    UriTemplate template = UriTemplate.fromTemplate(urlFragment);
-    String slicedPath = urlFragment;
-    for (Expression expression : template.getExpressions()) {
-      if (Operator.QUERY.equals(expression.getOperator()) || Operator.CONTINUATION.equals(expression.getOperator())) {
-        StringBuffer temp = new StringBuffer(slicedPath.substring(0, expression.getStartPosition()));
-        if (expression.getEndPosition() != -1 && expression.getEndPosition() < slicedPath.length()) {
-          temp.append(slicedPath.substring(expression.getEndPosition()));
-        }
-        slicedPath = temp.toString();
-        for (VarSpec spec : expression.getVarSpecs()) {
-          queryExpressions.add(spec);
-        }
-      }
-    }
-    return slicedPath;
-  }
-
-  private String parseQueries(String urlFragment) {
-    String slicedPath = urlFragment;
-    String queries = "";
-    if (urlFragment.contains("?")) {
-      String[] tokens = StringUtils.split(urlFragment, "?", 2);
-      slicedPath = tokens[0];
-      queries = tokens[1];
-    }
-    Multimap<String, String> multiMap = LinkedListMultimap.create();
-    for (String query : StringUtils.split(queries, "&")) {
-      String[] tokens = StringUtils.split(query, "=", 2);
-      String key = tokens[0];
-      String value = tokens.length == 2 ? CaravanHttpHelper.urlDecode(tokens[1]) : null;
-      multiMap.put(key, value);
-    }
-    for (String key : multiMap.keySet()) {
-      Collection<String> values = multiMap.get(key);
-      if (values.size() > 1) {
-        append("{?" + key + "*}");
-        queryValues.put(key, values);
-      }
-      else {
-        query(key, values.iterator().next());
-      }
-    }
-    return slicedPath;
+  /**
+   * Adds a query template expression.
+   * @param name Query parameter name
+   * @return Builder
+   */
+  public CaravanHttpRequestBuilder query(String name) {
+    queryNames.add(name);
+    return this;
   }
 
   /**
    * Adds a parameter with value to the request query
    * @see CaravanHttpRequest#getUrl()
-   * @param key Parameter name
+   * @param name Parameter name
    * @param value Parameter value
    * @return Builder
    */
-  public CaravanHttpRequestBuilder query(String key, Object value) {
-    queryValues.put(key, value);
-    return append("{?" + key + '}');
+  public CaravanHttpRequestBuilder query(String name, Object value) {
+    return query(name).value(name, value);
+  }
+
+  /**
+   * Adds a value for any UriTemplate expression in URL, header or body.
+   * @param name Parameter name
+   * @param value Parameter value
+   * @return Builder
+   */
+  public CaravanHttpRequestBuilder value(String name, Object value) {
+    values.put(name, value);
+    return this;
   }
 
   /**
@@ -241,12 +209,15 @@ public final class CaravanHttpRequestBuilder {
   }
 
   private String getExpandedUrl(Map<String, Object> parameters) {
+
     Map<String, Object> mergedParams = Maps.newHashMap(parameters);
-    mergedParams.putAll(queryValues);
-    List<String> expressions = Streams.of(queryExpressions).map(expression -> expression.getValue()).collect(Collectors.toList());
-    Collections.sort(expressions);
-    String query = expressions.isEmpty() ? "" : ("{?" + Joiner.on(",").join(expressions) + "}");
+    mergedParams.putAll(values);
+    List<String> sortedQueryNames = Lists.newArrayList(queryNames);
+    Collections.sort(sortedQueryNames);
+    String operator = path.indexOf("?") == -1 ? "?" : "&";
+    String query = queryNames.isEmpty() ? "" : ('{' + operator + StringUtils.join(queryNames, ',') + '}');
     return UriTemplate.fromTemplate(path + query).expand(mergedParams);
+
   }
 
   private Multimap<String, String> getExpandedHeaders(Map<String, Object> parameters) {

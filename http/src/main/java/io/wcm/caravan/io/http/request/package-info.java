@@ -20,5 +20,5 @@
 /**
  * Resilient HTTP transport layer request.
  */
-@org.osgi.annotation.versioning.Version("0.6.0")
+@org.osgi.annotation.versioning.Version("0.7.0")
 package io.wcm.caravan.io.http.request;
