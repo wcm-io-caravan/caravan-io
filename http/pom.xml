@@ -34,7 +34,7 @@
   <version>0.7.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
-  <name>Caravan Resilient HTTP</name>
+  <name>Resilient HTTP</name>
   <description>HTTP communication layer using Netflix Hystrix and Ribbon for resilience.</description>
 
   <scm>
