@@ -26,12 +26,12 @@
     <groupId>io.wcm.caravan</groupId>
     <artifactId>io.wcm.caravan.parent_toplevel</artifactId>
     <version>0.5.4</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <groupId>io.wcm.caravan</groupId>
   <artifactId>io.wcm.caravan.io.http</artifactId>
-  <version>0.7.1-SNAPSHOT</version>
+  <version>0.7.2-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <name>Resilient HTTP</name>
