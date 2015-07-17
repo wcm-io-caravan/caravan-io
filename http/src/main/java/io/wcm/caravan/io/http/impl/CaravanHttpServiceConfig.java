@@ -19,7 +19,13 @@
  */
 package io.wcm.caravan.io.http.impl;
 
+import io.wcm.caravan.commons.stream.Collectors;
+import io.wcm.caravan.commons.stream.Streams;
+
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang3.StringUtils;
@@ -30,6 +36,8 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Configures transport layer options for service access.
@@ -53,8 +61,9 @@ public class CaravanHttpServiceConfig {
    * Hosts
    */
   @Property(label = "Hosts",
-      description = "Ribbon: List of hostnames/IP addresses and ports to use for service (if multiple are defined software " +
-          "load balancing is applied). Example entry: 'host1:80'.",
+      description = "Ribbon: List of hostnames/IP addresses and ports to use for service (if multiple are defined software "
+          + "load balancing is applied). Optionally you can add a protocol as well. If you have mutliple entries "
+          + "all have to use the same protocol. Example entry: 'http://host1:8080'.",
           cardinality = Integer.MAX_VALUE)
   public static final String RIBBON_HOSTS_PROPERTY = "ribbonHosts";
 
@@ -191,6 +200,10 @@ public class CaravanHttpServiceConfig {
    */
   public static final String HTTP_PARAM_PROTOCOL = ".http.protocol";
 
+  static final String LIST_SEPARATOR = ",";
+
+  private static final Logger log = LoggerFactory.getLogger(CaravanHttpServiceConfig.class);
+
   @Activate
   protected void activate(Map<String, Object> config) {
     String serviceId = getServiceId(config);
@@ -221,7 +234,7 @@ public class CaravanHttpServiceConfig {
 
     // ribbon parameters
     archaiusConfig.setProperty(serviceId + RIBBON_PARAM_LISTOFSERVERS,
-        StringUtils.join(PropertiesUtil.toStringArray(config.get(RIBBON_HOSTS_PROPERTY), new String[0]), ","));
+        StringUtils.join(PropertiesUtil.toStringArray(config.get(RIBBON_HOSTS_PROPERTY), new String[0]), LIST_SEPARATOR));
     archaiusConfig.setProperty(serviceId + RIBBON_PARAM_MAXAUTORETRIES,
         PropertiesUtil.toInteger(config.get(RIBBON_MAXAUTORETRIES_PROPERTY), RIBBON_MAXAUTORETRIES_DEFAULT));
     archaiusConfig.setProperty(serviceId + RIBBON_PARAM_MAXAUTORETRIESONSERVER,
@@ -258,6 +271,53 @@ public class CaravanHttpServiceConfig {
 
     // others
     archaiusConfig.setProperty(serviceId + HTTP_PARAM_PROTOCOL, PropertiesUtil.toString(config.get(PROTOCOL_PROPERTY), PROTOCOL_PROPERTY_DEFAULT));
+
+    // update protocol to be used
+    applyRibbonHostsProcotol(serviceId);
+  }
+
+  /**
+   * Checks if protocols are defined in the ribbon "listOfServers" properties, which is not supported by ribbon itself.
+   * If this is the case, remove them and set our custom "http.protocol" property instead to the protocol, if
+   * it is set to "auto".
+   */
+  private void applyRibbonHostsProcotol(String serviceId) {
+    Configuration archaiusConfig = ArchaiusConfig.getConfiguration();
+
+    String[] listOfServers = archaiusConfig.getStringArray(serviceId + RIBBON_PARAM_LISTOFSERVERS);
+    String protocolForAllServers = archaiusConfig.getString(serviceId + HTTP_PARAM_PROTOCOL);
+
+    // get protocols defined in servers
+    Set<String> protocolsFromListOfServers = Streams.of(listOfServers)
+        .filter(server -> StringUtils.contains(server, "://"))
+        .map(server -> StringUtils.substringBefore(server, "://"))
+        .collect(Collectors.toSet());
+
+    // skip further processing of no protocols defined
+    if (protocolsFromListOfServers.isEmpty()) {
+      return;
+    }
+
+    // ensure that only one protocol is defined. if not use the first one and write a warning to the log files.
+    String protocol = new TreeSet<String>(protocolsFromListOfServers).iterator().next();
+    if (protocolsFromListOfServers.size() > 1) {
+      log.warn("Different protocols are defined for property {}: {}. Only protocol '{}' is used.",
+          RIBBON_HOSTS_PROPERTY, StringUtils.join(listOfServers, LIST_SEPARATOR), protocol);
+    }
+
+    // if http protocol is not set to "auto" write a warning as well, because protocol is defined in server list as well
+    if (!(StringUtils.equals(protocolForAllServers, RequestUtil.PROTOCOL_AUTO)
+        || StringUtils.equals(protocolForAllServers, protocol))) {
+      log.warn("Protocol '{}' is defined for property {}: {}, but an other protocol is defined in the server list: {}. Only protocol '{}' is used.",
+          protocolForAllServers, PROTOCOL_PROPERTY, StringUtils.join(listOfServers, LIST_SEPARATOR), protocol);
+    }
+
+    // remove protocol from list of servers and store default protocol
+    List<String> listOfServersWithoutProtocol = Streams.of(listOfServers)
+        .map(server -> StringUtils.substringAfter(server, "://"))
+        .collect(Collectors.toList());
+    archaiusConfig.setProperty(serviceId + RIBBON_PARAM_LISTOFSERVERS, StringUtils.join(listOfServersWithoutProtocol, LIST_SEPARATOR));
+    archaiusConfig.setProperty(serviceId + HTTP_PARAM_PROTOCOL, protocol);
   }
 
   /**
