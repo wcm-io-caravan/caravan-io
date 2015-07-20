@@ -36,8 +36,10 @@
   <packaging>pom</packaging>
 
   <name>Caravan I/O Root</name>
+  <description>Micro Services I/O Resilient Transport Layer.</description>
 
   <modules>
+    <module>parent</module>
     <module>http</module>
     <module>json-transform</module>
   </modules>
