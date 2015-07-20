@@ -1,18 +1,6 @@
-wcm.io Caravan Resilient Http
-============================
+## Resilient HTTP Usage
 
-Implements a resilient HTTP transport layer using:
-
-* [Apache Http Async Client](http://hc.apache.org/httpcomponents-asyncclient-4.1.x/index.html) for communication
-* [Netflix Hystrix](https://github.com/Netflix/Hystrix) for latency and fault tolerance
-* [Netflix Ribbon](https://github.com/netflix/ribbon) for load balancing
-* [Reactive Java](https://github.com/ReactiveX/RxJava) for asynchronous interfaces
-* [RFC 6570 URI Template](https://tools.ietf.org/html/rfc6570) for URI templating
-
-It's targeted for REST communication, but can be used for other protocols as well (e.g. SOAP).
-
-Simple example
---------------
+### Simple example
 
 To execute a resilient HTTP request it needs to load the HTTP client by dependency injection, create the request with help of the builder and execute it by the client.
 As the client works in an asynchron fashion, you will receive an Observable. It is possible to execute the request with a fallback getting returned if it fails.
