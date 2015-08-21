@@ -24,7 +24,7 @@
   <body>
 
     <release version="0.7.4" date="not released">
-      <action type="update" dev="sseifert">
+      <action type="update" dev="sseifert" issue="WCARAV-1">
         Update to io.wcm.caravan.commons.httpclient 1.0.0.
       </action>
     </release>
