@@ -9,7 +9,7 @@ HTTP communication layer using Netflix Hystrix and NetFlix Ribbon for resilience
 <dependency>
   <groupId>io.wcm.caravan</groupId>
   <artifactId>io.wcm.caravan.io.http</artifactId>
-  <version>0.7.2</version>
+  <version>0.7.4</version>
 </dependency>
 ```
 
