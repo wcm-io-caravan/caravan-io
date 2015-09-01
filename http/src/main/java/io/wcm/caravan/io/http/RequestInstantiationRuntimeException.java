@@ -2,7 +2,7 @@
  * #%L
  * wcm.io
  * %%
- * Copyright (C) 2014 wcm.io
+ * Copyright (C) 2015 wcm.io
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,21 @@
  * limitations under the License.
  * #L%
  */
-/**
- * Resilient HTTP transport layer.
- */
-@org.osgi.annotation.versioning.Version("0.6.0")
 package io.wcm.caravan.io.http;
 
+/**
+ * Thrown if there was an error by creating a request.
+ */
+public class RequestInstantiationRuntimeException extends RuntimeException {
+
+  private static final long serialVersionUID = 5633707101601214674L;
+
+  /**
+   * @param message Error message
+   * @param cause Cause (may be null)
+   */
+  public RequestInstantiationRuntimeException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+}

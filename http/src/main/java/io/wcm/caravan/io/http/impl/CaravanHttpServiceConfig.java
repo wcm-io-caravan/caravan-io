@@ -21,6 +21,8 @@ package io.wcm.caravan.io.http.impl;
 
 import io.wcm.caravan.commons.stream.Collectors;
 import io.wcm.caravan.commons.stream.Streams;
+import io.wcm.caravan.io.http.impl.ribbon.CachingLoadBalancerFactory;
+import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -35,6 +37,7 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +52,9 @@ description = "Configures transport layer options for service access.",
 configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
 @Property(name = "webconsole.configurationFactory.nameHint", value = "{serviceId}{serviceName}: {ribbonHosts}")
 public class CaravanHttpServiceConfig {
+
+  @Reference(target = "(type=" + LoadBalancerFactory.CACHING + ")")
+  private LoadBalancerFactory loadBalancerFactory;
 
   /**
    * Service ID
@@ -217,6 +223,10 @@ public class CaravanHttpServiceConfig {
     // clear configuration by writing empty properties
     String serviceId = getServiceId(config);
     clearArchiausProperties(serviceId);
+    // remove load balancer from caching factory
+    if (loadBalancerFactory != null && loadBalancerFactory instanceof CachingLoadBalancerFactory) {
+      ((CachingLoadBalancerFactory)loadBalancerFactory).unregister(serviceId);
+    }
   }
 
   private String getServiceId(Map<String, Object> config) {

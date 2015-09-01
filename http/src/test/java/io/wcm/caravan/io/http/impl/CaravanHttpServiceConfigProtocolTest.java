@@ -29,6 +29,8 @@ import static io.wcm.caravan.io.http.impl.RequestUtil.PROTOCOL_HTTP;
 import static io.wcm.caravan.io.http.impl.RequestUtil.PROTOCOL_HTTPS;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
+import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
@@ -54,6 +56,8 @@ public class CaravanHttpServiceConfigProtocolTest {
   public void setUp() {
     ArchaiusConfig.initialize();
     archaiusConfig = ArchaiusConfig.getConfiguration();
+    context.registerInjectActivateService(new SimpleLoadBalancerFactory());
+    context.registerInjectActivateService(new LoadBalancerCommandFactory());
   }
 
   @After

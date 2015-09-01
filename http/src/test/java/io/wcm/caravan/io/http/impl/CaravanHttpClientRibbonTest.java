@@ -28,6 +28,8 @@ import static org.junit.Assert.assertTrue;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
+import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
+import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
@@ -74,6 +76,8 @@ public class CaravanHttpClientRibbonTest {
   public void setUp() {
 
     ArchaiusConfig.initialize();
+    context.registerInjectActivateService(new SimpleLoadBalancerFactory());
+    context.registerInjectActivateService(new LoadBalancerCommandFactory());
     context.registerInjectActivateService(new HttpClientFactoryImpl());
     underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
 

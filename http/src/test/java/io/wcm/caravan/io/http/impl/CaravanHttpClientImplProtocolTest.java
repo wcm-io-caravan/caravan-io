@@ -25,6 +25,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import io.wcm.caravan.commons.httpclient.HttpClientFactory;
 import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
+import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 
 import java.net.URI;
@@ -78,6 +80,8 @@ public class CaravanHttpClientImplProtocolTest {
     threadPoolConfig = context.registerInjectActivateService(new CaravanHttpThreadPoolConfig(),
         ImmutableMap.of(CaravanHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
 
+    context.registerInjectActivateService(new SimpleLoadBalancerFactory());
+    context.registerInjectActivateService(new LoadBalancerCommandFactory());
     context.registerService(HttpClientFactory.class, httpClientFactory);
     underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
   }

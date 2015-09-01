@@ -20,6 +20,8 @@
 package io.wcm.caravan.io.http.impl;
 
 import static org.junit.Assert.assertEquals;
+import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
+import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
 
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.junit.Before;
@@ -40,6 +42,8 @@ public class HttpHystrixCommandTest {
   @Before
   public void setUp() {
     ArchaiusConfig.initialize();
+    context.registerInjectActivateService(new SimpleLoadBalancerFactory());
+    context.registerInjectActivateService(new LoadBalancerCommandFactory());
   }
 
   @Test
