@@ -23,6 +23,12 @@
     xsi:schemaLocation="http://maven.apache.org/changes/1.0.0 http://maven.apache.org/plugins/maven-changes-plugin/xsd/changes-1.0.0.xsd">
   <body>
 
+    <release version="0.8.0" date="2015-09-04">
+      <action type="update" dev="cnagel">
+        New Ribbon Loadbalancer Factory implementation.
+      </action>
+    </release>
+
     <release version="0.7.4" date="2015-08-26">
       <action type="update" dev="sseifert" issue="WCARAV-1">
         Update to io.wcm.caravan.commons.httpclient 1.0.0.

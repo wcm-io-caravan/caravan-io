@@ -2,7 +2,7 @@
  * #%L
  * wcm.io
  * %%
- * Copyright (C) 2014 wcm.io
+ * Copyright (C) 2015 wcm.io
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,63 +19,51 @@
  */
 package io.wcm.caravan.io.http.impl.ribbon;
 
-import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
-import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
+import com.google.common.collect.Maps;
+import com.netflix.loadbalancer.ILoadBalancer;
 
 /**
- * Caching implementation for the LoadBalancer factory. Stores the delegated results temporary for one minute.
+ * Caching implementation for the Ribbon load balancer factory storing items in a {@link ConcurrentMap}. Offers the
+ * ability to remove a load balancer from cache store.
  */
+@Component
+@Service(LoadBalancerFactory.class)
+@Property(name = "type", value = LoadBalancerFactory.CACHING)
 public class CachingLoadBalancerFactory implements LoadBalancerFactory {
 
-  private final LoadBalancerFactory delegate;
+  @Reference(target = "(type=" + LoadBalancerFactory.SIMPLE + ")")
+  private LoadBalancerFactory delegate;
 
-  private final LoadingCache<String, LoadBalancerCommand<CaravanHttpResponse>> loadBalancerCommandCache = CacheBuilder.newBuilder()
-      .expireAfterWrite(1, TimeUnit.MINUTES).build(
-          new CacheLoader<String, LoadBalancerCommand<CaravanHttpResponse>>() {
+  private final ConcurrentMap<String, ILoadBalancer> store = Maps.newConcurrentMap();
 
-            @Override
-            public LoadBalancerCommand<CaravanHttpResponse> load(String key) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-              return delegate.createCommand(key);
-            }
-          });
+  @Override
+  public ILoadBalancer getLoadBalancer(String serviceId) {
 
-  private final LoadingCache<String, Boolean> isLocalCache = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES)
-      .build(new CacheLoader<String, Boolean>() {
+    if (store.containsKey(serviceId)) {
+      return store.get(serviceId);
+    }
 
-        @Override
-        public Boolean load(String key) throws Exception {
-          return delegate.isLocalRequest(key);
-        }
+    ILoadBalancer loadBalancer = delegate.getLoadBalancer(serviceId);
+    ILoadBalancer old = store.putIfAbsent(serviceId, loadBalancer);
+    return ObjectUtils.defaultIfNull(old, loadBalancer);
 
-      });
+  }
 
   /**
-   * @param delegate
+   * Removes the load balancer for the service ID from the cache store.
+   * @param serviceId Logical name of the HTTP service
    */
-  public CachingLoadBalancerFactory(LoadBalancerFactory delegate) {
-    this.delegate = delegate;
-  }
-
-  @Override
-  public LoadBalancerCommand<CaravanHttpResponse> createCommand(String serviceId) {
-    if (serviceId == null) {
-      return null;
-    }
-    return loadBalancerCommandCache.getUnchecked(serviceId);
-  }
-
-  @Override
-  public boolean isLocalRequest(String serviceId) {
-    if (serviceId == null) {
-      return false;
-    }
-    return isLocalCache.getUnchecked(serviceId);
+  public void unregister(String serviceId) {
+    store.remove(serviceId);
   }
 
 }

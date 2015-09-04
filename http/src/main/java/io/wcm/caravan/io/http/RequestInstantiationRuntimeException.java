@@ -17,29 +17,21 @@
  * limitations under the License.
  * #L%
  */
-package io.wcm.caravan.io.http.impl.ribbon;
-
-import com.netflix.loadbalancer.ILoadBalancer;
+package io.wcm.caravan.io.http;
 
 /**
- * Factory to instantiate a Ribbon {@link ILoadBalancer}.
+ * Thrown if there was an error by creating a request.
  */
-public interface LoadBalancerFactory {
+public class RequestInstantiationRuntimeException extends RuntimeException {
+
+  private static final long serialVersionUID = 5633707101601214674L;
 
   /**
-   * Descriptor for simple implementation
+   * @param message Error message
+   * @param cause Cause (may be null)
    */
-  String SIMPLE = "simple";
-
-  /**
-   * Descriptor for caching implementation
-   */
-  String CACHING = "caching";
-
-  /**
-   * @param serviceId Logical name of the HTTP service
-   * @return Ribbon load balancer
-   */
-  ILoadBalancer getLoadBalancer(String serviceId);
+  public RequestInstantiationRuntimeException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
 }

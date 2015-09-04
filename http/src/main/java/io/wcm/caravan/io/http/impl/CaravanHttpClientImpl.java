@@ -24,9 +24,7 @@ import io.wcm.caravan.commons.httpclient.HttpClientFactory;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
-import io.wcm.caravan.io.http.impl.ribbon.CachingLoadBalancerFactory;
-import io.wcm.caravan.io.http.impl.ribbon.DefaultLoadBalancerFactory;
-import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerFactory;
+import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
@@ -68,8 +66,8 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
 
   @Reference
   private HttpClientFactory httpClientFactory;
-
-  private final LoadBalancerFactory loadBalancerFactory = new CachingLoadBalancerFactory(new DefaultLoadBalancerFactory());
+  @Reference
+  private LoadBalancerCommandFactory commandFactory;
 
   @Override
   public Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request) {
@@ -92,11 +90,11 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
   }
 
   private ExecutionIsolationStrategy getIsolationStrategy(String serviceId) {
-    return loadBalancerFactory.isLocalRequest(serviceId) ? ExecutionIsolationStrategy.SEMAPHORE : ExecutionIsolationStrategy.THREAD;
+    return commandFactory.isLocalRequest(serviceId) ? ExecutionIsolationStrategy.SEMAPHORE : ExecutionIsolationStrategy.THREAD;
   }
 
   private Observable<CaravanHttpResponse> createRibbonRequest(final CaravanHttpRequest request) {
-    LoadBalancerCommand<CaravanHttpResponse> command = loadBalancerFactory.createCommand(request.getServiceId());
+    LoadBalancerCommand<CaravanHttpResponse> command = commandFactory.createCommand(request.getServiceId());
     ServerOperation<CaravanHttpResponse> operation = new ServerOperation<CaravanHttpResponse>() {
 
       @Override
