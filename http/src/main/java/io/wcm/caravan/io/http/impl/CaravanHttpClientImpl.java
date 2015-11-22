@@ -19,6 +19,9 @@
  */
 package io.wcm.caravan.io.http.impl;
 
+import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_COMMAND_PREFIX;
+import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.wcm.caravan.common.performance.PerformanceMetrics;
 import io.wcm.caravan.commons.httpclient.HttpClientFactory;
 import io.wcm.caravan.io.http.CaravanHttpClient;
@@ -90,7 +93,10 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
   }
 
   private ExecutionIsolationStrategy getIsolationStrategy(String serviceId) {
-    return commandFactory.isLocalRequest(serviceId) ? ExecutionIsolationStrategy.SEMAPHORE : ExecutionIsolationStrategy.THREAD;
+    String threadPoolConfigKey = HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE;
+    String configuredThreadPool = ArchaiusConfig.getConfiguration().getString(threadPoolConfigKey);
+
+    return isBlank(configuredThreadPool) ? ExecutionIsolationStrategy.SEMAPHORE : ExecutionIsolationStrategy.THREAD;
   }
 
   private Observable<CaravanHttpResponse> createRibbonRequest(final CaravanHttpRequest request) {
