@@ -33,11 +33,11 @@ import java.net.URI;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.junit.After;
@@ -66,7 +66,7 @@ public class CaravanHttpClientImplProtocolTest {
   @Mock
   private HttpClientFactory httpClientFactory;
   @Mock
-  private HttpClient httpClient;
+  private CloseableHttpClient httpClient;
 
   private CaravanHttpThreadPoolConfig threadPoolConfig;
   private CaravanHttpClient underTest;
@@ -180,14 +180,14 @@ public class CaravanHttpClientImplProtocolTest {
     CaravanHttpServiceConfig serviceConfig = context.registerInjectActivateService(new CaravanHttpServiceConfig(),
         getServiceConfigProperties(serviceId, hostPort, protocol));
 
-    when(httpClient.execute(any(HttpUriRequest.class))).then(new Answer<HttpResponse>() {
+    when(httpClient.execute(any(HttpUriRequest.class))).then(new Answer<CloseableHttpResponse>() {
 
       @Override
-      public HttpResponse answer(InvocationOnMock invocation) {
+      public CloseableHttpResponse answer(InvocationOnMock invocation) {
         HttpUriRequest request = invocation.getArgumentAt(0, HttpUriRequest.class);
         assertEquals(expectedUrl, request.getURI().toString());
 
-        HttpResponse response = mock(HttpResponse.class);
+        CloseableHttpResponse response = mock(CloseableHttpResponse.class);
         StatusLine statusLine = mock(StatusLine.class);
         HttpEntity entity = mock(HttpEntity.class);
         when(response.getStatusLine()).thenReturn(statusLine);
