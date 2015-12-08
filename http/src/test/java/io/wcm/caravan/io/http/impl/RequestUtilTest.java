@@ -55,11 +55,11 @@ public class RequestUtilTest {
 
   @Test
   public void testBuildHttpRequest_Get() {
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder("test-service").method("get").append("/path")
+    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder("test-service").method("get").append("http://host").append("/path")
         .header("header1", "value1")
         .header("header2", "value2")
         .header("header2", "value3");
-    HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.build());
+    HttpUriRequest request = RequestUtil.buildHttpRequest(template.build());
 
     assertEquals("http://host/path", request.getURI().toString());
     assertEquals(HttpGet.METHOD_NAME, request.getMethod());
@@ -70,9 +70,9 @@ public class RequestUtilTest {
 
   @Test
   public void testBuildHttpRequest_Post() throws ParseException, IOException {
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder("test-service").method("post").append("/path")
+    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder("test-service").method("post").append("http://host").append("/path")
         .body("string body");
-    HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.build());
+    HttpUriRequest request = RequestUtil.buildHttpRequest(template.build());
 
     assertEquals("http://host/path", request.getURI().toString());
     assertEquals(HttpPost.METHOD_NAME, request.getMethod());
@@ -86,9 +86,9 @@ public class RequestUtilTest {
     byte[] data = new byte[] {
         0x01, 0x02, 0x03, 0x04, 0x05
     };
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder("test-service").method("put").append("/path")
+    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder("test-service").method("put").append("http://host").append("/path")
         .body(data, null);
-    HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.build());
+    HttpUriRequest request = RequestUtil.buildHttpRequest(template.build());
 
     assertEquals("http://host/path", request.getURI().toString());
     assertEquals(HttpPut.METHOD_NAME, request.getMethod());
@@ -99,8 +99,8 @@ public class RequestUtilTest {
 
   @Test
   public void testBuildHttpRequest_Delete() {
-    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder("test-service").method("delete").append("/path");
-    HttpUriRequest request = RequestUtil.buildHttpRequest("http://host", template.build());
+    CaravanHttpRequestBuilder template = new CaravanHttpRequestBuilder("test-service").method("delete").append("http://host").append("/path");
+    HttpUriRequest request = RequestUtil.buildHttpRequest(template.build());
 
     assertEquals("http://host/path", request.getURI().toString());
     assertEquals(HttpDelete.METHOD_NAME, request.getMethod());
@@ -108,7 +108,7 @@ public class RequestUtilTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testBuildHttpRequest_Invalid() {
-    RequestUtil.buildHttpRequest("http://host", new CaravanHttpRequestBuilder("test-service").method("invalid").append("/path").build());
+    RequestUtil.buildHttpRequest(new CaravanHttpRequestBuilder("test-service").method("invalid").append("http://host").append("/path").build());
   }
 
   @Test

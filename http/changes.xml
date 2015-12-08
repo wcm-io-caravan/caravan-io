@@ -22,6 +22,12 @@
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/changes/1.0.0"
     xsi:schemaLocation="http://maven.apache.org/changes/1.0.0 http://maven.apache.org/plugins/maven-changes-plugin/xsd/changes-1.0.0.xsd">
   <body>
+ 
+    <release version="0.9.0">
+      <action type="update" dev="cnagel">
+        Add consuming service ID to CaravanHttpRequest
+      </action>
+    </release>
 
     <release version="0.9.0" date="not released">
       <action type="update" dev="sseifert">

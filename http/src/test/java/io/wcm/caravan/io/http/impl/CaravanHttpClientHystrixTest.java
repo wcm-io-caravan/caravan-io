@@ -29,7 +29,9 @@ import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
+import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
 import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
+import io.wcm.caravan.io.http.impl.servletclient.ServletHttpClient;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
@@ -71,6 +73,9 @@ public class CaravanHttpClientHystrixTest {
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
     context.registerInjectActivateService(new HttpClientFactoryImpl());
+    context.registerInjectActivateService(new ServletHttpClient());
+    context.registerInjectActivateService(new ApacheHttpClient());
+    context.registerInjectActivateService(new RibbonHttpClient());
     underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
 
     host = "localhost:" + server.port();

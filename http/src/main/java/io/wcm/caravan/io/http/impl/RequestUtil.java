@@ -42,11 +42,20 @@ import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 /**
  * Utility methods for preparing a request for execution.
  */
-final class RequestUtil {
+public final class RequestUtil {
 
-  static final String PROTOCOL_AUTO = "auto";
-  static final String PROTOCOL_HTTP = "http";
-  static final String PROTOCOL_HTTPS = "https";
+  /**
+   * Choose protocol automatically.
+   */
+  public static final String PROTOCOL_AUTO = "auto";
+  /**
+   * Non secure protocol.
+   */
+  public static final String PROTOCOL_HTTP = "http";
+  /**
+   * Secure protocol.
+   */
+  public static final String PROTOCOL_HTTPS = "https";
 
   private RequestUtil() {
     // static methods only
@@ -92,28 +101,26 @@ final class RequestUtil {
   }
 
   /**
-   * @param urlPrefix URL prefix
    * @param request Requset
    * @return HTTP client request object
    */
-  public static HttpUriRequest buildHttpRequest(String urlPrefix, CaravanHttpRequest request) {
-    String url = urlPrefix + request.getUrl();
+  public static HttpUriRequest buildHttpRequest(CaravanHttpRequest request) {
 
     // http method
     HttpUriRequest httpRequest;
     String method = StringUtils.upperCase(request.getMethod());
     switch (method) {
       case HttpGet.METHOD_NAME:
-        httpRequest = new HttpGet(url);
+        httpRequest = new HttpGet(request.getUrl());
         break;
       case HttpPost.METHOD_NAME:
-        httpRequest = new HttpPost(url);
+        httpRequest = new HttpPost(request.getUrl());
         break;
       case HttpPut.METHOD_NAME:
-        httpRequest = new HttpPut(url);
+        httpRequest = new HttpPut(request.getUrl());
         break;
       case HttpDelete.METHOD_NAME:
-        httpRequest = new HttpDelete(url);
+        httpRequest = new HttpDelete(request.getUrl());
         break;
       default:
         throw new IllegalArgumentException("Unsupported HTTP method type: " + request.getMethod());

@@ -2,7 +2,7 @@
  * #%L
  * wcm.io
  * %%
- * Copyright (C) 2014 wcm.io
+ * Copyright (C) 2015 wcm.io
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.wcm.caravan.io.http.impl;
+package io.wcm.caravan.io.http.impl.ribbon;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -26,10 +26,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
-import io.wcm.caravan.io.http.CaravanHttpClient;
-import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
-import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
-import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
+import io.wcm.caravan.io.http.impl.ApacheHttpClient;
+import io.wcm.caravan.io.http.impl.ArchaiusConfig;
+import io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
@@ -48,8 +47,10 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.matching.RequestPattern;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.netflix.client.ClientException;
 
-public class CaravanHttpClientRibbonTest {
+
+public class RibbonHttpClientTest {
 
   private static final String SERVICE_NAME = "/test/ribbon/service";
   private static final String HTTP_200_URI = "/request";
@@ -70,7 +71,7 @@ public class CaravanHttpClientRibbonTest {
   private String defectServer1Host;
   private String defectServer2Host;
   private String workingServerHost;
-  private CaravanHttpClient underTest;
+  private RibbonHttpClient client;
 
   @Before
   public void setUp() {
@@ -79,7 +80,8 @@ public class CaravanHttpClientRibbonTest {
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
     context.registerInjectActivateService(new HttpClientFactoryImpl());
-    underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
+    context.registerInjectActivateService(new ApacheHttpClient());
+    client = context.registerInjectActivateService(new RibbonHttpClient());
 
     defectServer1Host = "localhost:" + defectServer1.port();
     defectServer2Host = "localhost:" + defectServer2.port();
@@ -105,8 +107,8 @@ public class CaravanHttpClientRibbonTest {
             ));
   }
 
-  @Test(expected = IllegalResponseRuntimeException.class)
-  public void test_retryOnOneServerThrowing500() {
+  @Test(expected = ClientException.class)
+  public void test_retryOnOneServerThrowing500() throws ClientException {
     context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
         .put(CaravanHttpServiceConfig.SERVICE_ID_PROPERTY, SERVICE_NAME)
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, defectServer1Host)
@@ -114,17 +116,16 @@ public class CaravanHttpClientRibbonTest {
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 0)
         .build());
     try {
-      Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
-      observable.toBlocking().single();
+      client.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build()).toBlocking().single();
     }
-    catch (IllegalResponseRuntimeException ex) {
+    catch (Throwable ex) {
       defectServer1.verify(5, WireMock.getRequestedFor(WireMock.urlEqualTo(HTTP_200_URI)));
-      throw ex;
+      throw (ClientException)ex.getCause();
     }
   }
 
-  @Test(expected = IllegalResponseRuntimeException.class)
-  public void test_retryOnMultipleServersThrowing500() {
+  @Test(expected = ClientException.class)
+  public void test_retryOnMultipleServersThrowing500() throws ClientException {
     context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
         .put(CaravanHttpServiceConfig.SERVICE_ID_PROPERTY, SERVICE_NAME)
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(defectServer1Host, defectServer2Host))
@@ -132,18 +133,17 @@ public class CaravanHttpClientRibbonTest {
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
         .build());
     try {
-      Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
-      observable.toBlocking().single();
+      client.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build()).toBlocking().single();
     }
-    catch (IllegalResponseRuntimeException ex) {
+    catch (Throwable ex) {
       defectServer1.verify(5, WireMock.getRequestedFor(WireMock.urlEqualTo(HTTP_200_URI)));
       defectServer2.verify(5, WireMock.getRequestedFor(WireMock.urlEqualTo(HTTP_200_URI)));
-      throw ex;
+      throw (ClientException)ex.getCause();
     }
   }
 
-  @Test(expected = IllegalResponseRuntimeException.class)
-  public void test_retryOnMultipleServerThrowing500WithoutChangingTheServer() {
+  @Test(expected = ClientException.class)
+  public void test_retryOnMultipleServerThrowing500WithoutChangingTheServer() throws ClientException {
     context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
         .put(CaravanHttpServiceConfig.SERVICE_ID_PROPERTY, SERVICE_NAME)
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(defectServer1Host, defectServer2Host))
@@ -151,15 +151,15 @@ public class CaravanHttpClientRibbonTest {
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 0)
         .build());
     try {
-      Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
+      Observable<CaravanHttpResponse> observable = client.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
       observable.toBlocking().single();
     }
-    catch (IllegalResponseRuntimeException ex) {
+    catch (Throwable ex) {
       int defectServer1count = defectServer1.countRequestsMatching(RequestPattern.everything()).getCount();
       int defectServer2count = defectServer2.countRequestsMatching(RequestPattern.everything()).getCount();
       assertEquals(5, defectServer1count + defectServer2count);
       assertTrue(defectServer1count == 0 || defectServer2count == 0);
-      throw ex;
+      throw (ClientException)ex.getCause();
     }
   }
 
@@ -171,7 +171,7 @@ public class CaravanHttpClientRibbonTest {
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIES_PROPERTY, 1)
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
         .build());
-    Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
+    Observable<CaravanHttpResponse> observable = client.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
     CaravanHttpResponse response = observable.toBlocking().single();
 
     workingServer.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo(HTTP_200_URI)));
@@ -188,7 +188,7 @@ public class CaravanHttpClientRibbonTest {
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, Lists.newArrayList(workingServerHost, defectServer1Host, defectServer2Host))
         .put(CaravanHttpServiceConfig.RIBBON_MAXAUTORETRIESNEXTSERVER_PROPERTY, 9)
         .build());
-    Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_404_URI).build());
+    Observable<CaravanHttpResponse> observable = client.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_404_URI).build());
     CaravanHttpResponse response = observable.toBlocking().single();
     workingServer.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo(HTTP_404_URI)));
     assertEquals(HttpServletResponse.SC_NOT_FOUND, response.status());

@@ -19,6 +19,8 @@
  */
 package io.wcm.caravan.io.http.impl;
 
+import io.wcm.caravan.commons.stream.Streams;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -45,6 +47,7 @@ public class HystrixMetricsMounter {
 
   @Deactivate
   protected void deactivate() {
+    Streams.of(metricRegistry.getNames()).forEach(name -> metricRegistry.remove(name));
     HystrixPlugins.reset();
   }
 

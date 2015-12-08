@@ -22,43 +22,30 @@ package io.wcm.caravan.io.http.impl;
 import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_COMMAND_PREFIX;
 import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-
 import io.wcm.caravan.common.performance.PerformanceMetrics;
-import io.wcm.caravan.commons.httpclient.HttpClientFactory;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
-import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
+import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
+import io.wcm.caravan.io.http.impl.servletclient.NotSupportedByRequestMapperException;
+import io.wcm.caravan.io.http.impl.servletclient.ServletHttpClient;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
-import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
-
-import java.io.IOException;
-import java.net.SocketTimeoutException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.http.HttpEntity;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.entity.BufferedHttpEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import rx.Observable;
+import rx.Observable.Operator;
 import rx.Subscriber;
 
 import com.netflix.client.ClientException;
 import com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
-import com.netflix.loadbalancer.Server;
-import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
-import com.netflix.loadbalancer.reactive.ServerOperation;
 
 /**
  * Default implementation of {@link CaravanHttpClient}.
@@ -70,111 +57,86 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
   private static final Logger LOG = LoggerFactory.getLogger(CaravanHttpClientImpl.class);
 
   @Reference
-  private HttpClientFactory httpClientFactory;
+  private ServletHttpClient localhostClient;
   @Reference
-  private LoadBalancerCommandFactory commandFactory;
+  private RibbonHttpClient ribbonClient;
+  @Reference
+  private ApacheHttpClient apacheHttpClient;
 
   @Override
-  public Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request) {
-    return execute(request, null);
+  public Observable<CaravanHttpResponse> execute(CaravanHttpRequest request) {
+    Context ctx = new Context(request, null);
+    return execute(ctx);
   }
 
   @Override
-  public Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request, final Observable<CaravanHttpResponse> fallback) {
+  public Observable<CaravanHttpResponse> execute(CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback) {
+    Context ctx = new Context(request, fallback);
+    return execute(ctx);
+  }
 
-    String serviceId = request.getServiceId();
-    Observable<CaravanHttpResponse> httpRequest = StringUtils.isEmpty(serviceId) ? createHttpRequest("", request) : createRibbonRequest(request);
-    ExecutionIsolationStrategy isolationStrategy = getIsolationStrategy(serviceId);
-    Observable<CaravanHttpResponse> hystrixRequest = new HttpHystrixCommand(StringUtils.defaultString(serviceId, "UNKNOWN"), isolationStrategy, httpRequest,
-        fallback).toObservable();
+  private Observable<CaravanHttpResponse> execute(Context ctx) {
 
-    PerformanceMetrics metrics = request.getPerformanceMetrics();
-    return hystrixRequest.onErrorResumeNext(exception -> Observable.<CaravanHttpResponse>error(mapToKnownException(request, exception)))
-        .doOnSubscribe(metrics.getStartAction()).doOnNext(metrics.getOnNextAction()).doOnTerminate(metrics.getEndAction());
+    if (isRequestWithoutServiceId(ctx)) {
+      return createApacheResponse(ctx);
+    }
+
+    Observable<CaravanHttpResponse> ribbonResponse = createRibbonResponse(ctx);
+    if (isServiceInSameServer(ctx)) {
+      return createLocalhostResponse(ctx, ribbonResponse);
+    }
+    return ribbonResponse;
 
   }
 
-  private ExecutionIsolationStrategy getIsolationStrategy(String serviceId) {
-    String threadPoolConfigKey = HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE;
+  private boolean isRequestWithoutServiceId(Context ctx) {
+    return StringUtils.isEmpty(ctx.request.getServiceId());
+  }
+
+  private Observable<CaravanHttpResponse> createApacheResponse(Context ctx) {
+    Observable<CaravanHttpResponse> response = apacheHttpClient.execute(ctx.request);
+    return addHystrixAndErrorMapperAndMetrics(ctx, response);
+  }
+
+  private Observable<CaravanHttpResponse> createRibbonResponse(Context ctx) {
+    Observable<CaravanHttpResponse> response = ribbonClient.execute(ctx.request);
+    return addHystrixAndErrorMapperAndMetrics(ctx, response);
+  }
+
+  private boolean isServiceInSameServer(Context ctx) {
+    return localhostClient.hasValidConfiguration(ctx.request.getServiceId());
+  }
+
+  private Observable<CaravanHttpResponse> createLocalhostResponse(Context ctx, Observable<CaravanHttpResponse> ribbonResponse) {
+    Observable<CaravanHttpResponse> localhostResponse = localhostClient.execute(ctx.request)
+        .lift(new ErrorDisassembleroperator(ctx, ribbonResponse));
+    return addHystrixAndErrorMapperAndMetrics(ctx, localhostResponse);
+  }
+
+  private Observable<CaravanHttpResponse> addHystrixAndErrorMapperAndMetrics(Context requestAndFallback,
+      Observable<CaravanHttpResponse> clientResponse) {
+    Observable<CaravanHttpResponse> hystrixResponse = wrapWithHystrix(requestAndFallback, clientResponse);
+    Observable<CaravanHttpResponse> exceptionMapperResponse = wrapWithExceptionMapper(requestAndFallback, hystrixResponse);
+    return addMetrics(requestAndFallback, exceptionMapperResponse);
+  }
+
+  private Observable<CaravanHttpResponse> wrapWithHystrix(Context ctx, Observable<CaravanHttpResponse> response) {
+    ExecutionIsolationStrategy isolationStrategy = getIsolationStrategy(ctx);
+    String nonNullServiceId = StringUtils.defaultString(ctx.request.getServiceId(), "UNKNOWN");
+    return new HttpHystrixCommand(nonNullServiceId, isolationStrategy, response, ctx.fallback).toObservable();
+  }
+
+  private ExecutionIsolationStrategy getIsolationStrategy(Context ctx) {
+    String threadPoolConfigKey = HYSTRIX_COMMAND_PREFIX + ctx.request.getServiceId() + HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE;
     String configuredThreadPool = ArchaiusConfig.getConfiguration().getString(threadPoolConfigKey);
-
     return isBlank(configuredThreadPool) ? ExecutionIsolationStrategy.SEMAPHORE : ExecutionIsolationStrategy.THREAD;
   }
 
-  private Observable<CaravanHttpResponse> createRibbonRequest(final CaravanHttpRequest request) {
-    LoadBalancerCommand<CaravanHttpResponse> command = commandFactory.createCommand(request.getServiceId());
-    ServerOperation<CaravanHttpResponse> operation = new ServerOperation<CaravanHttpResponse>() {
-
-      @Override
-      public Observable<CaravanHttpResponse> call(Server server) {
-        String protcol = RequestUtil.PROTOCOL_AUTO;
-        if (StringUtils.isNotEmpty(request.getServiceId())) {
-          protcol = ArchaiusConfig.getConfiguration().getString(request.getServiceId() + CaravanHttpServiceConfig.HTTP_PARAM_PROTOCOL);
-        }
-        return createHttpRequest(RequestUtil.buildUrlPrefix(server, protcol), request);
-      }
-    };
-    return command.submit(operation);
+  private Observable<CaravanHttpResponse> wrapWithExceptionMapper(Context ctx, Observable<CaravanHttpResponse> response) {
+    return response.onErrorResumeNext(ex -> Observable.<CaravanHttpResponse>error(mapToKnownException(ctx.request, ex)));
   }
 
-  private Observable<CaravanHttpResponse> createHttpRequest(final String urlPrefix, final CaravanHttpRequest request) {
-    return Observable.create(new Observable.OnSubscribe<CaravanHttpResponse>() {
-
-      @Override
-      public void call(final Subscriber<? super CaravanHttpResponse> subscriber) {
-        HttpUriRequest httpRequest = RequestUtil.buildHttpRequest(urlPrefix, request);
-
-        if (LOG.isDebugEnabled()) {
-          LOG.debug("Execute: {},\n{},\n{}", httpRequest.getURI(), request.toString(), request.getCorrelationId());
-        }
-
-        CloseableHttpClient httpClient = (CloseableHttpClient)httpClientFactory.get(httpRequest.getURI());
-        long start = System.currentTimeMillis();
-
-        // force to close the http response and the underlying connection to avoid connection leak.
-        // sometime connections are not released and cause problem, that server is not reachable.
-        try (CloseableHttpResponse httpResponse = httpClient.execute(httpRequest)) {
-          StatusLine status = httpResponse.getStatusLine();
-
-          //buffer inputStream and close it.
-          HttpEntity entity = new BufferedHttpEntity(httpResponse.getEntity());
-          EntityUtils.consume(entity);
-
-            if (status.getStatusCode() >= 500) {
-              subscriber.onError(new IllegalResponseRuntimeException(request, httpRequest.getURI().toString(), status.getStatusCode(), EntityUtils
-                .toString(entity), "Executing '" + httpRequest.getURI() + "' failed: " + httpResponse.getStatusLine()));
-            }
-            else {
-
-              CaravanHttpResponse caravanResponse = new CaravanHttpResponseBuilder()
-              .status(status.getStatusCode())
-              .reason(status.getReasonPhrase())
-              .headers(RequestUtil.toHeadersMap(httpResponse.getAllHeaders()))
-              .body(entity.getContent(), entity.getContentLength() > 0 ? (int)entity.getContentLength() : null)
-              .build();
-
-              subscriber.onNext(caravanResponse);
-              subscriber.onCompleted();
-            }
-        }
-        catch (SocketTimeoutException ex) {
-          subscriber.onError(new IOException("Socket timeout executing '" + httpRequest.getURI(), ex));
-        }
-        catch (IOException ex) {
-          subscriber.onError(new IOException("Executing '" + httpRequest.getURI() + "' failed", ex));
-        }
-        catch (Throwable ex) {
-          subscriber.onError(new IOException("Reading response of '" + httpRequest.getURI() + "' failed", ex));
-        }
-        finally {
-          LOG.debug("Took {} ms to load {},\n{}", (System.currentTimeMillis() - start), httpRequest.getURI().toString(),
-              request.getCorrelationId());
-        }
-      }
-    });
-  }
-
-  private Throwable mapToKnownException(final CaravanHttpRequest request, final Throwable ex) {
+  private Throwable mapToKnownException(CaravanHttpRequest request, Throwable ex) {
     if (ex instanceof RequestFailedRuntimeException || ex instanceof IllegalResponseRuntimeException) {
       return ex;
     }
@@ -184,9 +146,68 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
     throw new RequestFailedRuntimeException(request, StringUtils.defaultString(ex.getMessage(), ex.getClass().getSimpleName()), ex);
   }
 
+  private Observable<CaravanHttpResponse> addMetrics(Context ctx, Observable<CaravanHttpResponse> response) {
+    PerformanceMetrics metrics = ctx.request.getPerformanceMetrics();
+    return response.doOnSubscribe(metrics.getStartAction())
+        .doOnNext(metrics.getOnNextAction())
+        .doOnTerminate(metrics.getEndAction());
+  }
+
   @Override
   public boolean hasValidConfiguration(String serviceId) {
     return CaravanHttpServiceConfigValidator.hasValidConfiguration(serviceId);
+  }
+
+  private class Context {
+
+    private final CaravanHttpRequest request;
+    private final Observable<CaravanHttpResponse> fallback;
+
+    public Context(CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback) {
+      this.request = request;
+      this.fallback = fallback;
+    }
+
+  }
+
+  private class ErrorDisassembleroperator implements Operator<CaravanHttpResponse, CaravanHttpResponse> {
+
+    private final Context ctx;
+    private final Observable<CaravanHttpResponse> nonLocalResponse;
+
+    public ErrorDisassembleroperator(Context ctx, Observable<CaravanHttpResponse> nonLocalResponse) {
+      this.ctx = ctx;
+      this.nonLocalResponse = nonLocalResponse;
+    }
+
+    @Override
+    public Subscriber<? super CaravanHttpResponse> call(Subscriber<? super CaravanHttpResponse> subscriber) {
+      return new Subscriber<CaravanHttpResponse>() {
+
+        @Override
+        public void onCompleted() {
+          subscriber.onCompleted();
+        }
+
+        @Override
+        public void onError(Throwable ex) {
+          if (ex instanceof NotSupportedByRequestMapperException) {
+            LOG.warn("Could not execute request with localhost client for service " + ctx.request.getServiceId());
+            nonLocalResponse.subscribe(subscriber);
+          }
+          else {
+            subscriber.onError(ex);
+          }
+        }
+
+        @Override
+        public void onNext(CaravanHttpResponse next) {
+          subscriber.onNext(next);
+        }
+
+      };
+    }
+
   }
 
 }
