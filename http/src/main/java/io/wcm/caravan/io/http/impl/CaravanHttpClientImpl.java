@@ -22,6 +22,7 @@ package io.wcm.caravan.io.http.impl;
 import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_COMMAND_PREFIX;
 import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import io.wcm.caravan.common.performance.PerformanceMetrics;
 import io.wcm.caravan.commons.httpclient.HttpClientFactory;
 import io.wcm.caravan.io.http.CaravanHttpClient;
@@ -40,10 +41,11 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.BufferedHttpEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,37 +128,38 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
           LOG.debug("Execute: {},\n{},\n{}", httpRequest.getURI(), request.toString(), request.getCorrelationId());
         }
 
-        HttpClient httpClient = httpClientFactory.get(httpRequest.getURI());
-
+        CloseableHttpClient httpClient = (CloseableHttpClient)httpClientFactory.get(httpRequest.getURI());
         long start = System.currentTimeMillis();
-        try {
-          HttpResponse result = httpClient.execute(httpRequest);
 
-          StatusLine status = result.getStatusLine();
-          HttpEntity entity = result.getEntity();
+        // force to close the http response and the underlying connection to avoid connection leak.
+        // sometime connections are not released and cause problem, that server is not reachable.
+        try (CloseableHttpResponse httpResponse = httpClient.execute(httpRequest)) {
+          StatusLine status = httpResponse.getStatusLine();
+
+          //buffer inputStream and close it.
+          HttpEntity entity = new BufferedHttpEntity(httpResponse.getEntity());
+          EntityUtils.consume(entity);
 
           try {
             if (status.getStatusCode() >= 500) {
               subscriber.onError(new IllegalResponseRuntimeException(request, httpRequest.getURI().toString(), status.getStatusCode(), EntityUtils
-                  .toString(entity), "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine()));
-              EntityUtils.consumeQuietly(entity);
+                .toString(entity), "Executing '" + httpRequest.getURI() + "' failed: " + httpResponse.getStatusLine()));
             }
             else {
 
-              CaravanHttpResponse response = new CaravanHttpResponseBuilder()
+              CaravanHttpResponse caravanResponse = new CaravanHttpResponseBuilder()
               .status(status.getStatusCode())
               .reason(status.getReasonPhrase())
-              .headers(RequestUtil.toHeadersMap(result.getAllHeaders()))
+              .headers(RequestUtil.toHeadersMap(httpResponse.getAllHeaders()))
               .body(entity.getContent(), entity.getContentLength() > 0 ? (int)entity.getContentLength() : null)
               .build();
 
-              subscriber.onNext(response);
+              subscriber.onNext(caravanResponse);
               subscriber.onCompleted();
             }
           }
           catch (Throwable ex) {
             subscriber.onError(new IOException("Reading response of '" + httpRequest.getURI() + "' failed", ex));
-            EntityUtils.consumeQuietly(entity);
           }
         }
         catch (SocketTimeoutException ex) {

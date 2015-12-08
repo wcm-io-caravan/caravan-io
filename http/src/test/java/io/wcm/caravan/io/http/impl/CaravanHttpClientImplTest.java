@@ -137,7 +137,6 @@ public class CaravanHttpClientImplTest {
 
   @After
   public void tearDown() {
-    MockOsgi.deactivate(underTest);
     MockOsgi.deactivate(httpClientFactory);
     MockOsgi.deactivate(serviceConfig);
     MockOsgi.deactivate(threadPoolConfig);
