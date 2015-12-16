@@ -140,7 +140,6 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
           HttpEntity entity = new BufferedHttpEntity(httpResponse.getEntity());
           EntityUtils.consume(entity);
 
-          try {
             if (status.getStatusCode() >= 500) {
               subscriber.onError(new IllegalResponseRuntimeException(request, httpRequest.getURI().toString(), status.getStatusCode(), EntityUtils
                 .toString(entity), "Executing '" + httpRequest.getURI() + "' failed: " + httpResponse.getStatusLine()));
@@ -157,16 +156,15 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
               subscriber.onNext(caravanResponse);
               subscriber.onCompleted();
             }
-          }
-          catch (Throwable ex) {
-            subscriber.onError(new IOException("Reading response of '" + httpRequest.getURI() + "' failed", ex));
-          }
         }
         catch (SocketTimeoutException ex) {
           subscriber.onError(new IOException("Socket timeout executing '" + httpRequest.getURI(), ex));
         }
         catch (IOException ex) {
           subscriber.onError(new IOException("Executing '" + httpRequest.getURI() + "' failed", ex));
+        }
+        catch (Throwable ex) {
+          subscriber.onError(new IOException("Reading response of '" + httpRequest.getURI() + "' failed", ex));
         }
         finally {
           LOG.debug("Took {} ms to load {},\n{}", (System.currentTimeMillis() - start), httpRequest.getURI().toString(),
