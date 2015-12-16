@@ -29,7 +29,6 @@ import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -79,28 +78,22 @@ public class ApacheHttpClient implements CaravanHttpClient {
           HttpEntity entity = new BufferedHttpEntity(result.getEntity());
           EntityUtils.consume(entity);
 
-          try {
-            if (status.getStatusCode() >= 500) {
-              subscriber.onError(new IllegalResponseRuntimeException(request, httpRequest.getURI().toString(), status.getStatusCode(), EntityUtils
-                  .toString(entity), "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine()));
-              EntityUtils.consumeQuietly(entity);
-            }
-            else {
-
-              CaravanHttpResponse response = new CaravanHttpResponseBuilder()
-                  .status(status.getStatusCode())
-                  .reason(status.getReasonPhrase())
-                  .headers(RequestUtil.toHeadersMap(result.getAllHeaders()))
-                  .body(entity.getContent(), entity.getContentLength() > 0 ? (int)entity.getContentLength() : null)
-                  .build();
-
-              subscriber.onNext(response);
-              subscriber.onCompleted();
-            }
-          }
-          catch (Throwable ex) {
-            subscriber.onError(new IOException("Reading response of '" + httpRequest.getURI() + "' failed", ex));
+          if (status.getStatusCode() >= 500) {
+            subscriber.onError(new IllegalResponseRuntimeException(request, httpRequest.getURI().toString(), status.getStatusCode(), EntityUtils
+                .toString(entity), "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine()));
             EntityUtils.consumeQuietly(entity);
+          }
+          else {
+
+            CaravanHttpResponse response = new CaravanHttpResponseBuilder()
+            .status(status.getStatusCode())
+            .reason(status.getReasonPhrase())
+            .headers(RequestUtil.toHeadersMap(result.getAllHeaders()))
+            .body(entity.getContent(), entity.getContentLength() > 0 ? (int)entity.getContentLength() : null)
+            .build();
+
+            subscriber.onNext(response);
+            subscriber.onCompleted();
           }
         }
         catch (SocketTimeoutException ex) {
@@ -108,6 +101,9 @@ public class ApacheHttpClient implements CaravanHttpClient {
         }
         catch (IOException ex) {
           subscriber.onError(new IOException("Executing '" + httpRequest.getURI() + "' failed", ex));
+        }
+        catch (Throwable ex) {
+          subscriber.onError(new IOException("Reading response of '" + httpRequest.getURI() + "' failed", ex));
         }
         finally {
           LOG.debug("Took {} ms to load {},\n{}", (System.currentTimeMillis() - start), httpRequest.getURI().toString(),
