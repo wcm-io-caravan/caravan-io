@@ -20,8 +20,6 @@
 package io.wcm.caravan.io.http.request;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.wcm.caravan.commons.stream.Streams;
-import io.wcm.caravan.io.http.impl.CaravanHttpHelper;
 
 import java.nio.charset.Charset;
 import java.util.Collection;
@@ -43,6 +41,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+
+import io.wcm.caravan.io.http.impl.CaravanHttpHelper;
 
 /**
  * UriTemplate using HTTP request builder.
@@ -222,7 +222,7 @@ public final class CaravanHttpRequestBuilder {
 
   private Multimap<String, String> getExpandedHeaders(Map<String, Object> parameters) {
     Multimap<String, String> expandedHeaders = ArrayListMultimap.create();
-    Streams.of(headers.entries()).forEach(entry -> {
+    headers.entries().forEach(entry -> {
       String template = entry.getValue();
       String expanded = UriTemplate.expand(template, parameters);
       if (!Strings.isNullOrEmpty(expanded)) {

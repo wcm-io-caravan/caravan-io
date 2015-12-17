@@ -19,8 +19,7 @@
  */
 package io.wcm.caravan.io.http.impl;
 
-import io.wcm.caravan.commons.stream.Streams;
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import java.util.Arrays;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
@@ -37,6 +36,8 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.netflix.loadbalancer.Server;
+
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 
 /**
  * Utility methods for preparing a request for execution.
@@ -119,7 +120,7 @@ final class RequestUtil {
     }
 
     // headers
-    Streams.of(request.getHeaders().entries()).forEach(e -> httpRequest.addHeader(e.getKey(), e.getValue()));
+    request.getHeaders().entries().forEach(e -> httpRequest.addHeader(e.getKey(), e.getValue()));
 
     // body
     if ((httpRequest instanceof HttpEntityEnclosingRequest) && request.getBody() != null) {
@@ -141,7 +142,7 @@ final class RequestUtil {
    */
   public static Multimap<String, String> toHeadersMap(Header... headerArray) {
     LinkedHashMultimap<String, String> headerMap = LinkedHashMultimap.create();
-    Streams.of(headerArray).forEach(h -> headerMap.put(h.getName(), h.getValue()));
+    Arrays.stream(headerArray).forEach(h -> headerMap.put(h.getName(), h.getValue()));
     return ImmutableListMultimap.copyOf(headerMap);
   }
 
