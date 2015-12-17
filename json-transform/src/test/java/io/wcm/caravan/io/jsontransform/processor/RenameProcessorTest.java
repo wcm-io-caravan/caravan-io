@@ -20,23 +20,24 @@
 package io.wcm.caravan.io.jsontransform.processor;
 
 import static org.junit.Assert.assertEquals;
-import io.wcm.caravan.io.jsontransform.JsonTestHelper;
-import io.wcm.caravan.io.jsontransform.source.Source;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.google.common.collect.Maps;
 
+import io.wcm.caravan.io.jsontransform.JsonTestHelper;
+import io.wcm.caravan.io.jsontransform.source.Source;
+
 public class RenameProcessorTest {
 
   @Test
   public void test_rename() throws JsonParseException, IOException {
     Source source = JsonTestHelper.fromJson("{\"key1\":\"value1\",\"key2\":\"value2\"}");
-    HashMap<String, String> mapping = Maps.newHashMap();
+    Map<String, String> mapping = Maps.newHashMap();
     mapping.put("key2", "key3");
     RenameProcessor underTest = new RenameProcessor(source, mapping);
     String json = JsonTestHelper.toString(underTest);

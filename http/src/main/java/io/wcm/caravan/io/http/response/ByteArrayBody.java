@@ -54,7 +54,7 @@ final class ByteArrayBody implements Body {
 
   private final byte[] data;
 
-  public ByteArrayBody(byte[] data) {
+  ByteArrayBody(byte[] data) {
     this.data = data;
   }
 
