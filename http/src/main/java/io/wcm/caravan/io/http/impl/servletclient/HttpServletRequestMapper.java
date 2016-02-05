@@ -19,7 +19,6 @@
  */
 package io.wcm.caravan.io.http.impl.servletclient;
 
-import io.wcm.caravan.commons.stream.Streams;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 
 import java.io.BufferedReader;
@@ -154,7 +153,7 @@ public class HttpServletRequestMapper implements HttpServletRequest {
       List<NameValuePair> pairs = URLEncodedUtils.parse(new URI(request.getUrl()), Charsets.UTF_8.toString());
       Map<String, Collection<String>> multiMap = Observable.from(pairs).toMultimap(NameValuePair::getName, NameValuePair::getValue).toBlocking().single();
       Builder<String, String[]> builder = ImmutableMap.builder();
-      Streams.of(multiMap.entrySet()).forEach(entry -> {
+      multiMap.entrySet().stream().forEach(entry -> {
         String[] arrayValue = entry.getValue().toArray(new String[entry.getValue().size()]);
         builder.put(entry.getKey(), arrayValue);
       });

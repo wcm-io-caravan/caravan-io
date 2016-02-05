@@ -19,7 +19,6 @@
  */
 package io.wcm.caravan.io.http.impl.ribbon;
 
-import io.wcm.caravan.commons.stream.Streams;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.impl.ApacheHttpClient;
 import io.wcm.caravan.io.http.impl.ArchaiusConfig;
@@ -93,12 +92,12 @@ public class RibbonHttpClient implements CaravanHttpClient {
 
         String urlPrefix = RequestUtil.buildUrlPrefix(server, protocol);
         CaravanHttpRequestBuilder builder = new CaravanHttpRequestBuilder(request.getServiceId())
-        .append(urlPrefix)
-        .append(request.getUrl())
-        .body(request.getBody(), request.getCharset())
-        .method(request.getMethod());
-        Streams.of(request.getHeaders().entries())
-        .forEach(entry -> builder.header(entry.getKey(), entry.getValue()));
+            .append(urlPrefix)
+            .append(request.getUrl())
+            .body(request.getBody(), request.getCharset())
+            .method(request.getMethod());
+        request.getHeaders().entries().stream()
+            .forEach(entry -> builder.header(entry.getKey(), entry.getValue()));
         return builder.build();
 
       }
