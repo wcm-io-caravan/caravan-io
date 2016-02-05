@@ -57,7 +57,9 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
   private static final Logger LOG = LoggerFactory.getLogger(CaravanHttpClientImpl.class);
 
   @Reference
-  private ServletHttpClient localhostClient;
+  private CaravanHttpClientConfig config;
+  @Reference
+  private ServletHttpClient servletClient;
   @Reference
   private RibbonHttpClient ribbonClient;
   @Reference
@@ -82,8 +84,8 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
     }
 
     Observable<CaravanHttpResponse> ribbonResponse = createRibbonResponse(ctx);
-    if (isServiceInSameServer(ctx)) {
-      return createLocalhostResponse(ctx, ribbonResponse);
+    if (isServletClientPossible(ctx)) {
+      return createServletClientResponse(ctx, ribbonResponse);
     }
     return ribbonResponse;
 
@@ -103,12 +105,12 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
     return addHystrixAndErrorMapperAndMetrics(ctx, response);
   }
 
-  private boolean isServiceInSameServer(Context ctx) {
-    return localhostClient.hasValidConfiguration(ctx.request.getServiceId());
+  private boolean isServletClientPossible(Context ctx) {
+    return config.isServletClientEnabled() && servletClient.hasValidConfiguration(ctx.request.getServiceId());
   }
 
-  private Observable<CaravanHttpResponse> createLocalhostResponse(Context ctx, Observable<CaravanHttpResponse> ribbonResponse) {
-    Observable<CaravanHttpResponse> localhostResponse = localhostClient.execute(ctx.request)
+  private Observable<CaravanHttpResponse> createServletClientResponse(Context ctx, Observable<CaravanHttpResponse> ribbonResponse) {
+    Observable<CaravanHttpResponse> localhostResponse = servletClient.execute(ctx.request)
         .lift(new ErrorDisassembleroperator(ctx, ribbonResponse));
     return addHystrixAndErrorMapperAndMetrics(ctx, localhostResponse);
   }
@@ -122,8 +124,7 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
 
   private Observable<CaravanHttpResponse> wrapWithHystrix(Context ctx, Observable<CaravanHttpResponse> response) {
     ExecutionIsolationStrategy isolationStrategy = getIsolationStrategy(ctx);
-    String nonNullServiceId = StringUtils.defaultString(ctx.request.getServiceId(), "UNKNOWN");
-    return new HttpHystrixCommand(nonNullServiceId, isolationStrategy, response, ctx.fallback).toObservable();
+    return new HttpHystrixCommand(ctx.request, isolationStrategy, response, ctx.fallback).toObservable();
   }
 
   private ExecutionIsolationStrategy getIsolationStrategy(Context ctx) {

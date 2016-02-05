@@ -26,6 +26,7 @@ import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -42,6 +43,8 @@ import org.slf4j.LoggerFactory;
 
 import rx.Observable;
 
+import com.google.common.collect.Sets;
+
 /**
  * Client which executes {@link Servlet}s registered in the same server directly without HTTP. Ignores fallbacks.
  */
@@ -50,11 +53,11 @@ import rx.Observable;
 public class ServletHttpClient implements CaravanHttpClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(ServletHttpClient.class);
-  // private static final String FILTER = "(alias=%s)";
 
   @Reference(referenceInterface = Servlet.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
   private final ConcurrentMap<String, Servlet> servlets = new ConcurrentSkipListMap<>();
 
+  private final Set<String> failedServices = Sets.newHashSet();
   protected void bindServlet(Servlet servlet, Map<String, Object> config) {
     String serviceId = (String)config.get("alias");
     if (serviceId != null) {
@@ -68,13 +71,6 @@ public class ServletHttpClient implements CaravanHttpClient {
       servlets.remove(serviceId);
     }
   }
-
-  /*private BundleContext bundleCtx;
-
-  @Activate
-  protected void activate(BundleContext bundleContext) {
-    this.bundleCtx = bundleContext;
-  }*/
 
   @Override
   public Observable<CaravanHttpResponse> execute(CaravanHttpRequest request) {
@@ -90,23 +86,8 @@ public class ServletHttpClient implements CaravanHttpClient {
 
   @Override
   public boolean hasValidConfiguration(String serviceId) {
-    /*Collection<ServiceReference<Servlet>> servletReferences = getServletReferences(serviceId);
-    return servletReferences.size() == 1;*/
-    return servlets.containsKey(serviceId);
+    return servlets.containsKey(serviceId) && !failedServices.contains(serviceId);
   }
-
-  /*private Collection<ServiceReference<Servlet>> getServletReferences(String serviceId) {
-
-    try {
-      String filter = String.format(FILTER, serviceId);
-      return bundleCtx.getServiceReferences(Servlet.class, filter);
-    }
-    // TODO: must catch NullPointerException for tests
-    catch (NullPointerException | InvalidSyntaxException ex) {
-      return Collections.emptyList();
-    }
-
-  }*/
 
   private Servlet getServlet(String serviceId) {
 
@@ -115,13 +96,6 @@ public class ServletHttpClient implements CaravanHttpClient {
       throw new IllegalStateException("No local servlet registered for " + serviceId);
     }
     return servlet;
-
-    /*Collection<ServiceReference<Servlet>> references = getServletReferences(serviceId);
-    if (references.isEmpty()) {
-      throw new IllegalStateException("No local servlet registered for " + serviceId);
-    }
-    ServiceReference<Servlet> reference = references.iterator().next();
-    return bundleCtx.getService(reference);*/
 
   }
 
@@ -133,6 +107,10 @@ public class ServletHttpClient implements CaravanHttpClient {
     try {
       servlet.service(requestMapper, responseMapper);
       return responseMapper.getResponse();
+    }
+    catch (NotSupportedByRequestMapperException ex) {
+      failedServices.add(request.getServiceId());
+      throw ex;
     }
     catch (ServletException | IOException ex) {
       throw new RequestFailedRuntimeException(request, ex.getMessage(), ex);

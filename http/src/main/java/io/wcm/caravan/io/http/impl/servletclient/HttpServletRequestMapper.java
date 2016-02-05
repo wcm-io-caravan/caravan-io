@@ -332,7 +332,7 @@ public class HttpServletRequestMapper implements HttpServletRequest {
 
   @Override
   public String getMethod() {
-    return "GET";
+    return request.getMethod();
   }
 
   @Override

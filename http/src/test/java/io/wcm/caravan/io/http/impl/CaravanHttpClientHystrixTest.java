@@ -35,6 +35,8 @@ import io.wcm.caravan.io.http.impl.servletclient.ServletHttpClient;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
+import java.util.Collections;
+
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.CharEncoding;
@@ -70,6 +72,8 @@ public class CaravanHttpClientHystrixTest {
   public void setUp() {
 
     ArchaiusConfig.initialize();
+    context.registerInjectActivateService(new CaravanHttpClientConfig(),
+        Collections.singletonMap(CaravanHttpClientConfig.SERVLET_CLIENT_ENABLED, true));
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
     context.registerInjectActivateService(new HttpClientFactoryImpl());

@@ -37,6 +37,7 @@ import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.http.HttpServletResponse;
@@ -98,6 +99,8 @@ public class CaravanHttpClientImplIntegrationTest {
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
     httpClientFactory = context.registerInjectActivateService(new HttpClientFactoryImpl());
 
+    context.registerInjectActivateService(new CaravanHttpClientConfig(),
+        Collections.singletonMap(CaravanHttpClientConfig.SERVLET_CLIENT_ENABLED, true));
     context.registerInjectActivateService(new ServletHttpClient());
     context.registerInjectActivateService(new ApacheHttpClient());
     context.registerInjectActivateService(new RibbonHttpClient());

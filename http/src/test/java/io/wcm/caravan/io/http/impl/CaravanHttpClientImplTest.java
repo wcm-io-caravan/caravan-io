@@ -20,6 +20,7 @@
 package io.wcm.caravan.io.http.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.never;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
 import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
@@ -35,6 +36,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -53,7 +55,9 @@ public class CaravanHttpClientImplTest {
   public OsgiContext osgiCtx = new OsgiContext();
 
   @Mock
-  private ServletHttpClient localhostClient;
+  private CaravanHttpClientConfig config;
+  @Mock
+  private ServletHttpClient servletClient;
   @Mock
   private ApacheHttpClient apacheClient;
   @Mock
@@ -63,7 +67,9 @@ public class CaravanHttpClientImplTest {
 
   @Before
   public void setUp() {
-    osgiCtx.registerService(ServletHttpClient.class, localhostClient);
+    Mockito.when(config.isServletClientEnabled()).thenReturn(true);
+    osgiCtx.registerService(CaravanHttpClientConfig.class, config);
+    osgiCtx.registerService(ServletHttpClient.class, servletClient);
     osgiCtx.registerService(ApacheHttpClient.class, apacheClient);
     osgiCtx.registerService(RibbonHttpClient.class, ribbonClient);
     client = osgiCtx.registerInjectActivateService(new CaravanHttpClientImpl());
@@ -79,10 +85,18 @@ public class CaravanHttpClientImplTest {
   }
 
   @Test
-  public void shouldExecuteLocalhostClientForLocalRequests() {
+  public void shouldExecuteServletClientForLocalRequests() {
     setLocalclientCanHandleRequest(true);
-    setClientResponse(localhostClient, Observable.just(RESPONSE));
+    setClientResponse(servletClient, Observable.just(RESPONSE));
     assertEquals(RESPONSE, getResponse());
+  }
+
+  @Test
+  public void shouldNotExecuteServletClientIfDisabledInConfig() {
+    Mockito.when(config.isServletClientEnabled()).thenReturn(false);
+    setLocalclientCanHandleRequest(true);
+    client.execute(REQUEST);
+    Mockito.verify(servletClient, never()).execute(Matchers.any());
   }
 
   @Test
@@ -96,7 +110,7 @@ public class CaravanHttpClientImplTest {
   public void shouldExecuteRibbonClientIfLocalClientFailsByNotSupportedError() {
 
     setLocalclientCanHandleRequest(true);
-    setClientResponse(localhostClient, Observable.error(new NotSupportedByRequestMapperException()));
+    setClientResponse(servletClient, Observable.error(new NotSupportedByRequestMapperException()));
     setClientResponse(ribbonClient, Observable.just(RESPONSE));
     assertEquals(RESPONSE, getResponse());
 
@@ -115,7 +129,7 @@ public class CaravanHttpClientImplTest {
   @Test
   public void shouldReturnFallbackIfLocalClientFails() {
     setLocalclientCanHandleRequest(true);
-    setClientResponse(localhostClient, Observable.error(new IllegalStateException()));
+    setClientResponse(servletClient, Observable.error(new IllegalStateException()));
     assertEquals(FALLBACK, getResponse());
   }
 
@@ -129,7 +143,7 @@ public class CaravanHttpClientImplTest {
   @Test(expected = RequestFailedRuntimeException.class)
   public void shouldMapLocalhostClientErrorToRequestFailedRuntimeException() {
     setLocalclientCanHandleRequest(true);
-    setClientResponse(localhostClient, Observable.error(new IllegalStateException()));
+    setClientResponse(servletClient, Observable.error(new IllegalStateException()));
     getResponseWithoutFallback();
   }
 
@@ -141,7 +155,7 @@ public class CaravanHttpClientImplTest {
   }
 
   private void setLocalclientCanHandleRequest(boolean canHandle) {
-    Mockito.when(localhostClient.hasValidConfiguration(SERVICE_ID)).thenReturn(canHandle);
+    Mockito.when(servletClient.hasValidConfiguration(SERVICE_ID)).thenReturn(canHandle);
   }
 
   private void setClientResponse(CaravanHttpClient subClient, Observable<CaravanHttpResponse> response) {
