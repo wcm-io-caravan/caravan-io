@@ -92,6 +92,12 @@ public class HttpServletResponseMapper implements HttpServletResponse {
   @Override
   public void setContentLength(int len) {
     setIntHeader("Content-Length", len);
+
+    // if the content length is known in advance then resize the ByteArrayOutputSteram accordingly
+    // (but only if nothing has yet been written to the output stream)
+    if (len > 0 && outputStream.size() == 0) {
+      outputStream = new ByteArrayOutputStream(len);
+    }
   }
 
   @Override
