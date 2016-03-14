@@ -22,6 +22,7 @@ package io.wcm.caravan.io.http.impl;
 import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_COMMAND_PREFIX;
 import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import io.wcm.caravan.common.performance.PerformanceMetrics;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
@@ -106,9 +107,12 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
   }
 
   private boolean isServletClientPossible(Context ctx) {
-    return config.isServletClientEnabled() && servletClient.hasValidConfiguration(ctx.request.getServiceId());
+    boolean isGetRequest = "GET".equalsIgnoreCase(ctx.request.getMethod());
+    return isGetRequest
+        && config.isServletClientEnabled()
+        && servletClient.hasValidConfiguration(ctx.request.getServiceId());
   }
-
+  
   private Observable<CaravanHttpResponse> createServletClientResponse(Context ctx, Observable<CaravanHttpResponse> ribbonResponse) {
     Observable<CaravanHttpResponse> localhostResponse = servletClient.execute(ctx.request)
         .lift(new ErrorDisassembleroperator(ctx, ribbonResponse));
