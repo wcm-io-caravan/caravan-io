@@ -33,7 +33,6 @@ import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
 
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -61,7 +60,6 @@ public class RibbonHttpClientProtocolTest {
   @Mock
   private ApacheHttpClient apacheClient;
 
-  private CaravanHttpThreadPoolConfig threadPoolConfig;
   private RibbonHttpClient underTest;
 
   @Before
@@ -69,7 +67,7 @@ public class RibbonHttpClientProtocolTest {
 
     ArchaiusConfig.initialize();
 
-    threadPoolConfig = context.registerInjectActivateService(new CaravanHttpThreadPoolConfig(),
+    context.registerInjectActivateService(new CaravanHttpThreadPoolConfig(),
         ImmutableMap.of(CaravanHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
 
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
@@ -77,12 +75,6 @@ public class RibbonHttpClientProtocolTest {
     context.registerService(ApacheHttpClient.class, apacheClient);
 
     underTest = context.registerInjectActivateService(new RibbonHttpClient());
-  }
-
-  @After
-  public void tearDown() {
-    MockOsgi.deactivate(underTest);
-    MockOsgi.deactivate(threadPoolConfig);
   }
 
   @Test
@@ -185,7 +177,7 @@ public class RibbonHttpClientProtocolTest {
     });
 
     underTest.execute(new CaravanHttpRequestBuilder(serviceId).append(URL).build()).toBlocking().first();
-    MockOsgi.deactivate(serviceConfig);
+    MockOsgi.deactivate(serviceConfig, context.bundleContext());
   }
 
 }

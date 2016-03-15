@@ -26,7 +26,9 @@ import static org.junit.Assert.assertTrue;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
+import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
 import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
+import io.wcm.caravan.io.http.impl.servletclient.ServletHttpClient;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
@@ -70,21 +72,28 @@ public class CaravanHttpClientThreadingTest {
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
     context.registerInjectActivateService(new HttpClientFactoryImpl());
-    underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
+    context.registerInjectActivateService(new ApacheHttpClient());
+    context.registerInjectActivateService(new ServletHttpClient());
+    context.registerInjectActivateService(new RibbonHttpClient());
 
     host = "localhost:" + server.port();
-
-    server.stubFor(get(urlEqualTo(HTTP_200_URI))
-        .willReturn(aResponse()
-            .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
-            .withBody("success")
-        ));
 
     context.registerInjectActivateService(new CaravanHttpServiceConfig(), ImmutableMap.<String, Object>builder()
         .put(CaravanHttpServiceConfig.SERVICE_ID_PROPERTY, SERVICE_NAME)
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, host)
         .put(CaravanHttpServiceConfig.HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY, HYSTRIX_THREADPOOL_NAME)
         .build());
+
+    context.registerInjectActivateService(new CaravanHttpClientConfig());
+
+    underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
+
+
+    server.stubFor(get(urlEqualTo(HTTP_200_URI))
+        .willReturn(aResponse()
+            .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
+            .withBody("success")));
+
   }
 
   @Test

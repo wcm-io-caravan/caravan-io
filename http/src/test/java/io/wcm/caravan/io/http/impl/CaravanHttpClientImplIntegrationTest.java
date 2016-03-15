@@ -25,7 +25,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import io.wcm.caravan.commons.httpclient.HttpClientFactory;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
@@ -45,7 +44,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.CharEncoding;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -80,8 +78,6 @@ public class CaravanHttpClientImplIntegrationTest {
 
   private String wireMockHost;
   private CaravanHttpServiceConfig serviceConfig;
-  private CaravanHttpThreadPoolConfig threadPoolConfig;
-  private HttpClientFactory httpClientFactory;
   private CaravanHttpClientImpl client;
 
   @Before
@@ -93,11 +89,11 @@ public class CaravanHttpClientImplIntegrationTest {
 
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
     serviceConfig = context.registerInjectActivateService(new CaravanHttpServiceConfig(), getServiceConfigProperties(wireMockHost, "auto"));
-    threadPoolConfig = context.registerInjectActivateService(new CaravanHttpThreadPoolConfig(),
+    context.registerInjectActivateService(new CaravanHttpThreadPoolConfig(),
         ImmutableMap.of(CaravanHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
 
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
-    httpClientFactory = context.registerInjectActivateService(new HttpClientFactoryImpl());
+    context.registerInjectActivateService(new HttpClientFactoryImpl());
 
     context.registerInjectActivateService(new CaravanHttpClientConfig(),
         Collections.singletonMap(CaravanHttpClientConfig.SERVLET_CLIENT_ENABLED, true));
@@ -144,19 +140,11 @@ public class CaravanHttpClientImplIntegrationTest {
         .build();
   }
 
-  @After
-  public void tearDown() {
-    MockOsgi.deactivate(client);
-    MockOsgi.deactivate(httpClientFactory);
-    MockOsgi.deactivate(serviceConfig);
-    MockOsgi.deactivate(threadPoolConfig);
-  }
-
   @Test(expected = RequestFailedRuntimeException.class)
   public void testWithoutConfig() {
 
     // remove host config - service ID is required to clear archaius properties
-    MockOsgi.deactivate(serviceConfig, getServiceConfigProperties("", ""));
+    MockOsgi.deactivate(serviceConfig, context.bundleContext(), getServiceConfigProperties("", ""));
 
     assertFalse(client.hasValidConfiguration(SERVICE_NAME));
 

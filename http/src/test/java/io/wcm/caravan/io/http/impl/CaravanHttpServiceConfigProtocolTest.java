@@ -33,9 +33,7 @@ import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
 import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,7 +48,6 @@ public class CaravanHttpServiceConfigProtocolTest {
   public OsgiContext context = new OsgiContext();
 
   private Configuration archaiusConfig;
-  private CaravanHttpServiceConfig underTest;
 
   @Before
   public void setUp() {
@@ -58,11 +55,6 @@ public class CaravanHttpServiceConfigProtocolTest {
     archaiusConfig = ArchaiusConfig.getConfiguration();
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
-  }
-
-  @After
-  public void tearDown() {
-    MockOsgi.deactivate(underTest);
   }
 
   @Test
@@ -138,12 +130,12 @@ public class CaravanHttpServiceConfigProtocolTest {
   }
 
   private void registerConfig(String defaultProtocol, String... servers) {
-    underTest = context.registerInjectActivateService(new CaravanHttpServiceConfig(),
+    context.registerInjectActivateService(new CaravanHttpServiceConfig(),
         ImmutableMap.<String, Object>builder()
-        .put(SERVICE_ID_PROPERTY, SERVICE_ID)
-        .put(RIBBON_HOSTS_PROPERTY, servers)
-        .put(PROTOCOL_PROPERTY, defaultProtocol)
-        .build());
+            .put(SERVICE_ID_PROPERTY, SERVICE_ID)
+            .put(RIBBON_HOSTS_PROPERTY, servers)
+            .put(PROTOCOL_PROPERTY, defaultProtocol)
+            .build());
   }
 
   private void assertRibbonConfig(String defaultProtocol, String... servers) {
