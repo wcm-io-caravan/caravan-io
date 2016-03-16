@@ -19,10 +19,6 @@
  */
 package io.wcm.caravan.io.http.impl.ribbon;
 
-import io.wcm.caravan.commons.stream.Streams;
-import io.wcm.caravan.io.http.RequestInstantiationRuntimeException;
-import io.wcm.caravan.io.http.response.CaravanHttpResponse;
-
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -36,6 +32,9 @@ import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
+
+import io.wcm.caravan.io.http.RequestInstantiationRuntimeException;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
 /**
  * Factory for Hystrix {@link LoadBalancerCommand}s configuring the load balancer and retry handler.
@@ -74,7 +73,7 @@ public class LoadBalancerCommandFactory {
     try {
       ILoadBalancer loadBalancer = loadBalancerFactory.getLoadBalancer(serviceId);
       List<Server> serverList = loadBalancer.getServerList(true);
-      return Streams.of(serverList)
+      return serverList.stream()
           .filter(server -> !StringUtils.equals(server.getHost(), "localhost"))
           .count() == 0;
     }

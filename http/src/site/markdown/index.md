@@ -2,16 +2,8 @@
 
 HTTP communication layer using Netflix Hystrix and NetFlix Ribbon for resilience.
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.wcm.caravan/io.wcm.caravan.io.http/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.wcm.caravan/io.wcm.caravan.io.http)
 
-### Maven Dependency
-
-```xml
-<dependency>
-  <groupId>io.wcm.caravan</groupId>
-  <artifactId>io.wcm.caravan.io.http</artifactId>
-  <version>0.8.0</version>
-</dependency>
-```
 
 ### Documentation
 

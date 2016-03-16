@@ -22,6 +22,19 @@
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/changes/1.0.0"
     xsi:schemaLocation="http://maven.apache.org/changes/1.0.0 http://maven.apache.org/plugins/maven-changes-plugin/xsd/changes-1.0.0.xsd">
   <body>
+ 
+    <release version="0.9.0" date="2016-03-16">
+      <action type="add" dev="cnagel">
+        Add a new ServletClient which executes HTTP GET requests to servlets that run in the same container
+        directly through the Servlet API (instead of connecting through HTTP over a network socket)
+      </action>
+      <action type="update" dev="cnagel">
+        Add consuming service ID to CaravanHttpRequest
+      </action>
+      <action type="update" dev="sseifert">
+        Switch to Java 8.
+      </action>
+    </release>
 
     <release version="0.8.2" date="2015-12-08">
       <action type="update" dev="gweng">

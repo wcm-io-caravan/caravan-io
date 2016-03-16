@@ -33,7 +33,7 @@ import com.netflix.config.ConfigurationManager;
 /**
  * Initialize static archaius context.
  */
-final class ArchaiusConfig {
+public final class ArchaiusConfig {
 
   private static final String DEFAULT_CONFIGURATION = "/config.properties";
 

@@ -25,13 +25,13 @@
   <parent>
     <groupId>io.wcm.caravan</groupId>
     <artifactId>io.wcm.caravan.io.parent</artifactId>
-    <version>1.0.2</version>
+    <version>1.1.0-SNAPSHOT</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
   <groupId>io.wcm.caravan</groupId>
   <artifactId>io.wcm.caravan.io.http</artifactId>
-  <version>0.8.2</version>
+  <version>0.9.0-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <name>Resilient HTTP</name>
@@ -58,12 +58,6 @@
     </dependency>
 
     <!-- Caravan -->
-    <dependency>
-      <groupId>io.wcm.caravan</groupId>
-      <artifactId>io.wcm.caravan.commons.stream</artifactId>
-      <version>1.0.0</version>
-      <scope>compile</scope>
-    </dependency>
     <dependency>
       <groupId>io.wcm.caravan</groupId>
       <artifactId>io.wcm.caravan.commons.httpclient</artifactId>

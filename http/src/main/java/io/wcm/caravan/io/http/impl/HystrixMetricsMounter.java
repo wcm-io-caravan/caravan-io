@@ -45,6 +45,7 @@ public class HystrixMetricsMounter {
 
   @Deactivate
   protected void deactivate() {
+    metricRegistry.getNames().stream().forEach(name -> metricRegistry.remove(name));
     HystrixPlugins.reset();
   }
 

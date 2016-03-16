@@ -29,9 +29,13 @@ import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
+import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
 import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
+import io.wcm.caravan.io.http.impl.servletclient.ServletHttpClient;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+
+import java.util.Collections;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -68,9 +72,14 @@ public class CaravanHttpClientHystrixTest {
   public void setUp() {
 
     ArchaiusConfig.initialize();
+    context.registerInjectActivateService(new CaravanHttpClientConfig(),
+        Collections.singletonMap(CaravanHttpClientConfig.SERVLET_CLIENT_ENABLED, true));
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
     context.registerInjectActivateService(new HttpClientFactoryImpl());
+    context.registerInjectActivateService(new ServletHttpClient());
+    context.registerInjectActivateService(new ApacheHttpClient());
+    context.registerInjectActivateService(new RibbonHttpClient());
     underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
 
     host = "localhost:" + server.port();

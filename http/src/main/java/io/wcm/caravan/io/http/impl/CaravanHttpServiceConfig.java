@@ -19,15 +19,12 @@
  */
 package io.wcm.caravan.io.http.impl;
 
-import io.wcm.caravan.commons.stream.Collectors;
-import io.wcm.caravan.commons.stream.Streams;
-import io.wcm.caravan.io.http.impl.ribbon.CachingLoadBalancerFactory;
-import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerFactory;
-
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang3.StringUtils;
@@ -41,6 +38,9 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.wcm.caravan.io.http.impl.ribbon.CachingLoadBalancerFactory;
+import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerFactory;
 
 /**
  * Configures transport layer options for service access.
@@ -81,9 +81,9 @@ public class CaravanHttpServiceConfig {
           + "If set to 'Auto' the protocol is detected automatically from the port number (443 and 8443 = HTTPS).",
           value = CaravanHttpServiceConfig.PROTOCOL_PROPERTY_DEFAULT,
           options = {
-      @PropertyOption(name = RequestUtil.PROTOCOL_AUTO, value = "Auto"),
-      @PropertyOption(name = RequestUtil.PROTOCOL_HTTP, value = "HTTP"),
-      @PropertyOption(name = RequestUtil.PROTOCOL_HTTPS, value = "HTTPS")
+              @PropertyOption(name = RequestUtil.PROTOCOL_AUTO, value = "Auto"),
+              @PropertyOption(name = RequestUtil.PROTOCOL_HTTP, value = "HTTP"),
+              @PropertyOption(name = RequestUtil.PROTOCOL_HTTPS, value = "HTTPS")
   })
   public static final String PROTOCOL_PROPERTY = "http.protocol";
   static final String PROTOCOL_PROPERTY_DEFAULT = RequestUtil.PROTOCOL_AUTO;
@@ -298,7 +298,7 @@ public class CaravanHttpServiceConfig {
     String protocolForAllServers = archaiusConfig.getString(serviceId + HTTP_PARAM_PROTOCOL);
 
     // get protocols defined in servers
-    Set<String> protocolsFromListOfServers = Streams.of(listOfServers)
+    Set<String> protocolsFromListOfServers = Arrays.stream(listOfServers)
         .filter(server -> StringUtils.contains(server, "://"))
         .map(server -> StringUtils.substringBefore(server, "://"))
         .collect(Collectors.toSet());
@@ -323,7 +323,7 @@ public class CaravanHttpServiceConfig {
     }
 
     // remove protocol from list of servers and store default protocol
-    List<String> listOfServersWithoutProtocol = Streams.of(listOfServers)
+    List<String> listOfServersWithoutProtocol = Arrays.stream(listOfServers)
         .map(server -> StringUtils.substringAfter(server, "://"))
         .collect(Collectors.toList());
     archaiusConfig.setProperty(serviceId + RIBBON_PARAM_LISTOFSERVERS, StringUtils.join(listOfServersWithoutProtocol, LIST_SEPARATOR));

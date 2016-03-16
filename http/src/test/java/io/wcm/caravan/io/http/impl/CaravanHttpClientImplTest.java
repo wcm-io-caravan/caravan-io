@@ -2,7 +2,7 @@
  * #%L
  * wcm.io
  * %%
- * Copyright (C) 2014 wcm.io
+ * Copyright (C) 2015 wcm.io
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,223 +19,155 @@
  */
 package io.wcm.caravan.io.http.impl;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import io.wcm.caravan.commons.httpclient.HttpClientFactory;
-import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
+import static org.mockito.Mockito.never;
 import io.wcm.caravan.io.http.CaravanHttpClient;
-import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
-import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
-import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
+import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
+import io.wcm.caravan.io.http.impl.servletclient.NotSupportedByRequestMapperException;
+import io.wcm.caravan.io.http.impl.servletclient.ServletHttpClient;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
 
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.lang3.CharEncoding;
-import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Matchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import rx.Observable;
-import rx.Observer;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.common.collect.ImmutableMap;
-
-/**
- * Integration tests for HTTP communcation of transport layer.
- */
+@RunWith(MockitoJUnitRunner.class)
 public class CaravanHttpClientImplTest {
 
-  private static final String SERVICE_NAME = "/test/service";
-
-  private static final String HTTP_200_URI = "/http/200";
-  private static final String HTTP_404_URI = "/http/404";
-  private static final String HTTP_500_URI = "/http/500";
-  private static final String CONNECT_TIMEOUT_URI = "/connect/timeout";
-  private static final String RESPONSE_TIMEOUT_URI = "/connect/timeout";
-
-  private static final String DUMMY_CONTENT = "Der Jodelkaiser aus dem \u00D6tztal ist wieder daheim.";
+  private static final String SERVICE_ID = "/test/service";
+  private static final CaravanHttpRequest REQUEST = new CaravanHttpRequestBuilder(SERVICE_ID).build();
+  private static final CaravanHttpResponse RESPONSE = new CaravanHttpResponseBuilder().status(200).reason("OK").build();
+  private static final CaravanHttpResponse FALLBACK = new CaravanHttpResponseBuilder().status(200).reason("OK").build();
 
   @Rule
-  public OsgiContext context = new OsgiContext();
+  public OsgiContext osgiCtx = new OsgiContext();
 
-  @Rule
-  public WireMockRule wireMock = new WireMockRule(0);
+  @Mock
+  private CaravanHttpClientConfig config;
+  @Mock
+  private ServletHttpClient servletClient;
+  @Mock
+  private ApacheHttpClient apacheClient;
+  @Mock
+  private RibbonHttpClient ribbonClient;
 
-
-  private String wireMockHost;
-  private CaravanHttpServiceConfig serviceConfig;
-  private CaravanHttpThreadPoolConfig threadPoolConfig;
-  private HttpClientFactory httpClientFactory;
-  private CaravanHttpClient underTest;
+  private CaravanHttpClientImpl client;
 
   @Before
   public void setUp() {
-
-    ArchaiusConfig.initialize();
-
-    wireMockHost = "localhost:" + wireMock.port();
-
-    context.registerInjectActivateService(new SimpleLoadBalancerFactory());
-    serviceConfig = context.registerInjectActivateService(new CaravanHttpServiceConfig(), getServiceConfigProperties(wireMockHost, "auto"));
-    threadPoolConfig = context.registerInjectActivateService(new CaravanHttpThreadPoolConfig(),
-        ImmutableMap.of(CaravanHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
-
-    context.registerInjectActivateService(new LoadBalancerCommandFactory());
-    httpClientFactory = context.registerInjectActivateService(new HttpClientFactoryImpl());
-    underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
-
-    // setup wiremock
-    wireMock.stubFor(get(urlEqualTo(HTTP_200_URI))
-        .willReturn(aResponse()
-            .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
-            .withBody(DUMMY_CONTENT)
-            ));
-    wireMock.stubFor(get(urlEqualTo(HTTP_404_URI))
-        .willReturn(aResponse()
-            .withStatus(HttpServletResponse.SC_NOT_FOUND)
-            ));
-    wireMock.stubFor(get(urlEqualTo(HTTP_500_URI))
-        .willReturn(aResponse()
-            .withStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
-            ));
-    wireMock.stubFor(get(urlEqualTo(CONNECT_TIMEOUT_URI))
-        .willReturn(aResponse()
-            .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
-            .withBody(DUMMY_CONTENT)
-            ));
-    wireMock.stubFor(get(urlEqualTo(RESPONSE_TIMEOUT_URI))
-        .willReturn(aResponse()
-            .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
-            .withBody(DUMMY_CONTENT)
-            .withFixedDelay(1000)
-            ));
-
-    assertTrue(underTest.hasValidConfiguration(SERVICE_NAME));
+    Mockito.when(config.isServletClientEnabled()).thenReturn(true);
+    osgiCtx.registerService(CaravanHttpClientConfig.class, config);
+    osgiCtx.registerService(ServletHttpClient.class, servletClient);
+    osgiCtx.registerService(ApacheHttpClient.class, apacheClient);
+    osgiCtx.registerService(RibbonHttpClient.class, ribbonClient);
+    client = osgiCtx.registerInjectActivateService(new CaravanHttpClientImpl());
   }
 
-  private static ImmutableMap<String, Object> getServiceConfigProperties(String hostAndPort, String protocol) {
-    return ImmutableMap.<String, Object>builder()
-        .put(CaravanHttpServiceConfig.SERVICE_ID_PROPERTY, SERVICE_NAME)
-        .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, hostAndPort)
-        .put(CaravanHttpServiceConfig.PROTOCOL_PROPERTY, protocol)
-        .build();
+  @Test
+  public void shouldExecuteApacheClientForRequestsWithoutServiceId() {
+
+    CaravanHttpRequest request = new CaravanHttpRequestBuilder().append("http://localhost/test").build();
+    Mockito.when(apacheClient.execute(request)).thenReturn(Observable.just(RESPONSE));
+    CaravanHttpResponse response = client.execute(request).toBlocking().single();
+    assertEquals(RESPONSE, response);
   }
 
-  @After
-  public void tearDown() {
-    MockOsgi.deactivate(httpClientFactory);
-    MockOsgi.deactivate(serviceConfig);
-    MockOsgi.deactivate(threadPoolConfig);
+  @Test
+  public void shouldExecuteServletClientForLocalRequests() {
+    setLocalclientCanHandleRequest(true);
+    setClientResponse(servletClient, Observable.just(RESPONSE));
+    assertEquals(RESPONSE, getResponse());
+  }
+
+  @Test
+  public void shouldNotExecuteServletClientIfDisabledInConfig() {
+    Mockito.when(config.isServletClientEnabled()).thenReturn(false);
+    setLocalclientCanHandleRequest(true);
+    client.execute(REQUEST);
+    Mockito.verify(servletClient, never()).execute(Matchers.any());
+  }
+
+  @Test
+  public void shouldExecuteRibbonClientForNonLocalRequests() {
+    setLocalclientCanHandleRequest(false);
+    setClientResponse(ribbonClient, Observable.just(RESPONSE));
+    assertEquals(RESPONSE, getResponse());
+  }
+
+  @Test
+  public void shouldExecuteRibbonClientIfLocalClientFailsByNotSupportedError() {
+
+    setLocalclientCanHandleRequest(true);
+    setClientResponse(servletClient, Observable.error(new NotSupportedByRequestMapperException()));
+    setClientResponse(ribbonClient, Observable.just(RESPONSE));
+    assertEquals(RESPONSE, getResponse());
+
+  }
+
+  @Test
+  public void shouldReturnFallbackIfApacheClientFails() {
+
+    CaravanHttpRequest request = new CaravanHttpRequestBuilder().append("http://localhost/test").build();
+    Mockito.when(apacheClient.execute(request)).thenReturn(Observable.error(new IllegalStateException()));
+    CaravanHttpResponse response = client.execute(request, Observable.just(FALLBACK)).toBlocking().single();
+    assertEquals(FALLBACK, response);
+
+  }
+
+  @Test
+  public void shouldReturnFallbackIfLocalClientFails() {
+    setLocalclientCanHandleRequest(true);
+    setClientResponse(servletClient, Observable.error(new IllegalStateException()));
+    assertEquals(FALLBACK, getResponse());
+  }
+
+  @Test
+  public void shouldReturnFallbackIfRibbonClientFails() {
+    setLocalclientCanHandleRequest(false);
+    setClientResponse(ribbonClient, Observable.error(new IllegalStateException()));
+    assertEquals(FALLBACK, getResponse());
   }
 
   @Test(expected = RequestFailedRuntimeException.class)
-  public void testWithoutConfig() {
-
-    // remove host config - service ID is required to clear archaius properties
-    MockOsgi.deactivate(serviceConfig, getServiceConfigProperties("", ""));
-
-    assertFalse(underTest.hasValidConfiguration(SERVICE_NAME));
-
-    Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
-    observable.toBlocking().single();
+  public void shouldMapLocalhostClientErrorToRequestFailedRuntimeException() {
+    setLocalclientCanHandleRequest(true);
+    setClientResponse(servletClient, Observable.error(new IllegalStateException()));
+    getResponseWithoutFallback();
   }
 
   @Test(expected = RequestFailedRuntimeException.class)
-  public void testMissingServiceId() {
-    underTest.execute(new CaravanHttpRequestBuilder().append(HTTP_200_URI).build()).toBlocking().first();
+  public void shouldMapRibbonClientErrorToRequestFailedRuntimeException() {
+    setLocalclientCanHandleRequest(false);
+    setClientResponse(ribbonClient, Observable.error(new IllegalStateException()));
+    getResponseWithoutFallback();
   }
 
-  @Test
-  public void testAbsolutUrl() throws IOException {
-    Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder().append("http://" + wireMockHost + HTTP_200_URI).build());
-    CaravanHttpResponse response = observable.toBlocking().first();
-    assertEquals(HttpServletResponse.SC_OK, response.status());
-    assertEquals(DUMMY_CONTENT, response.body().asString());
+  private void setLocalclientCanHandleRequest(boolean canHandle) {
+    Mockito.when(servletClient.hasValidConfiguration(SERVICE_ID)).thenReturn(canHandle);
   }
 
-  @Test
-  public void testHttp200() throws IOException {
-    Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
-    CaravanHttpResponse response = observable.toBlocking().single();
-    assertEquals(HttpServletResponse.SC_OK, response.status());
-    assertEquals(DUMMY_CONTENT, response.body().asString());
+  private void setClientResponse(CaravanHttpClient subClient, Observable<CaravanHttpResponse> response) {
+    Mockito.when(subClient.execute(REQUEST)).thenReturn(response);
   }
 
-  @Test
-  public void testHttp404() {
-    Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_404_URI).build());
-    CaravanHttpResponse response = observable.toBlocking().single();
-    assertEquals(HttpServletResponse.SC_NOT_FOUND, response.status());
+  private CaravanHttpResponse getResponse() {
+    return client.execute(REQUEST, Observable.just(FALLBACK)).toBlocking().single();
   }
 
-  @Test(expected = IllegalResponseRuntimeException.class)
-  public void testHttp500() {
-    Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_500_URI).build());
-    observable.toBlocking().single();
+  private CaravanHttpResponse getResponseWithoutFallback() {
+    return client.execute(REQUEST).toBlocking().single();
   }
 
-  /** used by #testHttpSimultaneousRequests to count how many requests habe been completed, and detect errors */
-  private static final class ResponseObserver implements Observer<CaravanHttpResponse> {
-
-    private Throwable error;
-    private AtomicInteger completedCount = new AtomicInteger();
-
-    @Override
-    public synchronized void onNext(CaravanHttpResponse t) {
-      try {
-        assertEquals(HttpServletResponse.SC_OK, t.status());
-        assertEquals(DUMMY_CONTENT, t.body().asString());
-
-      }
-      catch (IOException ex) {
-        error = ex;
-      }
-    }
-
-    @Override
-    public synchronized void onCompleted() {
-      completedCount.incrementAndGet();
-    }
-
-    @Override
-    public synchronized void onError(Throwable e) {
-      error = e;
-      completedCount.incrementAndGet();
-    }
-  }
-
-  @Test
-  public void testHttpSimultaneousRequests() throws InterruptedException {
-
-    int totalNumRequests = 100;
-
-    ResponseObserver obs = new ResponseObserver();
-
-    for (int i = 0; i < totalNumRequests; i++) {
-      Observable<CaravanHttpResponse> observable = underTest.execute(new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build());
-      observable.subscribe(obs);
-    }
-
-    while (obs.completedCount.get() < totalNumRequests) {
-      Thread.sleep(50);
-    }
-
-    if (obs.error != null) {
-      throw new RuntimeException("At least one of the requests failed with an error ", obs.error);
-    }
-  }
 }

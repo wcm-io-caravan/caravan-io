@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Validates http service configuration for service IDs.
  */
-final class CaravanHttpServiceConfigValidator {
+public final class CaravanHttpServiceConfigValidator {
 
   private static final Logger log = LoggerFactory.getLogger(CaravanHttpServiceConfigValidator.class);
 

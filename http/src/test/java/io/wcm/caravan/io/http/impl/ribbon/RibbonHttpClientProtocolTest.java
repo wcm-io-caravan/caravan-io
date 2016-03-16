@@ -17,30 +17,22 @@
  * limitations under the License.
  * #L%
  */
-package io.wcm.caravan.io.http.impl;
+package io.wcm.caravan.io.http.impl.ribbon;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import io.wcm.caravan.commons.httpclient.HttpClientFactory;
-import io.wcm.caravan.io.http.CaravanHttpClient;
-import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
-import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
+import io.wcm.caravan.io.http.impl.ApacheHttpClient;
+import io.wcm.caravan.io.http.impl.ArchaiusConfig;
+import io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig;
+import io.wcm.caravan.io.http.impl.CaravanHttpThreadPoolConfig;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
 
-import java.net.URI;
-
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,13 +42,15 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
+import rx.Observable;
+
 import com.google.common.collect.ImmutableMap;
 
 /**
  * Integration tests for HTTP communcation of transport layer.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class CaravanHttpClientImplProtocolTest {
+public class RibbonHttpClientProtocolTest {
 
   private static final String URL = "/my/url";
 
@@ -64,32 +58,23 @@ public class CaravanHttpClientImplProtocolTest {
   public OsgiContext context = new OsgiContext();
 
   @Mock
-  private HttpClientFactory httpClientFactory;
-  @Mock
-  private CloseableHttpClient httpClient;
+  private ApacheHttpClient apacheClient;
 
-  private CaravanHttpThreadPoolConfig threadPoolConfig;
-  private CaravanHttpClient underTest;
+  private RibbonHttpClient underTest;
 
   @Before
   public void setUp() {
-    when(httpClientFactory.get(any(URI.class))).thenReturn(httpClient);
 
     ArchaiusConfig.initialize();
 
-    threadPoolConfig = context.registerInjectActivateService(new CaravanHttpThreadPoolConfig(),
+    context.registerInjectActivateService(new CaravanHttpThreadPoolConfig(),
         ImmutableMap.of(CaravanHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
 
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
-    context.registerService(HttpClientFactory.class, httpClientFactory);
-    underTest = context.registerInjectActivateService(new CaravanHttpClientImpl());
-  }
+    context.registerService(ApacheHttpClient.class, apacheClient);
 
-  @After
-  public void tearDown() {
-    MockOsgi.deactivate(underTest);
-    MockOsgi.deactivate(threadPoolConfig);
+    underTest = context.registerInjectActivateService(new RibbonHttpClient());
   }
 
   @Test
@@ -180,27 +165,19 @@ public class CaravanHttpClientImplProtocolTest {
     CaravanHttpServiceConfig serviceConfig = context.registerInjectActivateService(new CaravanHttpServiceConfig(),
         getServiceConfigProperties(serviceId, hostPort, protocol));
 
-    when(httpClient.execute(any(HttpUriRequest.class))).then(new Answer<CloseableHttpResponse>() {
+    when(apacheClient.execute(any())).then(new Answer<Observable<CaravanHttpResponse>>() {
 
       @Override
-      public CloseableHttpResponse answer(InvocationOnMock invocation) {
-        HttpUriRequest request = invocation.getArgumentAt(0, HttpUriRequest.class);
-        assertEquals(expectedUrl, request.getURI().toString());
-
-        CloseableHttpResponse response = mock(CloseableHttpResponse.class);
-        StatusLine statusLine = mock(StatusLine.class);
-        HttpEntity entity = mock(HttpEntity.class);
-        when(response.getStatusLine()).thenReturn(statusLine);
-        when(statusLine.getStatusCode()).thenReturn(HttpStatus.SC_OK);
-        when(statusLine.getReasonPhrase()).thenReturn("OK");
-        when(response.getAllHeaders()).thenReturn(new Header[0]);
-        when(response.getEntity()).thenReturn(entity);
-        return response;
+      public Observable<CaravanHttpResponse> answer(InvocationOnMock invocation) {
+        CaravanHttpRequest request = invocation.getArgumentAt(0, CaravanHttpRequest.class);
+        assertEquals(expectedUrl, request.getUrl().toString());
+        CaravanHttpResponse response = new CaravanHttpResponseBuilder().status(200).reason("OK").build();
+        return Observable.just(response);
       }
     });
 
     underTest.execute(new CaravanHttpRequestBuilder(serviceId).append(URL).build()).toBlocking().first();
-    MockOsgi.deactivate(serviceConfig);
+    MockOsgi.deactivate(serviceConfig, context.bundleContext());
   }
 
 }
