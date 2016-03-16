@@ -23,13 +23,14 @@
     xsi:schemaLocation="http://maven.apache.org/changes/1.0.0 http://maven.apache.org/plugins/maven-changes-plugin/xsd/changes-1.0.0.xsd">
   <body>
  
-    <release version="0.9.0">
+    <release version="0.9.0" date="not released">
+      <action type="add" dev="cnagel">
+        Add a new ServletClient which executes HTTP GET requests to servlets that run in the same container
+        directly through the Servlet API (instead of connecting through HTTP over a network socket)
+      </action>
       <action type="update" dev="cnagel">
         Add consuming service ID to CaravanHttpRequest
       </action>
-    </release>
-
-    <release version="0.9.0" date="not released">
       <action type="update" dev="sseifert">
         Switch to Java 8.
       </action>
