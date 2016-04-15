@@ -33,6 +33,7 @@ import org.junit.Test;
 public class XmlSourceTest {
 
   private static final String SIMPLE_XML = "<Root><Key1>value1</Key1><Obj1><Key2>2</Key2></Obj1></Root>";
+  private static final String SIMPLE_XML_WITH_COMMENT = "<Root><!-- comments --><Key1>value1</Key1></Root>";
 
   private XmlSource createXmlSource(String xml) throws XMLStreamException {
     return new XmlSource(new ByteArrayInputStream(xml.getBytes()), "Root");
@@ -74,5 +75,17 @@ public class XmlSourceTest {
     .assertEndObject()
     .assertEndObject()
     .assertEndObject();
+  }
+
+  @Test
+  public void commentLineShouldBeIgnored() throws XMLStreamException {
+    XmlSource source = createXmlSource(SIMPLE_XML_WITH_COMMENT);
+    source.setUncapitalizeProperties(false);
+    new JsonTestHelper(source)
+      .assertStartObject()
+      .assertStartObject("Root")
+      .assertValue("Key1", "value1")
+      .assertEndObject()
+      .assertEndObject();
   }
 }
