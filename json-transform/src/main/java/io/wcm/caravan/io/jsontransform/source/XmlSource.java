@@ -130,10 +130,11 @@ public final class XmlSource implements Source {
         nextHasBeenExecutedBefore = false;
       }
       else if (reader.hasNext()) {
+        int eventType;
         do {
-          reader.next();
+          eventType = reader.next();
         }
-        while (reader.hasNext() && !isRelevantElement());
+        while (reader.hasNext() && !isRelevantElement(eventType));
       }
     }
     catch (XMLStreamException ex) {
@@ -141,8 +142,8 @@ public final class XmlSource implements Source {
     }
   }
 
-  private boolean isRelevantElement() {
-    if (reader.isWhiteSpace()) {
+  private boolean isRelevantElement(int eventType) {
+    if (reader.isWhiteSpace() || eventType == XMLStreamReader.COMMENT) {
       return false;
     }
     String xpath = getXPath();
