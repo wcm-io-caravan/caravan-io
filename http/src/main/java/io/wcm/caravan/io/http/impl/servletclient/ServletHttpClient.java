@@ -20,7 +20,9 @@
 package io.wcm.caravan.io.http.impl.servletclient;
 
 import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
+import io.wcm.caravan.io.http.impl.CaravanHttpServiceConfigValidator;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
@@ -106,7 +108,17 @@ public class ServletHttpClient implements CaravanHttpClient {
     HttpServletResponseMapper responseMapper = new HttpServletResponseMapper();
     try {
       servlet.service(requestMapper, responseMapper);
-      return responseMapper.getResponse();
+      CaravanHttpResponse response = responseMapper.getResponse();
+
+      int status = response.status();
+      boolean throwExceptionForStatus500 = CaravanHttpServiceConfigValidator.throwExceptionForStatus500(request.getServiceId());
+      if (status >= 500 && throwExceptionForStatus500) {
+        String requestUrl = request.getUrl();
+        String responseBody = response.body().asString();
+        throw new IllegalResponseRuntimeException(request, requestUrl, status, responseBody,
+          "Executing '" + requestUrl + "' failed: " + responseBody);
+      }
+      return response;
     }
     catch (NotSupportedByRequestMapperException ex) {
       failedServices.add(request.getServiceId());

@@ -21,8 +21,13 @@ package io.wcm.caravan.io.http.impl.servletclient;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+
+import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
+import io.wcm.caravan.io.http.impl.ArchaiusConfig;
+import io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
@@ -35,6 +40,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
+import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -56,14 +62,14 @@ public class ServletHttpClientTest {
 
   private static final String SERVICE_ID = "/test/service/id";
   private static final CaravanHttpRequest REQUEST = new CaravanHttpRequestBuilder(SERVICE_ID)
-      .append("/path/ro/resource")
-      .query("param1", 1)
-      .query("param2", 2)
-      .build();
+    .append("/path/ro/resource")
+    .query("param1", 1)
+    .query("param2", 2)
+    .build();
   private static final CaravanHttpResponse FALLBACK = new CaravanHttpResponseBuilder()
-      .status(200)
-      .reason("OK")
-      .build();
+    .status(200)
+    .reason("OK")
+    .build();
 
   @Rule
   public OsgiContext osgiCtx = new OsgiContext();
@@ -77,6 +83,7 @@ public class ServletHttpClientTest {
   public void setUp() {
     osgiCtx.registerService(Servlet.class, servlet, ImmutableMap.of("alias", SERVICE_ID));
     client = osgiCtx.registerInjectActivateService(new ServletHttpClient());
+    throwExceptionForResponse500(true);
   }
 
   @Test
@@ -106,20 +113,37 @@ public class ServletHttpClientTest {
 
   @Test
   public void execute_shouldReturnResponse() throws ServletException, IOException {
-
-    Mockito.doAnswer(new Answer() {
-
-      @Override
-      public Object answer(InvocationOnMock invocation) throws IOException {
-        HttpServletResponse response = invocation.getArgumentAt(1, HttpServletResponse.class);
-        response.getWriter().append("Some content").flush();
-        return null;
-      }
-
-    }).when(servlet).service(Matchers.any(), Matchers.any());
+    mockResponse("Some content", 200);
     CaravanHttpResponse response = client.execute(REQUEST, Observable.just(FALLBACK)).toBlocking().single();
     assertEquals("Some content", response.body().asString());
+  }
 
+  @Test(expected = IllegalResponseRuntimeException.class)
+  public void execute_shouldIllegalResponseRuntimeExceptionForStatus500() throws ServletException, IOException {
+    mockResponse("", 500);
+    client.execute(REQUEST).toBlocking().single();
+  }
+
+  @Test
+  public void execute_shouldNotThrowExceptionForStatus500BecauseOfConfiguration() throws ServletException, IOException {
+    mockResponse("", 500);
+    // service configuration: disable exception for response 500
+    throwExceptionForResponse500(false);
+    CaravanHttpResponse response = client.execute(REQUEST).toBlocking().single();
+    assertThat(response.status(), CoreMatchers.equalTo(500));
+  }
+
+  private void mockResponse(String responseBody, int responseStatus) throws ServletException, IOException {
+    Mockito.doAnswer(invocation -> {
+      HttpServletResponse response = invocation.getArgumentAt(1, HttpServletResponse.class);
+      response.setStatus(responseStatus);
+      response.getWriter().append(responseBody).flush();
+      return null;
+    }).when(servlet).service(Matchers.any(), Matchers.any());
+  }
+
+  private void throwExceptionForResponse500(boolean value) {
+    ArchaiusConfig.getConfiguration().setProperty(SERVICE_ID + CaravanHttpServiceConfig.THROW_EXCEPTION_FOR_STATUS_500, value);
   }
 
 }
