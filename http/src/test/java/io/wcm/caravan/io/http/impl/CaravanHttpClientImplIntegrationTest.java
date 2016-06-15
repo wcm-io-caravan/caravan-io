@@ -82,9 +82,8 @@ public class CaravanHttpClientImplIntegrationTest {
 
   @Before
   public void setUp() {
-
     ArchaiusConfig.initialize();
-
+    ArchaiusConfig.getConfiguration().setProperty(SERVICE_NAME + CaravanHttpServiceConfig.THROW_EXCEPTION_FOR_STATUS_500, true);
     wireMockHost = "localhost:" + wireMock.port();
 
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
@@ -105,10 +104,10 @@ public class CaravanHttpClientImplIntegrationTest {
 
     // setup wiremock
     wireMock.stubFor(get(urlEqualTo(HTTP_200_URI))
-        .willReturn(aResponse()
-            .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
-            .withBody(DUMMY_CONTENT)
-            ));
+      .willReturn(aResponse()
+          .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
+          .withBody(DUMMY_CONTENT)
+      ));
     wireMock.stubFor(get(urlEqualTo(HTTP_404_URI))
         .willReturn(aResponse()
             .withStatus(HttpServletResponse.SC_NOT_FOUND)
@@ -118,18 +117,20 @@ public class CaravanHttpClientImplIntegrationTest {
             .withStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
             ));
     wireMock.stubFor(get(urlEqualTo(CONNECT_TIMEOUT_URI))
-        .willReturn(aResponse()
-            .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
-            .withBody(DUMMY_CONTENT)
-            ));
+      .willReturn(aResponse()
+          .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
+          .withBody(DUMMY_CONTENT)
+      ));
     wireMock.stubFor(get(urlEqualTo(RESPONSE_TIMEOUT_URI))
-        .willReturn(aResponse()
-            .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
-            .withBody(DUMMY_CONTENT)
-            .withFixedDelay(1000)
-            ));
+      .willReturn(aResponse()
+          .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
+          .withBody(DUMMY_CONTENT)
+          .withFixedDelay(1000)
+      ));
 
     assertTrue(client.hasValidConfiguration(SERVICE_NAME));
+
+
   }
 
   private static ImmutableMap<String, Object> getServiceConfigProperties(String hostAndPort, String protocol) {

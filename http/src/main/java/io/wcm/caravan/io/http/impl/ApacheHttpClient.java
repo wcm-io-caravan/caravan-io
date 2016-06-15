@@ -78,9 +78,15 @@ public class ApacheHttpClient implements CaravanHttpClient {
           HttpEntity entity = new BufferedHttpEntity(result.getEntity());
           EntityUtils.consume(entity);
 
-          if (status.getStatusCode() >= 500) {
-            subscriber.onError(new IllegalResponseRuntimeException(request, httpRequest.getURI().toString(), status.getStatusCode(), EntityUtils
-                .toString(entity), "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine()));
+          boolean throwExceptionForStatus500 = CaravanHttpServiceConfigValidator.throwExceptionForStatus500(request.getServiceId());
+          if (status.getStatusCode() >= 500 && throwExceptionForStatus500) {
+            IllegalResponseRuntimeException illegalResponseRuntimeException = new IllegalResponseRuntimeException(request,
+              httpRequest.getURI().toString(),
+              status.getStatusCode(),
+              EntityUtils.toString(entity),
+              "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine());
+
+            subscriber.onError(illegalResponseRuntimeException);
             EntityUtils.consumeQuietly(entity);
           }
           else {

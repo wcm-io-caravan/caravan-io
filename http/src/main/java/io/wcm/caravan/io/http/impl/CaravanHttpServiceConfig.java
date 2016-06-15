@@ -63,6 +63,13 @@ public class CaravanHttpServiceConfig {
   public static final String SERVICE_ID_PROPERTY = "serviceId";
   private static final String DEPRECATED_SERVICE_NAME_PROPERTY = "serviceName";
 
+  static final boolean THROW_EXCEPTION_FOR_STATUS_500_DEFAULT = true;
+  @Property(label = "Throw exception for response status > 500",
+    description = "If true, responses with status > 500 will be handled as error(hystrix failures). If the value is set to false, "
+      + "the caller service will has to handle the failure itself.",
+    boolValue = THROW_EXCEPTION_FOR_STATUS_500_DEFAULT
+  )
+  public static final String THROW_EXCEPTION_FOR_STATUS_500 = "exceptionForResponseStatus500";
   /**
    * Hosts
    */
@@ -276,11 +283,13 @@ public class CaravanHttpServiceConfig {
     if (config.get(HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY) != null) {
       // thread pool name
       archaiusConfig.setProperty(HYSTRIX_COMMAND_PREFIX + serviceId + HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE,
-          config.get(HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY));
+        config.get(HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY));
     }
 
     // others
     archaiusConfig.setProperty(serviceId + HTTP_PARAM_PROTOCOL, PropertiesUtil.toString(config.get(PROTOCOL_PROPERTY), PROTOCOL_PROPERTY_DEFAULT));
+    archaiusConfig.setProperty(serviceId + THROW_EXCEPTION_FOR_STATUS_500, PropertiesUtil.toBoolean(config.get(THROW_EXCEPTION_FOR_STATUS_500),
+      THROW_EXCEPTION_FOR_STATUS_500_DEFAULT));
 
     // update protocol to be used
     applyRibbonHostsProcotol(serviceId);
@@ -319,7 +328,7 @@ public class CaravanHttpServiceConfig {
     if (!(StringUtils.equals(protocolForAllServers, RequestUtil.PROTOCOL_AUTO)
         || StringUtils.equals(protocolForAllServers, protocol))) {
       log.warn("Protocol '{}' is defined for property {}: {}, but an other protocol is defined in the server list: {}. Only protocol '{}' is used.",
-          protocolForAllServers, PROTOCOL_PROPERTY, StringUtils.join(listOfServers, LIST_SEPARATOR), protocol);
+        protocolForAllServers, PROTOCOL_PROPERTY, StringUtils.join(listOfServers, LIST_SEPARATOR), protocol);
     }
 
     // remove protocol from list of servers and store default protocol
