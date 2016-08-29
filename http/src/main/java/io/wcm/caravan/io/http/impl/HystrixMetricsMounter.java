@@ -56,6 +56,7 @@ public class HystrixMetricsMounter {
     HystrixCodaHaleMetricsPublisher publisher = new HystrixCodaHaleMetricsPublisher(metricRegistry);
     HystrixPlugins.getInstance().registerMetricsPublisher(publisher);
 
+    // stop the connections
     graphiteRegistration.interrupt();
     graphiteRegistration.start();
   }
@@ -75,6 +76,7 @@ public class HystrixMetricsMounter {
   private class GraphiteRegistration extends Thread {
 
     private Graphite graphiteServer;
+    private static final int RETRY_TIME_IN_MINUTES = 2;
 
     @Override
     public void run() {
@@ -99,8 +101,13 @@ public class HystrixMetricsMounter {
       }
     }
 
+    /**
+     * establish a connection to the graphite. if is failed, wait {@value #RETRY_TIME_IN_MINUTES} minutes and try again
+     * until the connection is established successfully or the thread is stopped.
+     *
+     * @return
+     */
     private boolean establishConnection() {
-      int sleepMinutes = 2;
       while (!Thread.currentThread().isInterrupted()) {
         try {
           graphiteServer.connect();
@@ -111,10 +118,10 @@ public class HystrixMetricsMounter {
           LOG.error("Unable to connect to {}:{}! wait {} minutes and reconnect. ERROR: {}",
             graphiteIntegrationConfig.getGraphiteHostName(),
             graphiteIntegrationConfig.getGraphiteSocketPort(),
-            sleepMinutes,
+            RETRY_TIME_IN_MINUTES,
             e.getMessage());
           try {
-            Thread.sleep(TimeUnit.MINUTES.toMillis(sleepMinutes));
+            Thread.sleep(TimeUnit.MINUTES.toMillis(RETRY_TIME_IN_MINUTES));
           }
           catch (InterruptedException e1) {
             return false;
