@@ -1,6 +1,7 @@
 <img src="http://wcm.io/images/favicon-16@2x.png"/> wcm.io Caravan I/O
 ======
 [![Build Status](https://travis-ci.org/wcm-io-caravan/caravan-io.png?branch=develop)](https://travis-ci.org/wcm-io-caravan/caravan-io)
+[![Code Coverage](https://codecov.io/gh/wcm-io-caravan/caravan-io/branch/develop/graph/badge.svg)](https://codecov.io/gh/wcm-io-caravan/caravan-io)
 
 wcm.io Caravan - JSON Data Pipelining Infrastructure
 
