@@ -20,10 +20,6 @@
 package io.wcm.caravan.io.http.impl;
 
 import static org.junit.Assert.assertEquals;
-import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
-import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
-import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.junit.Before;
@@ -32,6 +28,11 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy;
+
+import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
+import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 
 public class HttpHystrixCommandTest {
 

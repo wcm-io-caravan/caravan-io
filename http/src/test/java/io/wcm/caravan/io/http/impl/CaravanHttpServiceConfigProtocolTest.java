@@ -29,8 +29,6 @@ import static io.wcm.caravan.io.http.impl.RequestUtil.PROTOCOL_HTTP;
 import static io.wcm.caravan.io.http.impl.RequestUtil.PROTOCOL_HTTPS;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
-import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
@@ -39,6 +37,9 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
+
+import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
+import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
 
 public class CaravanHttpServiceConfigProtocolTest {
 

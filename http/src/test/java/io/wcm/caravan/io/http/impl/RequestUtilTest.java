@@ -21,7 +21,6 @@ package io.wcm.caravan.io.http.impl;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 
 import java.io.IOException;
 import java.util.List;
@@ -42,6 +41,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimap;
 import com.netflix.loadbalancer.Server;
+
+import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 
 public class RequestUtilTest {
 

@@ -20,11 +20,12 @@
 package io.wcm.caravan.io.http.impl.servletclient;
 
 import static org.junit.Assert.assertEquals;
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
-import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 
 
 public class HttpServletRequestMapperTest {
