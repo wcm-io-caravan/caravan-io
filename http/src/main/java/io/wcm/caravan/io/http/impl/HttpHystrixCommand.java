@@ -19,21 +19,20 @@
  */
 package io.wcm.caravan.io.http.impl;
 
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
-import io.wcm.caravan.io.http.response.CaravanHttpResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import rx.Observable;
-import rx.functions.Action1;
 
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy;
 import com.netflix.hystrix.HystrixObservableCommand;
+
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+import rx.Observable;
+import rx.functions.Action1;
 
 /**
  * Hystrix command for asynchronously wrapping a HTTP request execution.

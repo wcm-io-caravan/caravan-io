@@ -23,6 +23,17 @@ import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_COMMA
 import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.netflix.client.ClientException;
+import com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy;
+import com.netflix.hystrix.exception.HystrixRuntimeException;
+
 import io.wcm.caravan.common.performance.PerformanceMetrics;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
@@ -32,21 +43,9 @@ import io.wcm.caravan.io.http.impl.servletclient.NotSupportedByRequestMapperExce
 import io.wcm.caravan.io.http.impl.servletclient.ServletHttpClient;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import rx.Observable;
 import rx.Observable.Operator;
 import rx.Subscriber;
-
-import com.netflix.client.ClientException;
-import com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy;
-import com.netflix.hystrix.exception.HystrixRuntimeException;
 
 /**
  * Default implementation of {@link CaravanHttpClient}.

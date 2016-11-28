@@ -19,8 +19,6 @@
  */
 package io.wcm.caravan.io.http.impl.ribbon;
 
-import io.wcm.caravan.io.http.RequestInstantiationRuntimeException;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
@@ -30,6 +28,8 @@ import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
+
+import io.wcm.caravan.io.http.RequestInstantiationRuntimeException;
 
 /**
  * Simple implementation for the Ribbon load balancer factory. Uses Netflix OSS configuration infrastructure.

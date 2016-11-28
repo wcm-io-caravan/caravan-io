@@ -19,14 +19,14 @@
  */
 package io.wcm.caravan.io.http.impl.ribbon;
 
-import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.netflix.client.DefaultLoadBalancerRetryHandler;
 import com.netflix.client.RetryHandler;
 import com.netflix.client.config.IClientConfig;
+
+import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 
 /**
  * Adapted implementation of a {@link RetryHandler}. Extends the list of retriable exceptions for the

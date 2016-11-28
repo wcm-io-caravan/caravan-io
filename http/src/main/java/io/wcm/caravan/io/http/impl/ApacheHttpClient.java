@@ -19,13 +19,6 @@
  */
 package io.wcm.caravan.io.http.impl;
 
-import io.wcm.caravan.commons.httpclient.HttpClientFactory;
-import io.wcm.caravan.io.http.CaravanHttpClient;
-import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
-import io.wcm.caravan.io.http.response.CaravanHttpResponse;
-import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
-
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 
@@ -42,6 +35,12 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.wcm.caravan.commons.httpclient.HttpClientFactory;
+import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
 import rx.Observable;
 import rx.Subscriber;
 
@@ -81,10 +80,10 @@ public class ApacheHttpClient implements CaravanHttpClient {
           boolean throwExceptionForStatus500 = CaravanHttpServiceConfigValidator.throwExceptionForStatus500(request.getServiceId());
           if (status.getStatusCode() >= 500 && throwExceptionForStatus500) {
             IllegalResponseRuntimeException illegalResponseRuntimeException = new IllegalResponseRuntimeException(request,
-              httpRequest.getURI().toString(),
-              status.getStatusCode(),
-              EntityUtils.toString(entity),
-              "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine());
+                httpRequest.getURI().toString(),
+                status.getStatusCode(),
+                EntityUtils.toString(entity),
+                "Executing '" + httpRequest.getURI() + "' failed: " + result.getStatusLine());
 
             subscriber.onError(illegalResponseRuntimeException);
             EntityUtils.consumeQuietly(entity);
@@ -92,11 +91,11 @@ public class ApacheHttpClient implements CaravanHttpClient {
           else {
 
             CaravanHttpResponse response = new CaravanHttpResponseBuilder()
-            .status(status.getStatusCode())
-            .reason(status.getReasonPhrase())
-            .headers(RequestUtil.toHeadersMap(result.getAllHeaders()))
-            .body(entity.getContent(), entity.getContentLength() > 0 ? (int)entity.getContentLength() : null)
-            .build();
+                .status(status.getStatusCode())
+                .reason(status.getReasonPhrase())
+                .headers(RequestUtil.toHeadersMap(result.getAllHeaders()))
+                .body(entity.getContent(), entity.getContentLength() > 0 ? (int)entity.getContentLength() : null)
+                .build();
 
             subscriber.onNext(response);
             subscriber.onCompleted();

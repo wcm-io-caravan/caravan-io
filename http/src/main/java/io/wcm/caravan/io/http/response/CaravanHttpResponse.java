@@ -21,7 +21,6 @@ package io.wcm.caravan.io.http.response;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import io.wcm.caravan.io.http.impl.CaravanHttpHelper;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -33,6 +32,8 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+
+import io.wcm.caravan.io.http.impl.CaravanHttpHelper;
 
 /**
  * An immutable response to an http invocation which only returns string content.
