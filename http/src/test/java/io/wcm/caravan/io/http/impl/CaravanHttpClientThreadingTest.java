@@ -23,15 +23,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertTrue;
-import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
-import io.wcm.caravan.io.http.CaravanHttpClient;
-import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
-import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
-import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
-import io.wcm.caravan.io.http.impl.servletclient.ServletHttpClient;
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
-import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
-import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -41,11 +32,20 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import rx.Observable;
-import rx.schedulers.Schedulers;
-
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
+
+import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
+import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
+import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
+import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
+import io.wcm.caravan.io.http.impl.servletclient.ServletHttpClient;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+import rx.Observable;
+import rx.schedulers.Schedulers;
 
 /**
  * Some tests to verify in which threads HTTP requests are executed
@@ -97,18 +97,18 @@ public class CaravanHttpClientThreadingTest {
   }
 
   @Test
-  public void test_responseEmissionOnHystrixThread() throws InterruptedException {
+  public void test_responseEmissionOnCallbackThread() throws InterruptedException {
 
     CaravanHttpRequest request = new CaravanHttpRequestBuilder(SERVICE_NAME).append(HTTP_200_URI).build();
 
-    // we don't call #observeOn here, so the response should be emitted with the hystrix threadpool
-    // that we have specified in the CaravanHttpServiceConfig
+    // we don't call #observeOn here, so the response should be emitted with the threadpool
+    // managed by the CaravanCallbackExecutor
     Observable<CaravanHttpResponse> rxResponse = underTest.execute(request);
 
     Thread emissionThread = subscribeWaitAndGetEmissionThread(rxResponse);
 
     // check that the response was emitted on a hystrix- thread
-    assertTrue(emissionThread.getName().startsWith("hystrix-" + HYSTRIX_THREADPOOL_NAME));
+    assertTrue(emissionThread.getName().startsWith(CaravanHttpCallbackExecutor.THREAD_GROUP_NAME));
   }
 
   @Test

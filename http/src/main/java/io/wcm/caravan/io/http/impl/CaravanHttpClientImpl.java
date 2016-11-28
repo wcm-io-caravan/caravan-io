@@ -24,7 +24,9 @@ import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_PARAM
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.slf4j.Logger;
@@ -45,7 +47,9 @@ import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 import rx.Observable;
 import rx.Observable.Operator;
+import rx.Scheduler;
 import rx.Subscriber;
+import rx.schedulers.Schedulers;
 
 /**
  * Default implementation of {@link CaravanHttpClient}.
@@ -65,16 +69,32 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
   @Reference
   private ApacheHttpClient apacheHttpClient;
 
+  private CaravanHttpCallbackExecutor callbackExecutor;
+  private Scheduler callbackScheduler;
+
+  @Activate
+  void activate() {
+    callbackExecutor = new CaravanHttpCallbackExecutor();
+    callbackScheduler = Schedulers.from(callbackExecutor);
+  }
+
+  @Deactivate
+  void deactivate() {
+    callbackExecutor.shutdownNow();
+  }
+
   @Override
   public Observable<CaravanHttpResponse> execute(CaravanHttpRequest request) {
     Context ctx = new Context(request, null);
-    return execute(ctx);
+    return execute(ctx)
+        .observeOn(callbackScheduler);
   }
 
   @Override
   public Observable<CaravanHttpResponse> execute(CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback) {
     Context ctx = new Context(request, fallback);
-    return execute(ctx);
+    return execute(ctx)
+        .observeOn(callbackScheduler);
   }
 
   private Observable<CaravanHttpResponse> execute(Context ctx) {
