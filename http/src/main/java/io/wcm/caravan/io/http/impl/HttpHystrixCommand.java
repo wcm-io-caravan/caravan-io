@@ -19,6 +19,10 @@
  */
 package io.wcm.caravan.io.http.impl;
 
+import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_COMMAND_PREFIX;
+import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,13 +50,20 @@ class HttpHystrixCommand extends HystrixObservableCommand<CaravanHttpResponse> {
   private final Observable<CaravanHttpResponse> observable;
   private final Observable<CaravanHttpResponse> fallback;
 
-  public HttpHystrixCommand(CaravanHttpRequest request, ExecutionIsolationStrategy isolationStrategy,
-      Observable<CaravanHttpResponse> observable, Observable<CaravanHttpResponse> fallback) {
+  /**
+   * @param request the request to execute
+   * @param observable the observable that emits the response for this request (created with one of the
+   *          CaravanHttpClient implementations)
+   * @param fallback the fallback response to emit if the original request fails
+   */
+  public HttpHystrixCommand(CaravanHttpRequest request, Observable<CaravanHttpResponse> observable, Observable<CaravanHttpResponse> fallback) {
 
     super(Setter
         .withGroupKey(HystrixCommandGroupKey.Factory.asKey(GROUP_KEY))
         .andCommandKey(HystrixCommandKey.Factory.asKey(StringUtils.defaultString(request.getServiceId(), "UNKNOWN")))
-        .andCommandPropertiesDefaults(HystrixCommandProperties.Setter().withExecutionIsolationStrategy(isolationStrategy)));
+        .andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
+            .withExecutionIsolationStrategy(getIsolationStrategy(request))
+            .withExecutionIsolationSemaphoreMaxConcurrentRequests(10000)));
 
     this.request = request;
     this.observable = observable;
@@ -84,6 +95,18 @@ class HttpHystrixCommand extends HystrixObservableCommand<CaravanHttpResponse> {
     else {
       return super.resumeWithFallback();
     }
+  }
+
+  /**
+   * Check which hystrix isolation strategy is configured for the target service of the given request
+   * @param request the request to execute
+   * @return {@link ExecutionIsolationStrategy#THREAD} if there is a hystrixThreadPoolKeyOverride configured for the
+   *         target serviceId of the given request, or {@link ExecutionIsolationStrategy#SEMAPHORE} otherwise
+   */
+  public static ExecutionIsolationStrategy getIsolationStrategy(CaravanHttpRequest request) {
+    String threadPoolConfigKey = HYSTRIX_COMMAND_PREFIX + request.getServiceId() + HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE;
+    String configuredThreadPool = ArchaiusConfig.getConfiguration().getString(threadPoolConfigKey);
+    return isBlank(configuredThreadPool) ? ExecutionIsolationStrategy.SEMAPHORE : ExecutionIsolationStrategy.THREAD;
   }
 
 }

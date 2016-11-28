@@ -42,6 +42,7 @@ import com.netflix.hystrix.HystrixCircuitBreaker;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandMetrics;
 
+import io.wcm.caravan.commons.httpasyncclient.impl.HttpAsyncClientFactoryImpl;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
@@ -77,6 +78,7 @@ public class CaravanHttpClientHystrixTest {
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
     context.registerInjectActivateService(new HttpClientFactoryImpl());
+    context.registerInjectActivateService(new HttpAsyncClientFactoryImpl());
     context.registerInjectActivateService(new ServletHttpClient());
     context.registerInjectActivateService(new ApacheHttpClient());
     context.registerInjectActivateService(new RibbonHttpClient());

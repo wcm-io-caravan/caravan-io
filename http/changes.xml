@@ -25,6 +25,10 @@
 
     <release version="0.10.0" date="not yet released">
       <action type="add" dev="ssauder">
+        Use HttpAsyncClient to execute all requests for services that do *not* have a specific Hystrix threadpool configured
+        via "hystrixThreadPoolKeyOverride" configuration.
+      </action>
+      <action type="add" dev="ssauder">
         Ensure that all Observables returned from CaravanHttpClient emit their results on a specific scheduler, backed by a deciated
         threadpool (managed internally by CaravanHttpCallbackExecutor). This ensures that the threads that are execute the
         HTTP requests can be blocked subscriber code (e.g. which might wait for additional requests to be finished)

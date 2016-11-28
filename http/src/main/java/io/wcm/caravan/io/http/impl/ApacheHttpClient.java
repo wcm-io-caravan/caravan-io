@@ -19,6 +19,8 @@
  */
 package io.wcm.caravan.io.http.impl;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 
@@ -26,18 +28,26 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Stopwatch;
+import com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy;
+
+import io.wcm.caravan.commons.httpasyncclient.HttpAsyncClientFactory;
 import io.wcm.caravan.commons.httpclient.HttpClientFactory;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
+import io.wcm.caravan.io.http.RequestFailedRuntimeException;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
@@ -56,6 +66,9 @@ public class ApacheHttpClient implements CaravanHttpClient {
   @Reference
   private HttpClientFactory httpClientFactory;
 
+  @Reference
+  private HttpAsyncClientFactory httpAsyncClientFactory;
+
   @Override
   public Observable<CaravanHttpResponse> execute(CaravanHttpRequest request) {
     return Observable.create(new Observable.OnSubscribe<CaravanHttpResponse>() {
@@ -64,15 +77,97 @@ public class ApacheHttpClient implements CaravanHttpClient {
       public void call(final Subscriber<? super CaravanHttpResponse> subscriber) {
         HttpUriRequest httpRequest = RequestUtil.buildHttpRequest(request);
 
-        if (LOG.isDebugEnabled()) {
-          LOG.debug("Execute: {},\n{},\n{}", httpRequest.getURI(), request.toString(), request.getCorrelationId());
+        if (LOG.isTraceEnabled()) {
+          LOG.trace("Initiating request for {},\n{},\n{}", httpRequest.getURI(), request.toString(), request.getCorrelationId());
+        }
+
+        if (HttpHystrixCommand.getIsolationStrategy(request) == ExecutionIsolationStrategy.THREAD) {
+          executeBlocking(subscriber, httpRequest);
+        }
+        else {
+          executeAsync(subscriber, httpRequest);
+        }
+      }
+
+      private void executeBlocking(final Subscriber<? super CaravanHttpResponse> subscriber, HttpUriRequest httpRequest) {
+
+        if (LOG.isTraceEnabled()) {
+          LOG.trace("Obtaining blocking http client to request " + httpRequest.getURI()
+          + ", because a hystrixThreadPoolKeyOverride is configured for this serviceId");
         }
 
         CloseableHttpClient httpClient = (CloseableHttpClient)httpClientFactory.get(httpRequest.getURI());
 
-        long start = System.currentTimeMillis();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         try (CloseableHttpResponse result = httpClient.execute(httpRequest)) {
+          LOG.debug("Received response from {} in {} ms\n{}", httpRequest.getURI().toString(), stopwatch.elapsed(MILLISECONDS), request.getCorrelationId());
 
+          processResponse(httpRequest, subscriber, result);
+
+        }
+        catch (Throwable ex) {
+          LOG.info("Caught exception requesting {} after {} ms\n{}", httpRequest.getURI().toString(), stopwatch.elapsed(MILLISECONDS),
+              request.getCorrelationId());
+
+          processExeption(httpRequest, subscriber, ex);
+        }
+      }
+
+      private void executeAsync(final Subscriber<? super CaravanHttpResponse> subscriber, HttpUriRequest httpRequest) {
+
+        if (LOG.isTraceEnabled()) {
+          LOG.trace("Obtaining async http client to request " + httpRequest.getURI()
+          + ", because a hystrixThreadPoolKeyOverride is *not* configured for this serviceId");
+        }
+
+        CloseableHttpAsyncClient httpClient = (CloseableHttpAsyncClient)httpAsyncClientFactory.get(httpRequest.getURI());
+
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
+        httpClient.execute(httpRequest, new FutureCallback<HttpResponse>() {
+
+          @Override
+          public void completed(HttpResponse result) {
+            LOG.debug("Received response from {} in {} ms\n{}", httpRequest.getURI().toString(), stopwatch.elapsed(MILLISECONDS), request.getCorrelationId());
+
+            processResponse(httpRequest, subscriber, result);
+
+          }
+
+          @Override
+          public void failed(Exception ex) {
+            LOG.info("Caught exception requesting {} after {} ms\n{}", httpRequest.getURI().toString(), stopwatch.elapsed(MILLISECONDS),
+                request.getCorrelationId());
+
+            processExeption(httpRequest, subscriber, ex);
+          }
+
+          @Override
+          public void cancelled() {
+            LOG.warn("Cancelled request for {} after {} ms\n{}", httpRequest.getURI().toString(), stopwatch.elapsed(MILLISECONDS), request.getCorrelationId());
+
+            subscriber.onError(
+                new RequestFailedRuntimeException(request, "The request was unexpectedly cancelled after " + stopwatch.elapsed(MILLISECONDS) + "ms", null));
+          }
+
+        });
+      }
+
+      void processExeption(HttpUriRequest httpRequest, Subscriber<? super CaravanHttpResponse> subscriber, Throwable ex) {
+        if (ex instanceof SocketTimeoutException) {
+          subscriber.onError(new IOException("Socket timeout requesting '" + httpRequest.getURI(), ex));
+        }
+        else if (ex instanceof IOException) {
+          subscriber.onError(new IOException("Connection to '" + httpRequest.getURI() + "' failed", ex));
+        }
+        else {
+          subscriber.onError(new IOException("Requesting '" + httpRequest.getURI() + "' failed", ex));
+        }
+      }
+
+      void processResponse(HttpUriRequest httpRequest, final Subscriber<? super CaravanHttpResponse> subscriber, HttpResponse result) {
+
+        try {
           StatusLine status = result.getStatusLine();
           HttpEntity entity = new BufferedHttpEntity(result.getEntity());
           EntityUtils.consume(entity);
@@ -101,20 +196,16 @@ public class ApacheHttpClient implements CaravanHttpClient {
             subscriber.onCompleted();
           }
         }
-        catch (SocketTimeoutException ex) {
-          subscriber.onError(new IOException("Socket timeout executing '" + httpRequest.getURI(), ex));
-        }
         catch (IOException ex) {
-          subscriber.onError(new IOException("Executing '" + httpRequest.getURI() + "' failed", ex));
-        }
-        catch (Throwable ex) {
           subscriber.onError(new IOException("Reading response of '" + httpRequest.getURI() + "' failed", ex));
         }
-        finally {
-          LOG.debug("Took {} ms to load {},\n{}", (System.currentTimeMillis() - start), httpRequest.getURI().toString(),
-              request.getCorrelationId());
+        // CHECKSTYLE:OFF - yes we really wan to catch all exceptions here
+        catch (Exception ex) {
+          // CHECKSTYLE:ON
+          subscriber.onError(new IOException("Processing response of '" + httpRequest.getURI() + "' failed", ex));
         }
       }
+
     });
   }
 

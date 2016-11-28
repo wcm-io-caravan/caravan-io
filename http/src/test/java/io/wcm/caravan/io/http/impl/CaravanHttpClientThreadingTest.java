@@ -35,6 +35,7 @@ import org.junit.Test;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
 
+import io.wcm.caravan.commons.httpasyncclient.impl.HttpAsyncClientFactoryImpl;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
@@ -71,6 +72,7 @@ public class CaravanHttpClientThreadingTest {
     ArchaiusConfig.initialize();
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
+    context.registerInjectActivateService(new HttpAsyncClientFactoryImpl());
     context.registerInjectActivateService(new HttpClientFactoryImpl());
     context.registerInjectActivateService(new ApacheHttpClient());
     context.registerInjectActivateService(new ServletHttpClient());

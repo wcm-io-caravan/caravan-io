@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.netflix.client.ClientException;
 
+import io.wcm.caravan.commons.httpasyncclient.impl.HttpAsyncClientFactoryImpl;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.impl.ApacheHttpClient;
 import io.wcm.caravan.io.http.impl.ArchaiusConfig;
@@ -80,6 +81,7 @@ public class RibbonHttpClientTest {
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
     context.registerInjectActivateService(new HttpClientFactoryImpl());
+    context.registerInjectActivateService(new HttpAsyncClientFactoryImpl());
     context.registerInjectActivateService(new ApacheHttpClient());
     client = context.registerInjectActivateService(new RibbonHttpClient());
 
