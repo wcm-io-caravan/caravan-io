@@ -23,7 +23,7 @@
     xsi:schemaLocation="http://maven.apache.org/changes/1.0.0 http://maven.apache.org/plugins/maven-changes-plugin/xsd/changes-1.0.0.xsd">
   <body>
 
-    <release version="0.10.0" date="not yet released">
+    <release version="0.10.0" date="2017-02-08">
       <action type="add" dev="ssauder">
         Use HttpAsyncClient to execute all requests for services that do *not* have a specific Hystrix threadpool configured
         via "hystrixThreadPoolKeyOverride" configuration.
@@ -41,7 +41,6 @@
         Default value is true. If the value is set to false, the caller service has to handle the failure itself.
       </action>
     </release>
-
  
     <release version="0.9.0" date="2016-03-16">
       <action type="add" dev="cnagel">
