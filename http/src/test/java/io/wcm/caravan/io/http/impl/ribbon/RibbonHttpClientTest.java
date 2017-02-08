@@ -25,12 +25,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
-import io.wcm.caravan.io.http.impl.ApacheHttpClient;
-import io.wcm.caravan.io.http.impl.ArchaiusConfig;
-import io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig;
-import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
-import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -40,14 +34,21 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import rx.Observable;
-
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.matching.RequestPattern;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.netflix.client.ClientException;
+
+import io.wcm.caravan.commons.httpasyncclient.impl.HttpAsyncClientFactoryImpl;
+import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
+import io.wcm.caravan.io.http.impl.ApacheHttpClient;
+import io.wcm.caravan.io.http.impl.ArchaiusConfig;
+import io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig;
+import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+import rx.Observable;
 
 
 public class RibbonHttpClientTest {
@@ -80,6 +81,7 @@ public class RibbonHttpClientTest {
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
     context.registerInjectActivateService(new HttpClientFactoryImpl());
+    context.registerInjectActivateService(new HttpAsyncClientFactoryImpl());
     context.registerInjectActivateService(new ApacheHttpClient());
     client = context.registerInjectActivateService(new RibbonHttpClient());
 

@@ -20,9 +20,6 @@
 package io.wcm.caravan.io.http.request;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.wcm.caravan.common.performance.PerformanceMetrics;
-import io.wcm.caravan.io.http.CaravanHttpClient;
-import io.wcm.caravan.io.http.impl.CaravanHttpHelper;
 
 import java.nio.charset.Charset;
 import java.util.Collection;
@@ -35,6 +32,10 @@ import org.osgi.annotation.versioning.ProviderType;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+
+import io.wcm.caravan.common.performance.PerformanceMetrics;
+import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.impl.CaravanHttpHelper;
 
 /**
  * An immutable request to a HTTP server.

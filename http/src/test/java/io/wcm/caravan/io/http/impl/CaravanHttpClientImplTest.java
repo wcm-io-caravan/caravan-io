@@ -21,15 +21,6 @@ package io.wcm.caravan.io.http.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.never;
-import io.wcm.caravan.io.http.CaravanHttpClient;
-import io.wcm.caravan.io.http.RequestFailedRuntimeException;
-import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
-import io.wcm.caravan.io.http.impl.servletclient.NotSupportedByRequestMapperException;
-import io.wcm.caravan.io.http.impl.servletclient.ServletHttpClient;
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
-import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
-import io.wcm.caravan.io.http.response.CaravanHttpResponse;
-import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
 
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.junit.Before;
@@ -41,6 +32,15 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.RequestFailedRuntimeException;
+import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
+import io.wcm.caravan.io.http.impl.servletclient.NotSupportedByRequestMapperException;
+import io.wcm.caravan.io.http.impl.servletclient.ServletHttpClient;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
 import rx.Observable;
 
 @RunWith(MockitoJUnitRunner.class)

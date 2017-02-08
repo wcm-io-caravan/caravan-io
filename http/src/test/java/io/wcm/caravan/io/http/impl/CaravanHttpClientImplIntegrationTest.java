@@ -25,15 +25,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
-import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
-import io.wcm.caravan.io.http.RequestFailedRuntimeException;
-import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
-import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
-import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
-import io.wcm.caravan.io.http.impl.servletclient.ServletHttpClient;
-import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
-import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -48,11 +39,21 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import rx.Observable;
-import rx.Observer;
-
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
+
+import io.wcm.caravan.commons.httpasyncclient.impl.HttpAsyncClientFactoryImpl;
+import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
+import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
+import io.wcm.caravan.io.http.RequestFailedRuntimeException;
+import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
+import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
+import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
+import io.wcm.caravan.io.http.impl.servletclient.ServletHttpClient;
+import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+import rx.Observable;
+import rx.Observer;
 
 /**
  * Integration tests for HTTP communcation of transport layer.
@@ -92,6 +93,7 @@ public class CaravanHttpClientImplIntegrationTest {
         ImmutableMap.of(CaravanHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
 
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
+    context.registerInjectActivateService(new HttpAsyncClientFactoryImpl());
     context.registerInjectActivateService(new HttpClientFactoryImpl());
 
     context.registerInjectActivateService(new CaravanHttpClientConfig(),
@@ -104,29 +106,24 @@ public class CaravanHttpClientImplIntegrationTest {
 
     // setup wiremock
     wireMock.stubFor(get(urlEqualTo(HTTP_200_URI))
-      .willReturn(aResponse()
-          .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
-          .withBody(DUMMY_CONTENT)
-      ));
+        .willReturn(aResponse()
+            .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
+            .withBody(DUMMY_CONTENT)));
     wireMock.stubFor(get(urlEqualTo(HTTP_404_URI))
         .willReturn(aResponse()
-            .withStatus(HttpServletResponse.SC_NOT_FOUND)
-            ));
+            .withStatus(HttpServletResponse.SC_NOT_FOUND)));
     wireMock.stubFor(get(urlEqualTo(HTTP_500_URI))
         .willReturn(aResponse()
-            .withStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
-            ));
+            .withStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)));
     wireMock.stubFor(get(urlEqualTo(CONNECT_TIMEOUT_URI))
-      .willReturn(aResponse()
-          .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
-          .withBody(DUMMY_CONTENT)
-      ));
+        .willReturn(aResponse()
+            .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
+            .withBody(DUMMY_CONTENT)));
     wireMock.stubFor(get(urlEqualTo(RESPONSE_TIMEOUT_URI))
-      .willReturn(aResponse()
-          .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
-          .withBody(DUMMY_CONTENT)
-          .withFixedDelay(1000)
-      ));
+        .willReturn(aResponse()
+            .withHeader("Content-Type", "text/plain;charset=" + CharEncoding.UTF_8)
+            .withBody(DUMMY_CONTENT)
+            .withFixedDelay(1000)));
 
     assertTrue(client.hasValidConfiguration(SERVICE_NAME));
 

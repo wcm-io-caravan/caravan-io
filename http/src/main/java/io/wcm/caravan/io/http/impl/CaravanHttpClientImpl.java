@@ -19,9 +19,17 @@
  */
 package io.wcm.caravan.io.http.impl;
 
-import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_COMMAND_PREFIX;
-import static io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig.HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.netflix.client.ClientException;
+import com.netflix.hystrix.exception.HystrixRuntimeException;
 
 import io.wcm.caravan.common.performance.PerformanceMetrics;
 import io.wcm.caravan.io.http.CaravanHttpClient;
@@ -32,21 +40,11 @@ import io.wcm.caravan.io.http.impl.servletclient.NotSupportedByRequestMapperExce
 import io.wcm.caravan.io.http.impl.servletclient.ServletHttpClient;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import rx.Observable;
 import rx.Observable.Operator;
+import rx.Scheduler;
 import rx.Subscriber;
-
-import com.netflix.client.ClientException;
-import com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy;
-import com.netflix.hystrix.exception.HystrixRuntimeException;
+import rx.schedulers.Schedulers;
 
 /**
  * Default implementation of {@link CaravanHttpClient}.
@@ -66,16 +64,32 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
   @Reference
   private ApacheHttpClient apacheHttpClient;
 
+  private CaravanHttpCallbackExecutor callbackExecutor;
+  private Scheduler callbackScheduler;
+
+  @Activate
+  void activate() {
+    callbackExecutor = new CaravanHttpCallbackExecutor();
+    callbackScheduler = Schedulers.from(callbackExecutor);
+  }
+
+  @Deactivate
+  void deactivate() {
+    callbackExecutor.shutdownNow();
+  }
+
   @Override
   public Observable<CaravanHttpResponse> execute(CaravanHttpRequest request) {
     Context ctx = new Context(request, null);
-    return execute(ctx);
+    return execute(ctx)
+        .observeOn(callbackScheduler);
   }
 
   @Override
   public Observable<CaravanHttpResponse> execute(CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback) {
     Context ctx = new Context(request, fallback);
-    return execute(ctx);
+    return execute(ctx)
+        .observeOn(callbackScheduler);
   }
 
   private Observable<CaravanHttpResponse> execute(Context ctx) {
@@ -89,7 +103,6 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
       return createServletClientResponse(ctx, ribbonResponse);
     }
     return ribbonResponse;
-
   }
 
   private boolean isRequestWithoutServiceId(Context ctx) {
@@ -112,7 +125,7 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
         && config.isServletClientEnabled()
         && servletClient.hasValidConfiguration(ctx.request.getServiceId());
   }
-  
+
   private Observable<CaravanHttpResponse> createServletClientResponse(Context ctx, Observable<CaravanHttpResponse> ribbonResponse) {
     Observable<CaravanHttpResponse> localhostResponse = servletClient.execute(ctx.request)
         .lift(new ErrorDisassembleroperator(ctx, ribbonResponse));
@@ -127,14 +140,8 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
   }
 
   private Observable<CaravanHttpResponse> wrapWithHystrix(Context ctx, Observable<CaravanHttpResponse> response) {
-    ExecutionIsolationStrategy isolationStrategy = getIsolationStrategy(ctx);
-    return new HttpHystrixCommand(ctx.request, isolationStrategy, response, ctx.fallback).toObservable();
-  }
 
-  private ExecutionIsolationStrategy getIsolationStrategy(Context ctx) {
-    String threadPoolConfigKey = HYSTRIX_COMMAND_PREFIX + ctx.request.getServiceId() + HYSTRIX_PARAM_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE;
-    String configuredThreadPool = ArchaiusConfig.getConfiguration().getString(threadPoolConfigKey);
-    return isBlank(configuredThreadPool) ? ExecutionIsolationStrategy.SEMAPHORE : ExecutionIsolationStrategy.THREAD;
+    return new HttpHystrixCommand(ctx.request, response, ctx.fallback).toObservable();
   }
 
   private Observable<CaravanHttpResponse> wrapWithExceptionMapper(Context ctx, Observable<CaravanHttpResponse> response) {

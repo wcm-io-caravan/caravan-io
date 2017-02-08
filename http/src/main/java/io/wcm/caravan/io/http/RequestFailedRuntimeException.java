@@ -19,9 +19,9 @@
  */
 package io.wcm.caravan.io.http;
 
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
-
 import org.osgi.annotation.versioning.ProviderType;
+
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 
 /**
  * Exception is thrown when a resilient HTTP request failed before a response was received.

@@ -28,12 +28,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertTrue;
-import io.wcm.caravan.common.performance.PerformanceMetrics;
-import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
-import io.wcm.caravan.io.http.CaravanHttpClient;
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
-import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
-import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 
 import org.apache.commons.lang3.CharEncoding;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
@@ -42,12 +36,18 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.common.collect.ImmutableMap;
+
+import io.wcm.caravan.common.performance.PerformanceMetrics;
+import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
+import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 import rx.Observable;
 import rx.functions.Action0;
 import rx.functions.Action1;
-
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * Integration tests for HTTP communcation of transport layer.

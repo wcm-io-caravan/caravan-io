@@ -19,8 +19,6 @@
  */
 package io.wcm.caravan.io.http.impl.servletclient;
 
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -55,12 +53,13 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 
-import rx.Observable;
-
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Maps;
+
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import rx.Observable;
 
 /**
  * Mapper from {@link CaravanHttpRequest} to {@link HttpServletRequest}.

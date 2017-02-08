@@ -19,6 +19,17 @@
  */
 package io.wcm.caravan.io.http.impl.ribbon;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.netflix.loadbalancer.Server;
+import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
+import com.netflix.loadbalancer.reactive.ServerOperation;
+
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.impl.ApacheHttpClient;
 import io.wcm.caravan.io.http.impl.ArchaiusConfig;
@@ -28,19 +39,7 @@ import io.wcm.caravan.io.http.impl.RequestUtil;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
 import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 import io.wcm.caravan.io.http.response.CaravanHttpResponse;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import rx.Observable;
-
-import com.netflix.loadbalancer.Server;
-import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
-import com.netflix.loadbalancer.reactive.ServerOperation;
 
 /**
  * Delegating implementation using Ribbon to determine full request URL.

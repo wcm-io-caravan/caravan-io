@@ -22,14 +22,6 @@ package io.wcm.caravan.io.http.impl.ribbon;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
-import io.wcm.caravan.io.http.impl.ApacheHttpClient;
-import io.wcm.caravan.io.http.impl.ArchaiusConfig;
-import io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig;
-import io.wcm.caravan.io.http.impl.CaravanHttpThreadPoolConfig;
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
-import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
-import io.wcm.caravan.io.http.response.CaravanHttpResponse;
-import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
 
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
@@ -42,9 +34,17 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
-import rx.Observable;
-
 import com.google.common.collect.ImmutableMap;
+
+import io.wcm.caravan.io.http.impl.ApacheHttpClient;
+import io.wcm.caravan.io.http.impl.ArchaiusConfig;
+import io.wcm.caravan.io.http.impl.CaravanHttpServiceConfig;
+import io.wcm.caravan.io.http.impl.CaravanHttpThreadPoolConfig;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
+import rx.Observable;
 
 /**
  * Integration tests for HTTP communcation of transport layer.

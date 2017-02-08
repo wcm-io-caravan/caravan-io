@@ -19,13 +19,6 @@
  */
 package io.wcm.caravan.io.http.impl.servletclient;
 
-import io.wcm.caravan.io.http.CaravanHttpClient;
-import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
-import io.wcm.caravan.io.http.RequestFailedRuntimeException;
-import io.wcm.caravan.io.http.impl.CaravanHttpServiceConfigValidator;
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
-import io.wcm.caravan.io.http.response.CaravanHttpResponse;
-
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
@@ -43,9 +36,15 @@ import org.apache.felix.scr.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import rx.Observable;
-
 import com.google.common.collect.Sets;
+
+import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
+import io.wcm.caravan.io.http.RequestFailedRuntimeException;
+import io.wcm.caravan.io.http.impl.CaravanHttpServiceConfigValidator;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+import rx.Observable;
 
 /**
  * Client which executes {@link Servlet}s registered in the same server directly without HTTP. Ignores fallbacks.

@@ -19,11 +19,10 @@
  */
 package io.wcm.caravan.io.http;
 
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
-import io.wcm.caravan.io.http.response.CaravanHttpResponse;
-
 import org.osgi.annotation.versioning.ProviderType;
 
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
 import rx.Observable;
 
 /**

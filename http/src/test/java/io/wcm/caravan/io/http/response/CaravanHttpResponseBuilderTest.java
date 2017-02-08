@@ -26,13 +26,13 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-import joptsimple.internal.Strings;
-
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
+
+import joptsimple.internal.Strings;
 
 
 public class CaravanHttpResponseBuilderTest {

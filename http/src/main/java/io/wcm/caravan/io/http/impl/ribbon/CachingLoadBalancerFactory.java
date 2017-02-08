@@ -19,7 +19,6 @@
  */
 package io.wcm.caravan.io.http.impl.ribbon;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.ObjectUtils;

@@ -20,10 +20,6 @@
 package io.wcm.caravan.io.http.impl;
 
 import static org.junit.Assert.assertEquals;
-import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
-import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
-import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.junit.Before;
@@ -31,7 +27,16 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
-import com.netflix.hystrix.HystrixCommandProperties.ExecutionIsolationStrategy;
+
+import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
+import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
+
+import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
+import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
+import io.wcm.caravan.io.http.request.CaravanHttpRequest;
+import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
 
 public class HttpHystrixCommandTest {
 
@@ -57,7 +62,7 @@ public class HttpHystrixCommandTest {
         .put(CaravanHttpServiceConfig.SERVICE_ID_PROPERTY, SERVICE_NAME)
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, "localhost")
         .build());
-    HttpHystrixCommand underTest = new HttpHystrixCommand(request, ExecutionIsolationStrategy.THREAD, null, null);
+    HttpHystrixCommand underTest = new HttpHystrixCommand(request, null, null);
     assertEquals("transportLayer", underTest.getThreadPoolKey().name());
   }
 
@@ -68,7 +73,7 @@ public class HttpHystrixCommandTest {
         .put(CaravanHttpServiceConfig.RIBBON_HOSTS_PROPERTY, "localhost")
         .put(CaravanHttpServiceConfig.HYSTRIX_EXECUTIONISOLATIONTHREADPOOLKEY_OVERRIDE_PROPERTY, "testThreadPool")
         .build());
-    HttpHystrixCommand underTest = new HttpHystrixCommand(request, ExecutionIsolationStrategy.THREAD, null, null);
+    HttpHystrixCommand underTest = new HttpHystrixCommand(request, null, null);
     assertEquals("testThreadPool", underTest.getThreadPoolKey().name());
   }
 

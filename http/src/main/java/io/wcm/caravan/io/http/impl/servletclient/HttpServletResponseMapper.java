@@ -19,9 +19,6 @@
  */
 package io.wcm.caravan.io.http.impl.servletclient;
 
-import io.wcm.caravan.io.http.response.CaravanHttpResponse;
-import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -41,6 +38,9 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+
+import io.wcm.caravan.io.http.response.CaravanHttpResponse;
+import io.wcm.caravan.io.http.response.CaravanHttpResponseBuilder;
 
 /**
  * Mapper from {@link CaravanHttpResponse} to {@link HttpServletResponse}.
