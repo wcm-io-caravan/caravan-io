@@ -36,6 +36,7 @@
 
   <name>JSON Transformation</name>
   <description>A stream-based JSON manipulation library.</description>
+  <url>${site.url}/${site.url.module.prefix}/</url>
 
   <scm>
     <connection>scm:git:https://github.com/wcm-io-caravan/caravan-io.git</connection>

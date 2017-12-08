@@ -36,6 +36,7 @@
 
   <name>Resilient HTTP</name>
   <description>HTTP communication layer using Netflix Hystrix and Ribbon for resilience.</description>
+  <url>${site.url}/${site.url.module.prefix}/</url>
 
   <scm>
     <connection>scm:git:https://github.com/wcm-io-caravan/caravan-io.git</connection>
