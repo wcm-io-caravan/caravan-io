@@ -19,8 +19,6 @@
  */
 package io.wcm.caravan.io.jsontransform.sink;
 
-import io.wcm.caravan.io.jsontransform.element.JsonElement;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
@@ -29,6 +27,8 @@ import org.osgi.annotation.versioning.ProviderType;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+
+import io.wcm.caravan.io.jsontransform.element.JsonElement;
 
 /**
  * Writes the JSON stream elements into an output stream.

@@ -19,13 +19,13 @@
  */
 package io.wcm.caravan.io.jsontransform.processor;
 
-import io.wcm.caravan.io.jsontransform.element.JsonElement;
-import io.wcm.caravan.io.jsontransform.element.JsonPath;
-import io.wcm.caravan.io.jsontransform.source.Source;
-
 import java.util.Set;
 
 import org.osgi.annotation.versioning.ProviderType;
+
+import io.wcm.caravan.io.jsontransform.element.JsonElement;
+import io.wcm.caravan.io.jsontransform.element.JsonPath;
+import io.wcm.caravan.io.jsontransform.source.Source;
 
 /**
  * Converts elements identified by passed keys to JSON array elements and the children into JSON array values.

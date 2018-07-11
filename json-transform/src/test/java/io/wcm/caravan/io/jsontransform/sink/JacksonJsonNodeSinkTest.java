@@ -22,7 +22,6 @@ package io.wcm.caravan.io.jsontransform.sink;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import io.wcm.caravan.io.jsontransform.element.JsonElement;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -31,6 +30,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
+
+import io.wcm.caravan.io.jsontransform.element.JsonElement;
 
 
 public class JacksonJsonNodeSinkTest {

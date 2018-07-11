@@ -19,8 +19,6 @@
  */
 package io.wcm.caravan.io.jsontransform.source;
 
-import io.wcm.caravan.io.jsontransform.JsonTestHelper;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -28,6 +26,8 @@ import java.math.BigDecimal;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
+
+import io.wcm.caravan.io.jsontransform.JsonTestHelper;
 
 
 public class JacksonStreamSourceTest {

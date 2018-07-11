@@ -22,12 +22,13 @@ package io.wcm.caravan.io.jsontransform.sink;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import io.wcm.caravan.io.jsontransform.element.JsonElement;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.junit.Test;
+
+import io.wcm.caravan.io.jsontransform.element.JsonElement;
 
 public class JacksonStreamSinkTest {
 

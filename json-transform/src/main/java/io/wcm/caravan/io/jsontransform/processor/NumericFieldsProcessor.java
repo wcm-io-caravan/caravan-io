@@ -19,15 +19,15 @@
  */
 package io.wcm.caravan.io.jsontransform.processor;
 
-import io.wcm.caravan.io.jsontransform.element.JsonElement;
-import io.wcm.caravan.io.jsontransform.element.JsonElementType;
-import io.wcm.caravan.io.jsontransform.source.Source;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Set;
 
 import org.osgi.annotation.versioning.ProviderType;
+
+import io.wcm.caravan.io.jsontransform.element.JsonElement;
+import io.wcm.caravan.io.jsontransform.element.JsonElementType;
+import io.wcm.caravan.io.jsontransform.source.Source;
 
 /**
  * Converts the values of JSON elements identified by key into {@link BigDecimal}s.

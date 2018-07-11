@@ -19,12 +19,12 @@
  */
 package io.wcm.caravan.io.jsontransform.source;
 
-import io.wcm.caravan.io.jsontransform.element.JsonElement;
-
 import java.io.Closeable;
 import java.util.Iterator;
 
 import org.osgi.annotation.versioning.ConsumerType;
+
+import io.wcm.caravan.io.jsontransform.element.JsonElement;
 
 /**
  * A source is the beginning of a processing pipeline delivering {@link JsonElement}s in an {@link Iterator} fashion.

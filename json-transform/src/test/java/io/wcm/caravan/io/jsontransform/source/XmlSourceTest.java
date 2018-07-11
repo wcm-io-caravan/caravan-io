@@ -20,7 +20,6 @@
 package io.wcm.caravan.io.jsontransform.source;
 
 import static org.junit.Assert.assertTrue;
-import io.wcm.caravan.io.jsontransform.JsonTestHelper;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -28,6 +27,8 @@ import java.io.IOException;
 import javax.xml.stream.XMLStreamException;
 
 import org.junit.Test;
+
+import io.wcm.caravan.io.jsontransform.JsonTestHelper;
 
 
 public class XmlSourceTest {

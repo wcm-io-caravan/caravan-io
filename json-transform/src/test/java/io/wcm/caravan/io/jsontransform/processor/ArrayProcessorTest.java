@@ -20,13 +20,14 @@
 package io.wcm.caravan.io.jsontransform.processor;
 
 import static org.junit.Assert.assertEquals;
-import io.wcm.caravan.io.jsontransform.JsonTestHelper;
 
 import java.io.IOException;
 
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
+
+import io.wcm.caravan.io.jsontransform.JsonTestHelper;
 
 
 public class ArrayProcessorTest {

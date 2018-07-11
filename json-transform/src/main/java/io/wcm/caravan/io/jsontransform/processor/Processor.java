@@ -19,9 +19,9 @@
  */
 package io.wcm.caravan.io.jsontransform.processor;
 
-import io.wcm.caravan.io.jsontransform.source.Source;
-
 import org.osgi.annotation.versioning.ConsumerType;
+
+import io.wcm.caravan.io.jsontransform.source.Source;
 
 /**
  * A processor converts JSON stream elements from an input source and transfers them to the next by an iterator

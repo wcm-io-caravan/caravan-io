@@ -19,8 +19,6 @@
  */
 package io.wcm.caravan.io.jsontransform.sink;
 
-import io.wcm.caravan.io.jsontransform.element.JsonElement;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Stack;
@@ -32,6 +30,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.wcm.caravan.io.jsontransform.element.JsonElement;
 
 /**
  * Converts the JSON stream elements into {@link JsonNode}s.
