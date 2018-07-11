@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableMap;
 import io.wcm.caravan.commons.httpasyncclient.impl.HttpAsyncClientFactoryImpl;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.CaravanHttpClient;
+import io.wcm.caravan.io.http.impl.ribbon.CachingLoadBalancerFactory;
 import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
 import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
 import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
@@ -71,6 +72,7 @@ public class CaravanHttpClientThreadingTest {
 
     ArchaiusConfig.initialize();
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
+    context.registerInjectActivateService(new CachingLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
     context.registerInjectActivateService(new HttpAsyncClientFactoryImpl());
     context.registerInjectActivateService(new HttpClientFactoryImpl());

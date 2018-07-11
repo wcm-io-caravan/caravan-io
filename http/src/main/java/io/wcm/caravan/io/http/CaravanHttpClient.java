@@ -37,7 +37,7 @@ public interface CaravanHttpClient {
    * @param request Request
    * @return Response
    */
-  Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request);
+  Observable<CaravanHttpResponse> execute(CaravanHttpRequest request);
 
   /**
    * Execute request.
@@ -45,7 +45,7 @@ public interface CaravanHttpClient {
    * @param fallback Function that returns a fallback that is returned when the call fails.
    * @return Response
    */
-  Observable<CaravanHttpResponse> execute(final CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback);
+  Observable<CaravanHttpResponse> execute(CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback);
 
   /**
    * Checks if a valid configuration exists for the given service ID. This does not mean that the host

@@ -19,15 +19,15 @@
  */
 package io.wcm.caravan.io.jsontransform.processor;
 
-import io.wcm.caravan.io.jsontransform.element.JsonElement;
-import io.wcm.caravan.io.jsontransform.source.Source;
-
 import java.io.IOException;
 import java.util.Queue;
 
 import org.osgi.annotation.versioning.ConsumerType;
 
 import com.google.common.collect.Lists;
+
+import io.wcm.caravan.io.jsontransform.element.JsonElement;
+import io.wcm.caravan.io.jsontransform.source.Source;
 
 /**
  * Helping abstract processor with an output buffer to process multiple incoming JSON stream elements.
@@ -49,7 +49,7 @@ public abstract class AbstractBufferingProcessor implements Processor {
    * Has to process the incoming JSON stream element.
    * @param element Current JSON element
    */
-  protected abstract void process(final JsonElement element);
+  protected abstract void process(JsonElement element);
 
   @Override
   public boolean hasNext() {

@@ -19,14 +19,13 @@
  */
 package io.wcm.caravan.io.jsontransform.source;
 
-import io.wcm.caravan.io.jsontransform.element.JsonElement;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Queue;
 import java.util.Stack;
 
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
@@ -36,6 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+
+import io.wcm.caravan.io.jsontransform.element.JsonElement;
 
 /**
  * Parses the SOAP response and transforms into JSON elements.
@@ -143,7 +144,7 @@ public final class XmlSource implements Source {
   }
 
   private boolean isRelevantElement(int eventType) {
-    if (reader.isWhiteSpace() || eventType == XMLStreamReader.COMMENT) {
+    if (reader.isWhiteSpace() || eventType == XMLStreamConstants.COMMENT) {
       return false;
     }
     String xpath = getXPath();

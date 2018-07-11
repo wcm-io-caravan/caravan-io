@@ -46,6 +46,7 @@ import io.wcm.caravan.commons.httpasyncclient.impl.HttpAsyncClientFactoryImpl;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
+import io.wcm.caravan.io.http.impl.ribbon.CachingLoadBalancerFactory;
 import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
 import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
 import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
@@ -76,6 +77,7 @@ public class CaravanHttpClientHystrixTest {
     context.registerInjectActivateService(new CaravanHttpClientConfig(),
         Collections.singletonMap(CaravanHttpClientConfig.SERVLET_CLIENT_ENABLED, true));
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
+    context.registerInjectActivateService(new CachingLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
     context.registerInjectActivateService(new HttpClientFactoryImpl());
     context.registerInjectActivateService(new HttpAsyncClientFactoryImpl());

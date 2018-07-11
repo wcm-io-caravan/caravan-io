@@ -46,6 +46,7 @@ import io.wcm.caravan.commons.httpasyncclient.impl.HttpAsyncClientFactoryImpl;
 import io.wcm.caravan.commons.httpclient.impl.HttpClientFactoryImpl;
 import io.wcm.caravan.io.http.IllegalResponseRuntimeException;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
+import io.wcm.caravan.io.http.impl.ribbon.CachingLoadBalancerFactory;
 import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
 import io.wcm.caravan.io.http.impl.ribbon.RibbonHttpClient;
 import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
@@ -88,6 +89,7 @@ public class CaravanHttpClientImplIntegrationTest {
     wireMockHost = "localhost:" + wireMock.port();
 
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
+    context.registerInjectActivateService(new CachingLoadBalancerFactory());
     serviceConfig = context.registerInjectActivateService(new CaravanHttpServiceConfig(), getServiceConfigProperties(wireMockHost, "auto"));
     context.registerInjectActivateService(new CaravanHttpThreadPoolConfig(),
         ImmutableMap.of(CaravanHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
