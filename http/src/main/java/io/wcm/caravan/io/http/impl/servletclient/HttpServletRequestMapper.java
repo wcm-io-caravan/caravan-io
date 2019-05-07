@@ -72,7 +72,7 @@ public class HttpServletRequestMapper implements HttpServletRequest {
   private final Map<String, Object> attributes = Maps.newHashMap();
 
   /**
-   * @param request
+   * @param request Request
    */
   public HttpServletRequestMapper(CaravanHttpRequest request) throws NotSupportedByRequestMapperException {
     this.request = request;
