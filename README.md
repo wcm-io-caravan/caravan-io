@@ -12,7 +12,8 @@ Micro Services I/O Resilient Transport Layer.
 Documentation: https://caravan.wcm.io/io/<br/>
 Issues: https://wcm-io.atlassian.net/<br/>
 Wiki: https://wcm-io.atlassian.net/wiki/<br/>
-Continuous Integration: https://travis-ci.org/wcm-io-caravan/caravan-io/
+Continuous Integration: https://travis-ci.org/wcm-io-caravan/caravan-io/<br/>
+Commercial support: https://wcm.io/commercial-support.html
 
 
 ## Build from sources
