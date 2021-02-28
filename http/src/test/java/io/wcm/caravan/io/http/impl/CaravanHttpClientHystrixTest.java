@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.CharEncoding;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -113,6 +114,7 @@ public class CaravanHttpClientHystrixTest {
   }
 
   @Test
+  @Ignore("Unit test is flaky")
   public void test_http500() throws InterruptedException {
     // error threshold = 50%, requests = 10/20 => CircuitBreaker needs to be closed
     execRequestsSync(5, HTTP_200_URI);
@@ -130,6 +132,7 @@ public class CaravanHttpClientHystrixTest {
   }
 
   @Test
+  @Ignore("Unit test is flaky")
   public void test_http400() throws InterruptedException {
     execRequestsSync(5, HTTP_404_URI);
     assertEquals(0, getMetrics().getHealthCounts().getErrorCount());
