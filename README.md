@@ -1,7 +1,7 @@
 <img src="https://wcm.io/images/favicon-16@2x.png"/> wcm.io Caravan I/O
 ======
 [![Build](https://github.com/wcm-io-caravan/caravan-io/workflows/Build/badge.svg?branch=develop)](https://github.com/wcm-io-caravan/caravan-io/actions?query=workflow%3ABuild+branch%3Adevelop)
-[![Code Coverage](https://codecov.io/gh/wcm-io-caravan/caravan-io/branch/develop/graph/badge.svg)](https://codecov.io/gh/wcm-io-caravan/caravan-io)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=wcm-io-caravan_caravan-io&metric=coverage)](https://sonarcloud.io/summary/new_code?id=wcm-io-caravan_caravan-io)
 
 wcm.io Caravan - JSON Data Pipelining Infrastructure
 
