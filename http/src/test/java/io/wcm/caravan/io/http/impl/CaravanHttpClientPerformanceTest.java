@@ -113,9 +113,8 @@ public class CaravanHttpClientPerformanceTest {
           Thread.sleep(100);
         }
         catch (InterruptedException ex) {
-          ex.printStackTrace();
+          throw new RuntimeException(ex);
         }
-
       }
 
     }).toBlocking().single();
@@ -139,9 +138,8 @@ public class CaravanHttpClientPerformanceTest {
           Thread.sleep(10);
         }
         catch (InterruptedException ex) {
-          ex.printStackTrace();
+          throw new RuntimeException(ex);
         }
-
       }
 
     }).toBlocking().single();
@@ -165,9 +163,8 @@ public class CaravanHttpClientPerformanceTest {
           Thread.sleep(100);
         }
         catch (InterruptedException ex) {
-          ex.printStackTrace();
+          throw new RuntimeException(ex);
         }
-
       }
 
     })).toBlocking().single();
@@ -192,9 +189,8 @@ public class CaravanHttpClientPerformanceTest {
           Thread.sleep(100);
         }
         catch (InterruptedException ex) {
-          ex.printStackTrace();
+          throw new RuntimeException(ex);
         }
-
       }
 
     })).toBlocking().single();
@@ -218,9 +214,8 @@ public class CaravanHttpClientPerformanceTest {
           Thread.sleep(0);
         }
         catch (InterruptedException ex) {
-          ex.printStackTrace();
+          throw new RuntimeException(ex);
         }
-
       }
 
     })).toBlocking().single();

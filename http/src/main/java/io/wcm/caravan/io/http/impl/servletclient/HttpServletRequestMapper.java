@@ -52,6 +52,8 @@ import javax.servlet.http.Part;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
@@ -65,6 +67,8 @@ import rx.Observable;
  * Mapper from {@link CaravanHttpRequest} to {@link HttpServletRequest}.
  */
 public class HttpServletRequestMapper implements HttpServletRequest {
+
+  private static final Logger LOG = LoggerFactory.getLogger(HttpServletRequestMapper.class);
 
   private final CaravanHttpRequest request;
   private final URI uri;
@@ -159,7 +163,7 @@ public class HttpServletRequestMapper implements HttpServletRequest {
       return builder.build();
     }
     catch (URISyntaxException ex) {
-      ex.printStackTrace();
+      LOG.debug("Error parsing {}", request.getUrl(), ex);
     }
     return null;
   }
