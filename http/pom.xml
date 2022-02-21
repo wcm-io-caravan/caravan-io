@@ -292,6 +292,14 @@
             <Bundle-Activator>io.wcm.caravan.io.http.impl.BundleActivator</Bundle-Activator>
           </instructions>
         </configuration>
+        <executions>
+          <execution>
+            <id>baseline</id>
+            <goals>
+              <goal>baseline</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
     </plugins>
