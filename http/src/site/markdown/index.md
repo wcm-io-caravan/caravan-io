@@ -2,7 +2,7 @@
 
 HTTP communication layer using Netflix Hystrix and NetFlix Ribbon for resilience.
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.wcm.caravan/io.wcm.caravan.io.http/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.wcm.caravan/io.wcm.caravan.io.http)
+[![Maven Central](https://img.shields.io/maven-central/v/io.wcm.caravan/io.wcm.caravan.io.http)](https://repo1.maven.org/maven2/io/wcm/caravan/io.wcm.caravan.io.http/)
 
 
 ### Documentation

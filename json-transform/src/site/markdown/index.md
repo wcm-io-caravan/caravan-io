@@ -2,7 +2,7 @@
 
 A stream-based JSON manipulation library.
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.wcm.caravan/io.wcm.caravan.io.json-transform/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.wcm.caravan/io.wcm.caravan.io.json-transform)
+[![Maven Central](https://img.shields.io/maven-central/v/io.wcm.caravan/io.wcm.caravan.io.json-transform)](https://repo1.maven.org/maven2/io/wcm/caravan/io.wcm.caravan.io.json-transform/)
 
 
 ### Documentation
