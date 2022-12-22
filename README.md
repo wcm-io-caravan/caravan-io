@@ -10,7 +10,7 @@ wcm.io Caravan - JSON Data Pipelining Infrastructure
 Micro Services I/O Resilient Transport Layer.
 
 Documentation: https://caravan.wcm.io/io/<br/>
-Issues: https://wcm-io.atlassian.net/<br/>
+Issues: https://github.com/wcm-io-caravan/caravan-io/issues<br/>
 Wiki: https://wcm-io.atlassian.net/wiki/<br/>
 Continuous Integration: https://github.com/wcm-io-caravan/caravan-io/actions<br/>
 Commercial support: https://wcm.io/commercial-support.html
