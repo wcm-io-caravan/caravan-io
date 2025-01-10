@@ -14,7 +14,7 @@ HTTP communication layer using Netflix Hystrix and NetFlix Ribbon for resilience
 
 [usage]: usage.html
 [apidocs]: apidocs/
-[changelog]: changes-report.html
+[changelog]: changes.html
 
 
 ### Overview

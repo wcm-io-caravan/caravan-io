@@ -14,7 +14,7 @@ A stream-based JSON manipulation library.
 
 [usage]: usage.html
 [apidocs]: apidocs/
-[changelog]: changes-report.html
+[changelog]: changes.html
 
 
 ### Overview
