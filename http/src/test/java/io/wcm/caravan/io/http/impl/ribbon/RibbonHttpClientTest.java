@@ -79,6 +79,7 @@ public class RibbonHttpClientTest {
 
     ArchaiusConfig.initialize();
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
+    context.registerInjectActivateService(new CachingLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
     context.registerInjectActivateService(new HttpClientFactoryImpl());
     context.registerInjectActivateService(new HttpAsyncClientFactoryImpl());

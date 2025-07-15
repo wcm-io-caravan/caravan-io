@@ -28,11 +28,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
-import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
-import io.wcm.caravan.io.http.request.CaravanHttpRequest;
-import io.wcm.caravan.io.http.request.CaravanHttpRequestBuilder;
-
+import io.wcm.caravan.io.http.impl.ribbon.CachingLoadBalancerFactory;
 import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
 import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
 import io.wcm.caravan.io.http.request.CaravanHttpRequest;
@@ -51,6 +47,7 @@ public class HttpHystrixCommandTest {
   public void setUp() {
     ArchaiusConfig.initialize();
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
+    context.registerInjectActivateService(new CachingLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
 
     request = new CaravanHttpRequestBuilder(SERVICE_NAME).build();

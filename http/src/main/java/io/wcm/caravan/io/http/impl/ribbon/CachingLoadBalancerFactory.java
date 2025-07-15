@@ -62,7 +62,9 @@ public class CachingLoadBalancerFactory implements LoadBalancerFactory {
    * @param serviceId Logical name of the HTTP service
    */
   public void unregister(String serviceId) {
-    store.remove(serviceId);
+    if (serviceId != null) {
+      store.remove(serviceId);
+    }
   }
 
 }

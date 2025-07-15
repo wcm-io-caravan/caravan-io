@@ -56,7 +56,7 @@ class HttpHystrixCommand extends HystrixObservableCommand<CaravanHttpResponse> {
    *          CaravanHttpClient implementations)
    * @param fallback the fallback response to emit if the original request fails
    */
-  public HttpHystrixCommand(CaravanHttpRequest request, Observable<CaravanHttpResponse> observable, Observable<CaravanHttpResponse> fallback) {
+  HttpHystrixCommand(CaravanHttpRequest request, Observable<CaravanHttpResponse> observable, Observable<CaravanHttpResponse> fallback) {
 
     super(Setter
         .withGroupKey(HystrixCommandGroupKey.Factory.asKey(GROUP_KEY))

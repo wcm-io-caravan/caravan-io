@@ -19,12 +19,12 @@
  */
 package io.wcm.caravan.io.jsontransform.processor;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 import io.wcm.caravan.io.jsontransform.element.JsonElement;
 import io.wcm.caravan.io.jsontransform.element.JsonPath;
 import io.wcm.caravan.io.jsontransform.element.JsonPathCreator;
 import io.wcm.caravan.io.jsontransform.source.Source;
-
-import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Helping abstract class recording the bread crumb of passed JSON stream elements
@@ -46,14 +46,14 @@ public abstract class AbstractPathProcessor extends AbstractBufferingProcessor {
    * @param element The current JSON stream element
    * @return True if process with the given parameter should get called
    */
-  protected abstract boolean isProcessable(final JsonPath path, final JsonElement element);
+  protected abstract boolean isProcessable(JsonPath path, JsonElement element);
 
   /**
    * Processes the current JSON stream element
    * @param path The current JSON path
    * @param element The current JSON stream element
    */
-  protected abstract void process(final JsonPath path, final JsonElement element);
+  protected abstract void process(JsonPath path, JsonElement element);
 
   @Override
   protected void process(final JsonElement element) {

@@ -175,7 +175,7 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
     private final CaravanHttpRequest request;
     private final Observable<CaravanHttpResponse> fallback;
 
-    public Context(CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback) {
+    Context(CaravanHttpRequest request, Observable<CaravanHttpResponse> fallback) {
       this.request = request;
       this.fallback = fallback;
     }
@@ -187,7 +187,7 @@ public class CaravanHttpClientImpl implements CaravanHttpClient {
     private final Context ctx;
     private final Observable<CaravanHttpResponse> nonLocalResponse;
 
-    public ErrorDisassembleroperator(Context ctx, Observable<CaravanHttpResponse> nonLocalResponse) {
+    ErrorDisassembleroperator(Context ctx, Observable<CaravanHttpResponse> nonLocalResponse) {
       this.ctx = ctx;
       this.nonLocalResponse = nonLocalResponse;
     }

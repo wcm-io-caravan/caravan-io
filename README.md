@@ -1,7 +1,7 @@
-<img src="http://wcm.io/images/favicon-16@2x.png"/> wcm.io Caravan I/O
+<img src="https://wcm.io/images/favicon-16@2x.png"/> wcm.io Caravan I/O
 ======
-[![Build Status](https://travis-ci.org/wcm-io-caravan/caravan-io.png?branch=develop)](https://travis-ci.org/wcm-io-caravan/caravan-io)
-[![Code Coverage](https://codecov.io/gh/wcm-io-caravan/caravan-io/branch/develop/graph/badge.svg)](https://codecov.io/gh/wcm-io-caravan/caravan-io)
+[![Build](https://github.com/wcm-io-caravan/caravan-io/workflows/Build/badge.svg?branch=develop)](https://github.com/wcm-io-caravan/caravan-io/actions?query=workflow%3ABuild+branch%3Adevelop)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=wcm-io-caravan_caravan-io&metric=coverage)](https://sonarcloud.io/summary/new_code?id=wcm-io-caravan_caravan-io)
 
 wcm.io Caravan - JSON Data Pipelining Infrastructure
 
@@ -9,17 +9,18 @@ wcm.io Caravan - JSON Data Pipelining Infrastructure
 
 Micro Services I/O Resilient Transport Layer.
 
-Documentation: http://caravan.wcm.io/io/<br/>
-Issues: https://wcm-io.atlassian.net/<br/>
+Documentation: https://caravan.wcm.io/io/<br/>
+Issues: https://github.com/wcm-io-caravan/caravan-io/issues<br/>
 Wiki: https://wcm-io.atlassian.net/wiki/<br/>
-Continuous Integration: https://travis-ci.org/wcm-io-caravan/caravan-io/
+Continuous Integration: https://github.com/wcm-io-caravan/caravan-io/actions<br/>
+Commercial support: https://wcm.io/commercial-support.html
 
 
 ## Build from sources
 
-If you want to build wcm.io from sources make sure you have configured all [Maven Repositories](http://caravan.wcm.io/maven.html) in your settings.xml.
+If you want to build wcm.io from sources make sure you have configured all [Maven Repositories](https://caravan.wcm.io/maven.html) in your settings.xml.
 
-See [Travis Maven settings.xml](https://github.com/wcm-io-caravan/caravan-io/blob/master/.travis.maven-settings.xml) for an example with a full configuration.
+See [Maven Settings](https://github.com/wcm-io-caravan/caravan-io/blob/develop/.maven-settings.xml) for an example with a full configuration.
 
 Then you can build using
 

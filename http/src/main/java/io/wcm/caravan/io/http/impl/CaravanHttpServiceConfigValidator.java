@@ -74,7 +74,7 @@ public final class CaravanHttpServiceConfigValidator {
   /**
    * get configuration for "THROW_EXCEPTION_FOR_STATUS_500"
    * @param serviceId
-   * @return
+   * @return Configured value
    */
   public static boolean throwExceptionForStatus500(String serviceId) {
     return ArchaiusConfig.getConfiguration().getBoolean(serviceId + CaravanHttpServiceConfig.THROW_EXCEPTION_FOR_STATUS_500,

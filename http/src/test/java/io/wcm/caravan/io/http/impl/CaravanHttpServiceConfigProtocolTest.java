@@ -38,6 +38,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.wcm.caravan.io.http.impl.ribbon.CachingLoadBalancerFactory;
 import io.wcm.caravan.io.http.impl.ribbon.LoadBalancerCommandFactory;
 import io.wcm.caravan.io.http.impl.ribbon.SimpleLoadBalancerFactory;
 
@@ -55,6 +56,7 @@ public class CaravanHttpServiceConfigProtocolTest {
     ArchaiusConfig.initialize();
     archaiusConfig = ArchaiusConfig.getConfiguration();
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
+    context.registerInjectActivateService(new CachingLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
   }
 

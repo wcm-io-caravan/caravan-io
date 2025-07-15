@@ -19,13 +19,13 @@
  */
 package io.wcm.caravan.io.jsontransform.processor;
 
-import io.wcm.caravan.io.jsontransform.element.JsonElement;
-import io.wcm.caravan.io.jsontransform.source.Source;
-
 import java.io.IOException;
 import java.util.Map;
 
 import org.osgi.annotation.versioning.ProviderType;
+
+import io.wcm.caravan.io.jsontransform.element.JsonElement;
+import io.wcm.caravan.io.jsontransform.source.Source;
 
 /**
  * Renames JSON elements by a given mapping.

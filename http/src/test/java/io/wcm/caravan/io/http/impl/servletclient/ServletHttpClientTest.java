@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 
 import java.io.IOException;
 
@@ -37,10 +38,10 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -96,14 +97,14 @@ public class ServletHttpClientTest {
 
   @Test(expected = NotSupportedByRequestMapperException.class)
   public void execute_shouldThrowNotSupportedExceptionForRequestError() throws ServletException, IOException {
-    Mockito.doThrow(new NotSupportedByRequestMapperException()).when(servlet).service(Matchers.any(), Matchers.any());
+    Mockito.doThrow(new NotSupportedByRequestMapperException()).when(servlet).service(any(), any());
     CaravanHttpResponse response = client.execute(REQUEST, Observable.just(FALLBACK)).toBlocking().single();
     assertEquals(FALLBACK, response);
   }
 
   @Test(expected = RequestFailedRuntimeException.class)
   public void execute_shouldThrowRequestFailedRuntimeExceptionForServerError() throws ServletException, IOException {
-    Mockito.doThrow(new ServletException()).when(servlet).service(Matchers.any(), Matchers.any());
+    Mockito.doThrow(new ServletException()).when(servlet).service(any(), any());
     CaravanHttpResponse response = client.execute(REQUEST, Observable.just(FALLBACK)).toBlocking().single();
     assertEquals(FALLBACK, response);
   }
@@ -132,11 +133,11 @@ public class ServletHttpClientTest {
 
   private void mockResponse(String responseBody, int responseStatus) throws ServletException, IOException {
     Mockito.doAnswer(invocation -> {
-      HttpServletResponse response = invocation.getArgumentAt(1, HttpServletResponse.class);
+      HttpServletResponse response = invocation.getArgument(1);
       response.setStatus(responseStatus);
       response.getWriter().append(responseBody).flush();
       return null;
-    }).when(servlet).service(Matchers.any(), Matchers.any());
+    }).when(servlet).service(ArgumentMatchers.any(), ArgumentMatchers.any());
   }
 
   private void throwExceptionForResponse500(boolean value) {

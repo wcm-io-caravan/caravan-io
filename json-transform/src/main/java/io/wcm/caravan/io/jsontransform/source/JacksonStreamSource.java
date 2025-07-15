@@ -19,8 +19,6 @@
  */
 package io.wcm.caravan.io.jsontransform.source;
 
-import io.wcm.caravan.io.jsontransform.element.JsonElement;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -33,6 +31,8 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+
+import io.wcm.caravan.io.jsontransform.element.JsonElement;
 
 /**
  * JSON source using the Jackson streaming parser.

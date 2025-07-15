@@ -20,17 +20,18 @@
 package io.wcm.caravan.io.jsontransform;
 
 import static org.junit.Assert.assertEquals;
-import io.wcm.caravan.io.jsontransform.element.JsonElement;
-import io.wcm.caravan.io.jsontransform.element.JsonElementType;
-import io.wcm.caravan.io.jsontransform.sink.JacksonStreamSink;
-import io.wcm.caravan.io.jsontransform.source.JacksonStreamSource;
-import io.wcm.caravan.io.jsontransform.source.Source;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import com.fasterxml.jackson.core.JsonParseException;
+
+import io.wcm.caravan.io.jsontransform.element.JsonElement;
+import io.wcm.caravan.io.jsontransform.element.JsonElementType;
+import io.wcm.caravan.io.jsontransform.sink.JacksonStreamSink;
+import io.wcm.caravan.io.jsontransform.source.JacksonStreamSource;
+import io.wcm.caravan.io.jsontransform.source.Source;
 
 
 public class JsonTestHelper {

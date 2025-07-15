@@ -20,6 +20,7 @@
 package io.wcm.caravan.io.http.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
@@ -27,10 +28,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import io.wcm.caravan.io.http.CaravanHttpClient;
 import io.wcm.caravan.io.http.RequestFailedRuntimeException;
@@ -96,7 +96,7 @@ public class CaravanHttpClientImplTest {
     Mockito.when(config.isServletClientEnabled()).thenReturn(false);
     setLocalclientCanHandleRequest(true);
     client.execute(REQUEST);
-    Mockito.verify(servletClient, never()).execute(Matchers.any());
+    Mockito.verify(servletClient, never()).execute(any());
   }
 
   @Test

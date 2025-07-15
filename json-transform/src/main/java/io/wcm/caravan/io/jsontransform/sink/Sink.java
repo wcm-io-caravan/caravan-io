@@ -19,12 +19,12 @@
  */
 package io.wcm.caravan.io.jsontransform.sink;
 
-import io.wcm.caravan.io.jsontransform.element.JsonElement;
-
 import java.io.Closeable;
 import java.io.IOException;
 
 import org.osgi.annotation.versioning.ConsumerType;
+
+import io.wcm.caravan.io.jsontransform.element.JsonElement;
 
 /**
  * Sinks represent the end of a pipeline and consumes the data flow.

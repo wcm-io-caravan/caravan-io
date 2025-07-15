@@ -20,7 +20,7 @@
 package io.wcm.caravan.io.http.impl.ribbon;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import org.apache.sling.testing.mock.osgi.MockOsgi;
@@ -31,7 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 import com.google.common.collect.ImmutableMap;
@@ -71,6 +71,7 @@ public class RibbonHttpClientProtocolTest {
         ImmutableMap.of(CaravanHttpThreadPoolConfig.THREAD_POOL_NAME_PROPERTY, "default"));
 
     context.registerInjectActivateService(new SimpleLoadBalancerFactory());
+    context.registerInjectActivateService(new CachingLoadBalancerFactory());
     context.registerInjectActivateService(new LoadBalancerCommandFactory());
     context.registerService(ApacheHttpClient.class, apacheClient);
 
@@ -169,7 +170,7 @@ public class RibbonHttpClientProtocolTest {
 
       @Override
       public Observable<CaravanHttpResponse> answer(InvocationOnMock invocation) {
-        CaravanHttpRequest request = invocation.getArgumentAt(0, CaravanHttpRequest.class);
+        CaravanHttpRequest request = invocation.getArgument(0);
         assertEquals(expectedUrl, request.getUrl().toString());
         CaravanHttpResponse response = new CaravanHttpResponseBuilder().status(200).reason("OK").build();
         return Observable.just(response);

@@ -20,8 +20,6 @@
 package io.wcm.caravan.io.jsontransform.processor;
 
 import static org.junit.Assert.assertEquals;
-import io.wcm.caravan.io.jsontransform.JsonTestHelper;
-import io.wcm.caravan.io.jsontransform.source.Source;
 
 import java.io.IOException;
 
@@ -29,6 +27,9 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.google.common.collect.Sets;
+
+import io.wcm.caravan.io.jsontransform.JsonTestHelper;
+import io.wcm.caravan.io.jsontransform.source.Source;
 
 public class NumericFieldsProcessorTest {
 

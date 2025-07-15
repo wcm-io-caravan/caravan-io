@@ -64,12 +64,17 @@ public class CaravanHttpServiceConfig {
   private static final String DEPRECATED_SERVICE_NAME_PROPERTY = "serviceName";
 
   static final boolean THROW_EXCEPTION_FOR_STATUS_500_DEFAULT = true;
+
+  /**
+   * Throw exception for response status > 500
+   */
   @Property(label = "Throw exception for response status > 500",
     description = "If true, responses with status > 500 will be handled as error(hystrix failures). If the value is set to false, "
       + "the caller service will has to handle the failure itself.",
     boolValue = THROW_EXCEPTION_FOR_STATUS_500_DEFAULT
   )
   public static final String THROW_EXCEPTION_FOR_STATUS_500 = "exceptionForResponseStatus500";
+
   /**
    * Hosts
    */
