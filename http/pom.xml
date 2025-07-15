@@ -62,13 +62,13 @@
     <dependency>
       <groupId>io.wcm.caravan</groupId>
       <artifactId>io.wcm.caravan.commons.httpasyncclient</artifactId>
-      <version>1.1.0</version>
+      <version>1.4.2</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>io.wcm.caravan</groupId>
       <artifactId>io.wcm.caravan.commons.httpclient</artifactId>
-      <version>1.1.0</version>
+      <version>1.4.2</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -287,6 +287,8 @@
               org.apache.commons.jxpath.*;resolution:=optional,
               org.apache.commons.vfs2.*;resolution:=optional,
               org.apache.xml.resolver.*;resolution:=optional,
+              org.apache.commons.beanutils;resolution:=optional,
+              javax.mail.internet;resolution:=optional,
               *
             </Import-Package>
             <Bundle-Activator>io.wcm.caravan.io.http.impl.BundleActivator</Bundle-Activator>
